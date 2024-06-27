@@ -1,53 +1,43 @@
 package org.crochet.service.impl;
 
-import org.crochet.constant.AppConstant;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.ProductMapper;
 import org.crochet.model.Product;
 import org.crochet.payload.request.ProductRequest;
 import org.crochet.payload.response.ProductPaginationResponse;
 import org.crochet.payload.response.ProductResponse;
-import org.crochet.repository.CustomCategoryRepo;
-import org.crochet.repository.CustomProductRepo;
+import org.crochet.repository.CategoryRepo;
 import org.crochet.repository.Filter;
 import org.crochet.repository.ProductRepository;
 import org.crochet.repository.ProductSpecifications;
 import org.crochet.repository.Specifications;
 import org.crochet.service.ProductService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * ProductServiceImpl class
  */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
-    private final ProductRepository productRepo;
-    private final CustomProductRepo customProductRepo;
-    private final CustomCategoryRepo customCategoryRepo;
-
-    /**
-     * Constructor
-     *
-     * @param productRepo       The {@link ProductRepository} instance.
-     * @param customProductRepo The {@link CustomProductRepo} instance.
-     */
-    public ProductServiceImpl(ProductRepository productRepo,
-                              CustomProductRepo customProductRepo,
-                              CustomCategoryRepo customCategoryRepo) {
-        this.productRepo = productRepo;
-        this.customProductRepo = customProductRepo;
-        this.customCategoryRepo = customCategoryRepo;
-    }
+    final ProductRepository productRepo;
+    final CategoryRepo categoryRepo;
 
     /**
      * Creates a new product or updates an existing one based on the provided {@link ProductRequest}.
@@ -60,10 +50,18 @@ public class ProductServiceImpl implements ProductService {
      */
     @Transactional
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "limitedproducts", allEntries = true),
+                    @CacheEvict(value = "products", allEntries = true)
+            }
+    )
     public ProductResponse createOrUpdate(ProductRequest request) {
         Product product;
         if (!StringUtils.hasText(request.getId())) {
-            var category = customCategoryRepo.findById(request.getCategoryId());
+            var category = categoryRepo.findById(request.getCategoryId()).orElseThrow(
+                    () -> new IllegalArgumentException("Category not found")
+            );
             product = Product.builder()
                     .category(category)
                     .name(request.getName())
@@ -76,33 +74,13 @@ public class ProductServiceImpl implements ProductService {
                     .images(FileMapper.INSTANCE.toEntities(request.getImages()))
                     .build();
         } else {
-            product = customProductRepo.findById(request.getId());
+            product = productRepo.findById(request.getId()).orElseThrow(
+                    () -> new IllegalArgumentException("Product not found")
+            );
             product = ProductMapper.INSTANCE.update(request, product);
         }
         product = productRepo.save(product);
         return ProductMapper.INSTANCE.toResponse(product);
-    }
-
-    @Transactional
-    @Override
-    public List<ProductResponse> batchInsert(List<ProductRequest> requests) {
-        List<Product> products = new ArrayList<>();
-        for (ProductRequest request : requests) {
-            var category = customCategoryRepo.findById(request.getCategoryId());
-            Product product = Product.builder()
-                    .category(category)
-                    .name(request.getName())
-                    .price(request.getPrice())
-                    .description(request.getDescription())
-                    .currencyCode(request.getCurrencyCode())
-                    .isHome(request.isHome())
-                    .link(request.getLink())
-                    .images(FileMapper.INSTANCE.toEntities(request.getImages()))
-                    .build();
-            products.add(product);
-        }
-        products = productRepo.saveAll(products);
-        return ProductMapper.INSTANCE.toResponses(products);
     }
 
     /**
@@ -118,21 +96,29 @@ public class ProductServiceImpl implements ProductService {
      * @return A {@link ProductPaginationResponse} containing the paginated list of products.
      */
     @Override
+    @Cacheable(value = "products",
+            key = "T(java.util.Objects).hash(#pageNo, #pageSize, #sortBy, #sortDir, #searchText, #categoryId, #filters)")
     public ProductPaginationResponse getProducts(int pageNo, int pageSize, String sortBy, String sortDir,
                                                  String searchText, String categoryId, List<Filter> filters) {
-        // create Sort instance
+        log.info("Fetching products");
         Sort sort = Sort.by(sortBy);
         sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? sort.ascending() : sort.descending();
-        // create Pageable instance
+
         Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
-        Specification<Product> spec = Specifications.getSpecificationFromFilters(filters);
+
+        Specification<Product> spec = Specifications.getSpecFromFilters(filters);
+
         if (StringUtils.hasText(searchText)) {
-            spec = spec.and(ProductSpecifications.searchByNameOrDesc(searchText));
+            spec = spec.or(ProductSpecifications.searchByNameOrDesc(searchText));
         }
         if (StringUtils.hasText(categoryId)) {
-            spec = spec.and(ProductSpecifications.in(getProductsByCategory(categoryId)));
+            spec = spec.or(ProductSpecifications.in(getProductsByCategory(categoryId)));
         }
+
+        spec = spec.and(ProductSpecifications.getAll());
+
         Page<Product> menuPage = productRepo.findAll(spec, pageable);
+
         List<ProductResponse> contents = ProductMapper.INSTANCE.toResponses(menuPage.getContent());
         return ProductPaginationResponse.builder()
                 .contents(contents)
@@ -144,22 +130,32 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
+    /**
+     * Get all products by category
+     *
+     * @param categoryId The unique identifier of the category.
+     * @return A list of {@link Product} containing products.
+     */
     private List<Product> getProductsByCategory(String categoryId) {
-        var category = customCategoryRepo.findById(categoryId);
-        List<Product> products = new ArrayList<>(category.getProducts());
-        for (var subCategory : category.getChildren()) {
-            products.addAll(getProductsByCategory(subCategory.getId()));
+        List<Product> products = productRepo.findProductByCategory(categoryId);
+        var categoryIds = categoryRepo.findChildrenIds(categoryId);
+        for (var subCategoryId : categoryIds) {
+            products.addAll(getProductsByCategory(subCategoryId));
         }
         return products;
     }
 
+    /**
+     * Retrieves a list of products that are marked as limited.
+     *
+     * @return A list of {@link ProductResponse} containing limited products.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Cacheable(value = "limitedproducts")
     @Override
     public List<ProductResponse> getLimitedProducts() {
-        var products = productRepo.findAll()
-                .stream()
-                .filter(Product::isHome)
-                .limit(AppConstant.PRODUCT_LIMITED)
-                .toList();
+        log.info("Fetching limited products");
+        var products = productRepo.findLimitedNumProductByCreatedDateDesc();
         return ProductMapper.INSTANCE.toResponses(products);
     }
 
@@ -171,13 +167,26 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public ProductResponse getDetail(String id) {
-        var product = customProductRepo.findById(id);
+        var product = productRepo.getDetail(id).orElseThrow(
+                () -> new IllegalArgumentException("Product not found")
+        );
         return ProductMapper.INSTANCE.toResponse(product);
     }
 
+    /**
+     * Deletes the product with the specified ID.
+     *
+     * @param id The unique identifier of the product to delete.
+     */
     @Transactional
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "limitedproducts", allEntries = true),
+                    @CacheEvict(value = "products", allEntries = true)
+            }
+    )
     public void delete(String id) {
-        customProductRepo.deleteById(id);
+        productRepo.deleteById(id);
     }
 }

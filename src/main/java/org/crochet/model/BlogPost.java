@@ -6,7 +6,9 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -46,12 +48,7 @@ public class BlogPost extends BaseEntity {
     })
     private List<File> files;
 
-    @ElementCollection
-    @CollectionTable(name = "blog_post_avatar",
-            joinColumns = @JoinColumn(name = "blog_post_id", referencedColumnName = "id", nullable = false))
-    @AttributeOverrides({
-            @AttributeOverride(name = "fileName", column = @Column(name = "file_name")),
-            @AttributeOverride(name = "fileContent", column = @Column(name = "file_content"))
-    })
-    private List<File> avatars;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "blog_category_id", referencedColumnName = "id")
+    private BlogCategory blogCategory;
 }

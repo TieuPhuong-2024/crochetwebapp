@@ -34,8 +34,6 @@ app:
     tokenSecret: ${TOKEN_SECRET}
     tokenExpirationMs: 900000 # 15 minutes
     refresh-token-expiration-ms: 86400000 # 1 day
-  cors:
-    allowedOrigins: http://localhost:3000,http://localhost:8080
   oauth2:
     # After successfully authenticating with the OAuth2 Provider,
     # we'll be generating an auth token for the user and sending the token to the
@@ -43,8 +41,11 @@ app:
     # We're not using cookies because they won't work well in mobile clients.
     authorizedRedirectUris:
       - http://localhost:3000/oauth2/redirect
-      - myandroidapp://oauth2/redirect
-      - myiosapp://oauth2/redirect
+      - https://tieuphuongcrochet.com/oauth2/redirect
+      - https://littlecrochet.web.app/oauth2/redirect
+      - https://littlecrochet.firebaseapp.com/oauth2/redirect
+      - crochetandroidapp://oauth2/redirect
+      - crochetiosapp://oauth2/redirect
 
 authorize:
   http-request:
@@ -65,23 +66,6 @@ authorize:
       - "/users/**"
       - "/banner/batchInsertOrUpdate"
       - "/bannerType/**"
-    permit-all:
-      - "/"
-      - "/auth/**"
-      - "/oauth2/**"
-      - "/error"
-      - "/favicon.ico"
-      - "/*.png"
-      - "/*.gif"
-      - "/*.svg"
-      - "/*.jpg"
-      - "/*.html"
-      - "/*.css"
-      - "/*.js"
-      - "/swagger-ui/**"
-      - "/swagger-ui.html"
-      - "webjars/**"
-      - "/v3/api-docs/**"
-      - "/v3/api-docs"
-      - "/swagger-resources"
-      - "/swagger-resources/**"
+      - "/blog-categories/create"
+      - "/blog-categories/update"
+      - "/blog-categories/delete/**"

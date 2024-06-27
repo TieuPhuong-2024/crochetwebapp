@@ -2,15 +2,20 @@ package org.crochet.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
 @Builder
-@JsonPropertyOrder({"id", "name", "description", "author", "is_home", "link", "content", "images", "files", "category"})
-public class FreePatternResponse {
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonPropertyOrder({"id", "name", "description", "author", "is_home", "link", "content", "images", "files"})
+public class FreePatternResponse implements Serializable {
     private String id;
     private String name;
     private String description;
@@ -21,5 +26,4 @@ public class FreePatternResponse {
     private String content;
     private List<FileResponse> images;
     private List<FileResponse> files;
-    private CategoryResponse category;
 }

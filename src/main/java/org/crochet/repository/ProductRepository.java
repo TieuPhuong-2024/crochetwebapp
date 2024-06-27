@@ -7,13 +7,34 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String>, JpaSpecificationExecutor<Product> {
+
     @Query("""
-            select p from Product p
-            join fetch p.category
-            where p.category.id = ?1
+            select p
+            from Product p
+            left join fetch p.images
+            where p.isHome = true
+            order by p.createdDate desc
+            limit 12
+            """)
+    List<Product> findLimitedNumProductByCreatedDateDesc();
+
+    @Query("""
+            select prod
+            from Product prod
+            join fetch prod.category c
+            where c.id = ?1
             """)
     List<Product> findProductByCategory(String categoryId);
+
+    @Query("""
+            select p
+            from Product p
+            left join fetch p.images
+            where p.id = ?1
+            """)
+    Optional<Product> getDetail(String id);
 }

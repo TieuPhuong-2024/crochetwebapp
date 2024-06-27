@@ -1,5 +1,6 @@
 package org.crochet.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.BannerMapper;
 import org.crochet.model.Banner;
@@ -8,13 +9,18 @@ import org.crochet.payload.response.BannerResponse;
 import org.crochet.repository.BannerRepo;
 import org.crochet.repository.BannerTypeRepo;
 import org.crochet.service.BannerService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class BannerServiceImpl implements BannerService {
     final BannerRepo bannerRepo;
@@ -27,6 +33,9 @@ public class BannerServiceImpl implements BannerService {
 
     @Transactional
     @Override
+    @Caching(
+            evict = {@CacheEvict(value = "activebanners", allEntries = true)}
+    )
     public List<BannerResponse> batchInsertOrUpdate(List<BannerRequest> requests) {
         List<Banner> banners = new ArrayList<>();
         List<Banner> existingBanners = bannerRepo.findAll();
@@ -62,12 +71,12 @@ public class BannerServiceImpl implements BannerService {
         return banners.stream().map(BannerMapper.INSTANCE::toResponse).toList();
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Cacheable(value = "activebanners")
     @Override
     public List<BannerResponse> getAll() {
-        List<Banner> banners = bannerRepo.findAll()
-                .stream()
-                .filter(Banner::isActive)
-                .toList();
+        log.info("Fetching all active banners");
+        List<Banner> banners = bannerRepo.findActiveBanners();
         return BannerMapper.INSTANCE.toResponses(banners);
     }
 }

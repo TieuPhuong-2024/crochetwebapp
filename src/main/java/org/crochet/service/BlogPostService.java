@@ -3,7 +3,8 @@ package org.crochet.service;
 import org.crochet.payload.request.BlogPostRequest;
 import org.crochet.payload.response.BlogPostPaginationResponse;
 import org.crochet.payload.response.BlogPostResponse;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 public interface BlogPostService {
     BlogPostResponse createOrUpdatePost(BlogPostRequest request);
@@ -12,6 +13,7 @@ public interface BlogPostService {
 
     BlogPostResponse getDetail(String id);
 
-    @Transactional
+    List<BlogPostResponse> getLimitedBlogPosts();
+
     void deletePost(String id);
 }
