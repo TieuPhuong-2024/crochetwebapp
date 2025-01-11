@@ -4,13 +4,13 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
+
+import org.crochet.model.User;
 import org.crochet.properties.AppProperties;
-import org.crochet.security.UserPrincipal;
 import org.crochet.service.JwtTokenService;
 import org.crochet.service.TokenBlacklistService;
 import org.slf4j.Logger;
@@ -24,6 +24,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import javax.crypto.SecretKey;
 
 /**
  * TokenProvider class
@@ -42,11 +44,10 @@ public class JwtTokenServiceImpl implements JwtTokenService {
      * @param tokenBlacklistService TokenBlacklistService
      */
     public JwtTokenServiceImpl(AppProperties appProperties,
-                               TokenBlacklistService tokenBlacklistService) {
+            TokenBlacklistService tokenBlacklistService) {
         this.appProperties = appProperties;
         this.tokenBlacklistService = tokenBlacklistService;
     }
-
 
     /**
      * Creates a JWT token for the provided Authentication object.
@@ -57,7 +58,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     @Override
     public String createToken(Authentication auth) {
         // Get the UserPrincipal from the Authentication object
-        UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
+        User userPrincipal = (User) auth.getPrincipal();
 
         // Get the current date and time
         Date now = new Date();
@@ -67,10 +68,10 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
         // Build and sign the JWT token
         return Jwts.builder()
-                .setSubject(userPrincipal.getUsername()) // Set the subject of the token as the user ID
-                .setIssuedAt(new Date()) // Set the issued date as the current date
-                .setExpiration(expiryDate) // Set the token expiration date
-                .signWith(getKey(), SignatureAlgorithm.HS512) // Sign the token using the key and algorithm
+                .subject(userPrincipal.getEmail()) // Set the subject of the token as the user ID
+                .issuedAt(new Date()) // Set the issued date as the current date
+                .expiration(expiryDate) // Set the token expiration date
+                .signWith(getKey()) // Sign the token using the key and algorithm
                 .compact(); // Compact the token into its final string representation
     }
 
@@ -86,7 +87,8 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     }
 
     /**
-     * Extracts a claim from the provided token using the specified claims resolver function.
+     * Extracts a claim from the provided token using the specified claims resolver
+     * function.
      *
      * @param token          The token from which to extract the claim.
      * @param claimsResolver The claims resolver function to use.
@@ -124,7 +126,8 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     }
 
     /**
-     * Generates a JWT token for the specified username with the specified extra claims.
+     * Generates a JWT token for the specified username with the specified extra
+     * claims.
      *
      * @param extraClaims The extra claims to include in the token.
      * @param username    The username for which to generate the token.
@@ -133,13 +136,13 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     @Override
     public String generateToken(
             Map<String, Object> extraClaims,
-            String username
-    ) {
+            String username) {
         return buildToken(extraClaims, username, appProperties.getAuth().getTokenExpirationMs());
     }
 
     /**
-     * Builds a JWT token with the specified extra claims, username, and expiration time.
+     * Builds a JWT token with the specified extra claims, username, and expiration
+     * time.
      *
      * @param extraClaims The extra claims to include in the token.
      * @param username    The username for which to generate the token.
@@ -149,15 +152,14 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     private String buildToken(
             Map<String, Object> extraClaims,
             String username,
-            long expiration
-    ) {
+            long expiration) {
         return Jwts
                 .builder()
-                .setClaims(extraClaims)
-                .setSubject(username)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getKey(), SignatureAlgorithm.HS512)
+                .claims(extraClaims)
+                .subject(username)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getKey())
                 .compact();
     }
 
@@ -189,11 +191,11 @@ public class JwtTokenServiceImpl implements JwtTokenService {
      */
     private Claims extractAllClaims(String token) {
         return Jwts
-                .parserBuilder()
-                .setSigningKey(getKey())
+                .parser()
+                .verifyWith((SecretKey) getKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     /**
@@ -209,7 +211,6 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-
     /**
      * Extracts the user ID from the provided token.
      *
@@ -220,16 +221,15 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     @Override
     public String getUserIdFromToken(String token) {
         // Parse the token, validate its signature, and retrieve the claims
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getKey())
+        Claims claims = Jwts.parser()
+                .verifyWith((SecretKey) getKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
 
         // Extract and return the user ID from the claims
         return claims.getSubject();
     }
-
 
     /**
      * Validates the authenticity and integrity of the provided JWT token.
@@ -241,10 +241,10 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     public boolean validateToken(String authToken) {
         try {
             // Parse the token and validate it using the configured signing key
-            Jwts.parserBuilder()
-                    .setSigningKey(getKey())
+            Jwts.parser()
+                    .verifyWith((SecretKey) getKey())
                     .build()
-                    .parseClaimsJws(authToken);
+                    .parseSignedClaims(authToken);
 
             // Check if the token is blacklisted
             if (tokenBlacklistService.isTokenBlacklisted(authToken)) {
@@ -252,7 +252,8 @@ public class JwtTokenServiceImpl implements JwtTokenService {
                 return false;
             }
 
-            // If no exception is thrown during parsing and validation, the token is considered valid
+            // If no exception is thrown during parsing and validation, the token is
+            // considered valid
             return true;
         } catch (SecurityException ex) {
             logger.error("Invalid JWT signature");
@@ -265,7 +266,8 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         } catch (IllegalArgumentException ex) {
             logger.error("JWT claims string is empty.");
         }
-        // If an exception is caught during parsing or validation, the token is considered invalid
+        // If an exception is caught during parsing or validation, the token is
+        // considered invalid
         return false;
     }
 }

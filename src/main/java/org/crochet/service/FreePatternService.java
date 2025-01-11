@@ -2,6 +2,7 @@ package org.crochet.service;
 
 import org.crochet.payload.request.Filter;
 import org.crochet.payload.request.FreePatternRequest;
+import org.crochet.payload.response.FreePatternOnHome;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginatedFreePatternResponse;
 
@@ -12,9 +13,15 @@ public interface FreePatternService {
 
     PaginatedFreePatternResponse getAllFreePatterns(int pageNo, int pageSize, String sortBy, String sortDir, Filter[] filters);
 
-    List<FreePatternResponse> getLimitedFreePatterns();
+    PaginatedFreePatternResponse getAllFreePatternsOnAdminPage(int pageNo, int pageSize, String sortBy, String sortDir, Filter[] filters);
+
+    List<FreePatternOnHome> getLimitedFreePatterns();
 
     FreePatternResponse getDetail(String id);
 
     void delete(String id);
+
+    List<String> getFreePatternIds(int pageNo, int limit);
+
+    List<FreePatternOnHome> getFrepsByCreateBy();
 }

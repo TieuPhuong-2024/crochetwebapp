@@ -29,17 +29,17 @@ public class FirebaseStorageController {
 
     @Operation(summary = "Upload multiple files to Firebase Cloud Storage")
     @ApiResponse(responseCode = "200", description = "Upload files successfully", content = @Content(mediaType = "application/json"))
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @SecurityRequirement(name = "BearerAuth")
     @PostMapping(value = "/upload-file", consumes = {"multipart/form-data"})
-    public ResponseEntity<List<FileResponse>> uploadMultipleFiles(@RequestPart MultipartFile[] files) {
+    public ResponseEntity<List<FileResponse>> uploadMultipleFiles(@RequestPart("files") MultipartFile[] files) {
         var fileResponses = firebaseStorageService.uploadMultipleFiles(files);
         return ResponseEntity.ok(fileResponses);
     }
 
     @Operation(summary = "Delete multiple files from Firebase Cloud Storage")
     @ApiResponse(responseCode = "200", description = "If all files are deleted, return empty. Otherwise, return files are not deleted.", content = @Content(mediaType = "application/json"))
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @SecurityRequirement(name = "BearerAuth")
     @DeleteMapping(value = "/delete-multiple-files")
     public ResponseEntity<List<String>> deleteMultipleFiles(@RequestBody List<String> fileNames) {

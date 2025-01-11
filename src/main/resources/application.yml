@@ -29,30 +29,59 @@ spring:
     multipart:
       max-file-size: 100MB
 
+  # HikariCP configuration
+  datasource:
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+        tcpKeepAlive: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+  metrics:
+    enable:
+      hikaricp: true
+
+# Application configuration
 app:
   auth:
     tokenSecret: ${TOKEN_SECRET}
-    tokenExpirationMs: 900000 # 15 minutes
-    refresh-token-expiration-ms: 86400000 # 1 day
+    tokenExpirationMs: 259200000 # 3 days
+    refresh-token-expiration-ms: 604800000 # 1 week
   oauth2:
-    # After successfully authenticating with the OAuth2 Provider,
-    # we'll be generating an auth token for the user and sending the token to the
-    # redirectUri mentioned by the client in the /oauth2/authorize request.
-    # We're not using cookies because they won't work well in mobile clients.
     authorizedRedirectUris:
       - http://localhost:3000/oauth2/redirect
       - https://tieuphuongcrochet.com/oauth2/redirect
       - https://littlecrochet.web.app/oauth2/redirect
       - https://littlecrochet.firebaseapp.com/oauth2/redirect
-      - crochetandroidapp://oauth2/redirect
-      - crochetiosapp://oauth2/redirect
 
+# Authorization configuration
 authorize:
   http-request:
+    allowedOrigins: ${ALLOWED_ORIGINS}
     authenticated:
       - "/blog/create"
       - "/comment/create"
       - "/free-pattern/create"
+      - "/free-pattern/delete"
+      - "/free-pattern/create-by"
+      - "/free-pattern/collection/**"
       - "/pattern/create"
       - "/pattern/detail"
       - "/category/create"
@@ -70,6 +99,28 @@ authorize:
       - "/blog-categories/update"
       - "/blog-categories/delete/**"
       - "/setting/**"
+      - "/collections/**"
 
+# Firebase configuration
 firebase:
   serviceAccountKey: ${SERVICE_ACCOUNT_KEY}
+
+# Resilience4j configuration
+resilience4j:
+  ratelimiter:
+    instances:
+      passwordResetRateLimiter:
+        limitForPeriod: 1
+        limitRefreshPeriod: 3m
+        timeoutDuration: 5s
+      resendEmail:
+        limitForPeriod: 3
+        limitRefreshPeriod: 1h
+        timeoutDuration: 0s
+  retry:
+    instances:
+      resendEmail:
+        maxAttempts: 3
+        waitDuration: 1s
+        retryExceptions:
+          - org.springframework.mail.MailException

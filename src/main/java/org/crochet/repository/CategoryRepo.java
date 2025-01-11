@@ -31,9 +31,19 @@ public interface CategoryRepo extends JpaRepository<Category, String> {
     @Query("select c from Category c")
     List<Category> getCategories();
 
-    @Query("SELECT c FROM Category c LEFT JOIN FETCH c.children WHERE c.id = :id")
-    Optional<Category> getCategory(String id);
+    @EntityGraph(attributePaths = {"children"})
+    @Query("""
+            select c
+            from Category c
+            where c.id in :ids
+            """)
+    List<Category> findCategoriesByIds(@Param("ids") String... ids);
 
-    @Query("SELECT c.id FROM Category c WHERE c.parent.id = :id")
-    List<String> findChildrenIds(@Param("id") String parentId);
+    @EntityGraph(attributePaths = {"children"})
+    @Query("""
+            select c
+            from Category c
+            where c.id = :id
+            """)
+    Optional<Category> findCategoryById(@Param("id") String id);
 }

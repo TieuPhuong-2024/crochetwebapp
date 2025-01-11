@@ -7,14 +7,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.crochet.constant.AppConstant;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class BannerTypeResponse implements Serializable {
+public class BannerTypeResponse {
     private String id;
     private String name;
     @JsonFormat(pattern = AppConstant.DATE_PATTERN)

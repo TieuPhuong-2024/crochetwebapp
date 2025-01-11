@@ -5,7 +5,6 @@ import org.crochet.constant.MessageConstant;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -42,19 +41,6 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
-    @ExceptionHandler({AccessDeniedException.class})
-    public ResponseEntity<ApiError> handleAccessDeniedException(AccessDeniedException ex) {
-        ApiError error = ApiError.builder()
-                .message(MessageConstant.MSG_NO_PERMISSION)
-                .code(HttpStatus.FORBIDDEN.value())
-                .error(HttpStatus.FORBIDDEN.getReasonPhrase())
-                .messageCode(MAP_CODE.get(MessageConstant.FORBIDDEN))
-                .build();
-        log.error(ex.getMessage());
-        log.error(ex.toString());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-    }
-
     @ExceptionHandler({BadRequestException.class})
     public ResponseEntity<ApiError> handleBadRequestException(BadRequestException ex) {
         ApiError err = ApiError.builder()
@@ -73,13 +59,13 @@ public class ApiExceptionHandler {
             OAuth2AuthenticationProcessingException ex) {
         ApiError err = ApiError.builder()
                 .message(ex.getMessage())
-                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
                 .messageCode(ex.getMessageCode())
                 .build();
         log.error(ex.getMessage());
         log.error(ex.toString());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(err);
     }
 
     @ExceptionHandler({ResourceNotFoundException.class})
@@ -102,7 +88,15 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler({TokenException.class})
     public ResponseEntity<ApiError> handleTokenException(TokenException ex) {
-        return handleInternalError(ex, ex.getMessageCode());
+        ApiError error = ApiError.builder()
+                .message(ex.getMessage())
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .messageCode(ex.getMessageCode())
+                .build();
+        log.error(ex.getMessage());
+        log.error(ex.toString());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     @ExceptionHandler({UsernameNotFoundException.class})
@@ -120,8 +114,12 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        String message = ex.getMessage();
+        if (ex.getCause() != null) {
+            message = ex.getCause().getMessage();
+        }
         ApiError err = ApiError.builder()
-                .message(ex.getRootCause().getMessage())
+                .message(message)
                 .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
                 .messageCode(MAP_CODE.get(MessageConstant.DATA_INTEGRITY_VIOLATION))
@@ -129,6 +127,19 @@ public class ApiExceptionHandler {
         log.error(ex.getMessage());
         log.error(ex.toString());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err);
+    }
+
+    @ExceptionHandler({AccessDeniedException.class})
+    public ResponseEntity<ApiError> handleAccessDeniedException(AccessDeniedException ex) {
+        ApiError err = ApiError.builder()
+                .message(ex.getMessage())
+                .code(HttpStatus.FORBIDDEN.value())
+                .error(HttpStatus.FORBIDDEN.getReasonPhrase())
+                .messageCode(ex.getMessageCode())
+                .build();
+        log.error(ex.getMessage());
+        log.error(ex.toString());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(err);
     }
 
     private ResponseEntity<ApiError> handleInternalError(RuntimeException ex, int messageCode) {

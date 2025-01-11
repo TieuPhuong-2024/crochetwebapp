@@ -2,7 +2,6 @@ package org.crochet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.crochet.exception.IllegalArgumentException;
-import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.CategoryMapper;
 import org.crochet.model.Category;
 import org.crochet.payload.request.CategoryCreationRequest;
@@ -92,6 +91,13 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryMapper.INSTANCE.toResponses(savedCategories);
     }
 
+    /**
+     * Recursive method to detect circular references
+     *
+     * @param parent  the parent category
+     * @param request the request object containing the category name
+     * @return true if a circular reference is detected, false otherwise
+     */
     // Recursive method to detect circular references
     private boolean isCircularReference(Category parent, CategoryCreationRequest request) {
         Category current = parent;
@@ -175,12 +181,12 @@ public class CategoryServiceImpl implements CategoryService {
      * @return a list of CategoryResponse objects
      */
     private Category findById(String id) {
-        return categoryRepo
-                .getCategory(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(MSG_CATEGORY_NOT_FOUND,
-                                MAP_CODE.get(MSG_CATEGORY_NOT_FOUND))
-                );
+        var categories = categoryRepo.findCategoriesByIds(id);
+        if (categories.isEmpty()) {
+            throw new IllegalArgumentException(MSG_CATEGORY_NOT_FOUND,
+                    MAP_CODE.get(MSG_CATEGORY_NOT_FOUND));
+        }
+        return categories.get(0);
     }
 
     /**

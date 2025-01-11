@@ -20,6 +20,11 @@ import static org.crochet.constant.MessageCodeConstant.MAP_CODE;
 public class SettingServiceImpl implements SettingService {
     private final SettingsRepo settingsRepo;
 
+    /**
+     * Create a new setting
+     *
+     * @param request SettingRequest
+     */
     @Transactional
     @Override
     public void create(SettingRequest request) {
@@ -30,6 +35,11 @@ public class SettingServiceImpl implements SettingService {
         settingsRepo.save(settings);
     }
 
+    /**
+     * Update an existing setting
+     *
+     * @param request SettingRequest
+     */
     @Transactional
     @Override
     public void update(SettingRequest request) {
@@ -40,15 +50,25 @@ public class SettingServiceImpl implements SettingService {
         settingsRepo.save(settings);
     }
 
+    /**
+     * Delete a setting
+     *
+     * @param key String
+     */
     @Transactional
     @Override
     public void delete(String key) {
         settingsRepo.deleteById(key);
     }
 
+    /**
+     * Get all settings
+     *
+     * @return List<SettingResponse>
+     */
     @Override
     public List<SettingResponse> getAll() {
-        var settings = settingsRepo.findAll();
+        var settings = settingsRepo.findSettings();
         return settings.stream()
                 .map(s -> SettingResponse.builder()
                         .key(s.getKey())
@@ -57,6 +77,12 @@ public class SettingServiceImpl implements SettingService {
                 .toList();
     }
 
+    /**
+     * Get a setting by key
+     *
+     * @param key String
+     * @return SettingResponse
+     */
     @Override
     public SettingResponse getById(String key) {
         var setting = settingsRepo.findById(key)
