@@ -164,7 +164,7 @@ public class ProductServiceImpl implements ProductService {
      *
      * @return A list of {@link ProductResponse} containing limited products.
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     @Override
     public List<ProductOnHome> getLimitedProducts() {
         Map<String, Settings> settingsMap = settingsUtil.getSettingsMap();
@@ -193,6 +193,7 @@ public class ProductServiceImpl implements ProductService {
      * product.
      */
     @Override
+    @Transactional(readOnly = true)
     public ProductResponse getDetail(String id) {
         var product = productRepo.getDetail(id).orElseThrow(
                 () -> new ResourceNotFoundException(MessageConstant.MSG_PRODUCT_NOT_FOUND,
@@ -209,5 +210,16 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void delete(String id) {
         productRepo.deleteById(id);
+    }
+
+    /**
+     * Deletes multiple products with the specified IDs.
+     *
+     * @param ids The list of unique identifiers of the products to delete.
+     */
+    @Transactional
+    @Override
+    public void deleteMultiple(List<String> ids) {
+        productRepo.deleteMultiple(ids);
     }
 }

@@ -13,7 +13,7 @@ public interface FreePatternService {
 
     PaginatedFreePatternResponse getAllFreePatterns(int pageNo, int pageSize, String sortBy, String sortDir, Filter[] filters);
 
-    PaginatedFreePatternResponse getAllFreePatternsOnAdminPage(int pageNo, int pageSize, String sortBy, String sortDir, Filter[] filters);
+    PaginatedFreePatternResponse getAllByUser(int pageNo, int pageSize, String sortBy, String sortDir, Filter[] filters, String userId);
 
     List<FreePatternOnHome> getLimitedFreePatterns();
 
@@ -23,5 +23,7 @@ public interface FreePatternService {
 
     List<String> getFreePatternIds(int pageNo, int limit);
 
-    List<FreePatternOnHome> getFrepsByCreateBy();
+    void deleteAllById(List<String> ids);
+
+    List<FreePatternOnHome> getFrepsByCreateBy(String userId);
 }
