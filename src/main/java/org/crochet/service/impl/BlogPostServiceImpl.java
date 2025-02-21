@@ -10,7 +10,6 @@ import org.crochet.model.BlogPost;
 import org.crochet.model.Settings;
 import org.crochet.payload.request.BlogPostRequest;
 import org.crochet.payload.request.Filter;
-import org.crochet.payload.response.BlogOnHome;
 import org.crochet.payload.response.BlogPostPaginationResponse;
 import org.crochet.payload.response.BlogPostResponse;
 import org.crochet.repository.BlogCategoryRepo;
@@ -60,14 +59,11 @@ public class BlogPostServiceImpl implements BlogPostService {
      *
      * @param request The {@link BlogPostRequest} containing information for
      *                creating or updating the blog post.
-     * @return A {@link BlogPostResponse} containing detailed information about the
-     * created or updated blog post.
      */
     @Transactional
     @Override
-    public BlogPostResponse createOrUpdatePost(BlogPostRequest request) {
+    public void createOrUpdatePost(BlogPostRequest request) {
         BlogPost blogPost;
-        var images = ImageUtils.sortFiles(request.getFiles());
 
         if (!StringUtils.hasText(request.getId())) {
             BlogCategory blogCategory = null;
@@ -76,6 +72,7 @@ public class BlogPostServiceImpl implements BlogPostService {
                         .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.MSG_BLOG_CATEGORY_NOT_FOUND,
                                 MAP_CODE.get(MessageConstant.MSG_BLOG_CATEGORY_NOT_FOUND)));
             }
+            var images = ImageUtils.sortFiles(request.getFiles());
             blogPost = BlogPost.builder()
                     .blogCategory(blogCategory)
                     .title(request.getTitle())
@@ -85,19 +82,9 @@ public class BlogPostServiceImpl implements BlogPostService {
                     .build();
         } else {
             blogPost = getById(request.getId());
-            blogPost.setTitle(request.getTitle());
-            blogPost.setContent(request.getContent());
-            blogPost.setHome(request.isHome());
-            blogPost.setFiles(FileMapper.INSTANCE.toEntities(images));
+            blogPost = BlogPostMapper.INSTANCE.partialUpdate(request, blogPost);
         }
-        blogPost = blogPostRepo.save(blogPost);
-        return BlogPostResponse.builder()
-                .id(blogPost.getId())
-                .title(blogPost.getTitle())
-                .content(blogPost.getContent())
-                .isHome(blogPost.isHome())
-                .createdDate(blogPost.getCreatedDate())
-                .build();
+        blogPostRepo.save(blogPost);
     }
 
     /**
@@ -179,7 +166,7 @@ public class BlogPostServiceImpl implements BlogPostService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     @Override
-    public List<BlogOnHome> getLimitedBlogPosts() {
+    public List<BlogPostResponse> getLimitedBlogPosts() {
         Map<String, Settings> settingsMap = settingsUtil.getSettingsMap();
         if (settingsMap.isEmpty()) {
             return List.of();

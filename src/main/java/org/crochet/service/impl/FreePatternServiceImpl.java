@@ -8,24 +8,21 @@ import org.crochet.exception.AccessDeniedException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.CategoryMapper;
 import org.crochet.mapper.FileMapper;
+import org.crochet.mapper.FreePatternMapper;
 import org.crochet.model.FreePattern;
 import org.crochet.payload.request.Filter;
 import org.crochet.payload.request.FreePatternRequest;
-import org.crochet.payload.response.FreePatternOnHome;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginatedFreePatternResponse;
-import org.crochet.repository.CategoryRepo;
-import org.crochet.repository.FreePatternRepository;
-import org.crochet.repository.GenericFilter;
-import org.crochet.repository.UserRepository;
+import org.crochet.repository.*;
 import org.crochet.service.FreePatternService;
 import org.crochet.util.ImageUtils;
 import org.crochet.util.SecurityUtils;
 import org.crochet.util.SettingsUtil;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +45,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final CategoryRepo categoryRepo;
     private final SettingsUtil settingsUtil;
     private final UserRepository userRepo;
+    private final FreePatternRepoCustom freePatternRepoCustom;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -58,20 +56,17 @@ public class FreePatternServiceImpl implements FreePatternService {
      *
      * @param request The {@link FreePatternRequest} containing information for
      *                creating or updating the FreePattern.
-     * @return FreePatternResponse
      */
     @Transactional
     @Override
-    public FreePatternResponse createOrUpdate(FreePatternRequest request) {
+    public void createOrUpdate(FreePatternRequest request) {
         FreePattern freePattern;
-        var sortedImages = ImageUtils.sortFiles(request.getImages());
-        var sortedFiles = ImageUtils.sortFiles(request.getFiles());
-
         if (!StringUtils.hasText(request.getId())) {
             var category = categoryRepo.findCategoryById(request.getCategoryId())
                     .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.MSG_CATEGORY_NOT_FOUND,
                             MAP_CODE.get(MessageConstant.MSG_CATEGORY_NOT_FOUND)));
-
+            var sortedImages = ImageUtils.sortFiles(request.getImages());
+            var sortedFiles = ImageUtils.sortFiles(request.getFiles());
             freePattern = FreePattern.builder()
                     .category(category)
                     .name(request.getName())
@@ -88,27 +83,9 @@ public class FreePatternServiceImpl implements FreePatternService {
             freePattern = freePatternRepo.findById(request.getId()).orElseThrow(
                     () -> new ResourceNotFoundException(MessageConstant.MSG_FREE_PATTERN_NOT_FOUND,
                             MAP_CODE.get(MessageConstant.MSG_FREE_PATTERN_NOT_FOUND)));
-            freePattern.setName(request.getName());
-            freePattern.setDescription(request.getDescription());
-            freePattern.setAuthor(request.getAuthor());
-            freePattern.setHome(request.isHome());
-            freePattern.setLink(request.getLink());
-            freePattern.setContent(request.getContent());
-            freePattern.setStatus(request.getStatus());
-            freePattern.setFiles(FileMapper.INSTANCE.toSetEntities(sortedFiles));
-            freePattern.setImages(FileMapper.INSTANCE.toEntities(sortedImages));
+            freePattern = FreePatternMapper.INSTANCE.update(request, freePattern);
         }
         freePatternRepo.save(freePattern);
-        return FreePatternResponse.builder()
-                .id(freePattern.getId())
-                .name(freePattern.getName())
-                .description(freePattern.getDescription())
-                .author(freePattern.getAuthor())
-                .isHome(freePattern.isHome())
-                .link(freePattern.getLink())
-                .content(freePattern.getContent())
-                .status(freePattern.getStatus())
-                .build();
     }
 
     /**
@@ -121,11 +98,18 @@ public class FreePatternServiceImpl implements FreePatternService {
      * @param filters  List Filters
      * @return PaginatedFreePatternResponse
      */
+    @Transactional(readOnly = true)
     @Override
     public PaginatedFreePatternResponse getAllFreePatterns(int pageNo, int pageSize, String sortBy, String sortDir, Filter[] filters) {
         List<String> freePatternIds = new ArrayList<>();
         var pageable = preparePageableAndFilter(pageNo, pageSize, sortBy, sortDir, filters, freePatternIds);
-        var page = freePatternRepo.getFreePatternOnHomeWithIds(freePatternIds, pageable);
+
+        Page<FreePatternResponse> page;
+        if (freePatternIds.isEmpty()) {
+            page = freePatternRepo.getFrepWithPageable(pageable);
+        } else {
+            page = freePatternRepo.getFrepByIds(freePatternIds, pageable);
+        }
 
         return PaginatedFreePatternResponse.builder()
                 .contents(page.getContent())
@@ -141,12 +125,12 @@ public class FreePatternServiceImpl implements FreePatternService {
      * Retrieves a paginated and sorted list of free patterns associated with a specific user,
      * optionally filtered by specified criteria.
      *
-     * @param pageNo    the page number to retrieve (zero-based)
-     * @param pageSize  the number of items per page
-     * @param sortBy    the attribute to sort the results by
-     * @param sortDir   the direction to sort the results (e.g., "asc" or "desc")
-     * @param filters   an array of filter conditions to apply to the query, can be null or empty
-     * @param userId    the ID of the user whose free patterns are to be retrieved
+     * @param pageNo   the page number to retrieve (zero-based)
+     * @param pageSize the number of items per page
+     * @param sortBy   the attribute to sort the results by
+     * @param sortDir  the direction to sort the results (e.g., "asc" or "desc")
+     * @param filters  an array of filter conditions to apply to the query, can be null or empty
+     * @param userId   the ID of the user whose free patterns are to be retrieved
      * @return a {@link PaginatedFreePatternResponse} containing the paginated and filtered list of free patterns
      */
     @Transactional(readOnly = true)
@@ -174,7 +158,7 @@ public class FreePatternServiceImpl implements FreePatternService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     @Override
-    public List<FreePatternOnHome> getLimitedFreePatterns() {
+    public List<FreePatternResponse> getLimitedFreePatterns() {
         var settingsMap = settingsUtil.getSettingsMap();
         if (settingsMap.isEmpty()) {
             return Collections.emptyList();
@@ -216,7 +200,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     @Transactional(readOnly = true)
     @Override
     public FreePatternResponse getDetail(String id) {
-        var frep = freePatternRepo.findById(id)
+        var frep = freePatternRepo.findFrepById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.MSG_FREE_PATTERN_NOT_FOUND,
                         MAP_CODE.get(MessageConstant.MSG_FREE_PATTERN_NOT_FOUND)));
         var user = userRepo.findById(frep.getCreatedBy())
@@ -235,7 +219,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .content(frep.getContent())
                 .status(frep.getStatus())
                 .userId(user.getId())
-                .username(user.getUsername())
+                .username(user.getName())
                 .userAvatar(user.getImageUrl())
                 .images(images)
                 .files(files)
@@ -298,7 +282,7 @@ public class FreePatternServiceImpl implements FreePatternService {
      * @return List of FreePatternOnHome
      */
     @Override
-    public List<FreePatternOnHome> getFrepsByCreateBy(String userId) {
+    public List<FreePatternResponse> getFrepsByCreateBy(String userId) {
         if (!userRepo.existsById(userId)) {
             throw new ResourceNotFoundException(MessageConstant.MSG_USER_NOT_FOUND,
                     MAP_CODE.get(MessageConstant.MSG_USER_NOT_FOUND));
@@ -311,28 +295,21 @@ public class FreePatternServiceImpl implements FreePatternService {
      * and applies filters to identify matching records. The filtered IDs are added
      * to the provided list of freePatternIds.
      *
-     * @param pageNo the page number to retrieve, zero-based index
-     * @param pageSize the number of records per page
-     * @param sortBy the property name to sort by
-     * @param sortDir the direction of sorting, either "asc" for ascending or "desc" for descending
-     * @param filters an array of filters to apply to the query
+     * @param pageNo         the page number to retrieve, zero-based index
+     * @param pageSize       the number of records per page
+     * @param sortBy         the property name to sort by
+     * @param sortDir        the direction of sorting, either "asc" for ascending or "desc" for descending
+     * @param filters        an array of filters to apply to the query
      * @param freePatternIds a reference to a list where the filtered IDs will be collected
      * @return a Pageable object configured with the specified page, size, and sort properties
      */
     private Pageable preparePageableAndFilter(int pageNo, int pageSize, String sortBy, String sortDir, Filter[] filters, List<String> freePatternIds) {
-        Specification<FreePattern> spec = Specification.where(null);
         if (filters != null && filters.length > 0) {
             GenericFilter<FreePattern> filter = GenericFilter.create(filters);
-            spec = filter.build();
+            var spec = filter.build();
+            List<String> ids = freePatternRepoCustom.findAllIds(spec);
+            freePatternIds.addAll(ids);
         }
-
-        List<String> ids = freePatternRepo.findAll(spec)
-                .stream()
-                .map(FreePattern::getId)
-                .toList();
-
-        freePatternIds.addAll(ids);
-
         Sort.Direction dir = Sort.Direction.fromString(sortDir);
         Sort sort = Sort.by(dir, sortBy);
         return PageRequest.of(pageNo, pageSize, sort);
