@@ -7,7 +7,7 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -17,12 +17,12 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-        cacheManager.setCaffeine(caffeineCacheBuilder());
-        cacheManager.setCacheNames(Arrays.asList("settings"));
+        cacheManager.setCacheNames(List.of("settings"));
+        cacheManager.registerCustomCache("settings", settingsCacheBuilder().build());
         return cacheManager;
     }
 
-    private Caffeine<Object, Object> caffeineCacheBuilder() {
+    private Caffeine<Object, Object> settingsCacheBuilder() {
         return Caffeine.newBuilder()
                 .initialCapacity(100)
                 .maximumSize(500)
