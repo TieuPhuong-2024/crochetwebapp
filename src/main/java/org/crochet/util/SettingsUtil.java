@@ -26,6 +26,9 @@ public class SettingsUtil {
     @Cacheable(value = "settings", key = "'allSettings'")
     public Map<String, Settings> getSettingsMap() {
         var settings = settingsRepo.findSettings();
+        if (ObjectUtils.isEmpty(settings)) {
+            return Map.of();
+        }
         return ObjectUtils.toMap(settings, Settings::getKey, Function.identity());
     }
 

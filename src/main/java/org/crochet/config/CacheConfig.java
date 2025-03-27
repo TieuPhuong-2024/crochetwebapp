@@ -18,7 +18,7 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
         cacheManager.setCacheNames(List.of("settings"));
-        cacheManager.registerCustomCache("settings", settingsCacheBuilder().build());
+        cacheManager.setCaffeine(settingsCacheBuilder());
         return cacheManager;
     }
 
