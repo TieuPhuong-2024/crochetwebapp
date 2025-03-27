@@ -11,6 +11,7 @@ import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.FreePatternMapper;
 import org.crochet.mapper.PaginationMapper;
 import org.crochet.model.FreePattern;
+import org.crochet.model.Settings;
 import org.crochet.payload.request.FreePatternRequest;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginationResponse;
@@ -168,9 +169,18 @@ public class FreePatternServiceImpl implements FreePatternService {
         if (settingsMap.isEmpty()) {
             return Collections.emptyList();
         }
-        var direction = settingsMap.get("homepage.fp.direction").getValue();
-        var orderBy = settingsMap.get("homepage.fp.orderBy").getValue();
-        var limit = settingsMap.get("homepage.fp.limit").getValue();
+        var direction = settingsMap.getOrDefault(
+                "homepage.fp.direction",
+                new Settings("homepage.fp.direction", "desc")
+        ).getValue();
+        var orderBy = settingsMap.getOrDefault(
+                "homepage.fp.orderBy",
+                new Settings("homepage.fp.orderBy", "createdDate")
+        ).getValue();
+        var limit = settingsMap.getOrDefault(
+                "homepage.fp.limit",
+                new Settings("homepage.fp.limit", "12")
+        ).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         return freePatternRepo.findLimitedNumFreePattern(pageable);

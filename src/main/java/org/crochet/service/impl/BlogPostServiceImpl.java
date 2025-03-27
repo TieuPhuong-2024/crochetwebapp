@@ -166,9 +166,18 @@ public class BlogPostServiceImpl implements BlogPostService {
         if (settingsMap.isEmpty()) {
             return List.of();
         }
-        String direction = settingsMap.get("homepage.blog.direction").getValue();
-        String orderBy = settingsMap.get("homepage.blog.orderBy").getValue();
-        String limit = settingsMap.get("homepage.blog.limit").getValue();
+        String direction = settingsMap.getOrDefault(
+                "homepage.blog.direction",
+                new Settings("homepage.blog.direction", "desc")
+        ).getValue();
+        String orderBy = settingsMap.getOrDefault(
+                "homepage.blog.orderBy",
+                new Settings("homepage.blog.orderBy", "createdDate")
+        ).getValue();
+        String limit = settingsMap.getOrDefault(
+                "homepage.blog.limit",
+                new Settings("homepage.blog.limit", "12")
+        ).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         return blogPostRepo.findLimitedNumPosts(pageable);

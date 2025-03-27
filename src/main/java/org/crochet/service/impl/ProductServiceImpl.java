@@ -141,9 +141,18 @@ public class ProductServiceImpl implements ProductService {
         if (settingsMap.isEmpty()) {
             return Collections.emptyList();
         }
-        var direction = settingsMap.get("homepage.product.direction").getValue();
-        var orderBy = settingsMap.get("homepage.product.orderBy").getValue();
-        var limit = settingsMap.get("homepage.product.limit").getValue();
+        var direction = settingsMap.getOrDefault(
+                "homepage.product.direction",
+                new Settings("homepage.product.direction", "desc")
+        ).getValue();
+        var orderBy = settingsMap.getOrDefault(
+                "homepage.product.orderBy",
+                new Settings("homepage.product.orderBy", "createdDate")
+        ).getValue();
+        var limit = settingsMap.getOrDefault(
+                "homepage.product.limit",
+                new Settings("homepage.product.limit", "12")
+        ).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         return productRepo.findLimitedNumProduct(pageable);
