@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * BlogPostServiceImpl class
@@ -202,10 +201,6 @@ public class BlogPostServiceImpl implements BlogPostService {
         List<BlogPostResponse> posts = blogPostRepo.findLimitedNumPosts(pageable);
         
         // Thêm số lượng comments cho mỗi bài viết
-        List<String> postIds = posts.stream()
-                .map(BlogPostResponse::getId)
-                .collect(Collectors.toList());
-        
         for (BlogPostResponse post : posts) {
             long commentCount = commentRepository.countByBlogPostId(post.getId());
             post.setCommentCount(commentCount);
