@@ -126,7 +126,7 @@ public class CommentServiceImpl implements CommentService {
         if (ObjectUtils.hasText(comment.getMentionedUserId())) {
             User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
             if (mentionedUser != null) {
-                response.setMentionedUsername(mentionedUser.getUsername());
+                response.setMentionedUsername(mentionedUser.getName());
             }
         }
         
@@ -141,15 +141,16 @@ public class CommentServiceImpl implements CommentService {
      * @param pageSize Số lượng comments mỗi trang
      * @return PaginationResponse chứa danh sách root comments và thông tin phân trang
      */
+    @Transactional(readOnly = true)
     @Override
     public PaginationResponse<CommentResponse> getRootCommentsByBlogPost(String blogPostId, int pageNo, int pageSize) {
         // Kiểm tra xem bài viết có tồn tại không
         blogPostRepo.findById(blogPostId).orElseThrow(
                 () -> new ResourceNotFoundException(
-                        ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                        ResultCode.MSG_BLOG_NOT_FOUND.code()
+                    ResultCode.MSG_BLOG_NOT_FOUND.message(),
+                    ResultCode.MSG_BLOG_NOT_FOUND.code()
                 )
-        );
+            );
         
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Comment> commentPage = commentRepo.findByBlogPostIdAndParentIsNullOrderByCreatedDateDesc(blogPostId, pageable);

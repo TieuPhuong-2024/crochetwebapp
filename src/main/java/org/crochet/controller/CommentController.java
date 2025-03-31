@@ -56,8 +56,8 @@ public class CommentController {
     @GetMapping("/root/{blogId}")
     public ResponseData<PaginationResponse<CommentResponse>> getRootCommentsByBlogPost(
             @PathVariable("blogId") String blogId,
-            @RequestParam(defaultValue = "0") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(value = "pageNo", defaultValue = "0") int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
         var response = commentService.getRootCommentsByBlogPost(blogId, pageNo, pageSize);
         return ResponseUtil.success(response);
     }
@@ -69,8 +69,8 @@ public class CommentController {
     @GetMapping("/blog/{blogId}")
     public ResponseData<PaginationResponse<CommentResponse>> getCommentsByBlogPost(
             @PathVariable("blogId") String blogId,
-            @RequestParam(defaultValue = "0") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(value = "pageNo", defaultValue = "0") int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
         var response = commentService.getCommentsByBlogPost(blogId, pageNo, pageSize);
         return ResponseUtil.success(response);
     }

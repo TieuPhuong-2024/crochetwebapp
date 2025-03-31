@@ -4,7 +4,6 @@ import org.crochet.model.Comment;
 import org.crochet.payload.response.CommentResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
