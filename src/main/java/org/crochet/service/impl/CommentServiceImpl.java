@@ -163,7 +163,7 @@ public class CommentServiceImpl implements CommentService {
             if (ObjectUtils.hasText(comment.getMentionedUserId())) {
                 User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
                 if (mentionedUser != null) {
-                    response.setMentionedUsername(mentionedUser.getUsername());
+                    response.setMentionedUsername(mentionedUser.getName());
                 }
             }
             
@@ -183,7 +183,7 @@ public class CommentServiceImpl implements CommentService {
                     if (ObjectUtils.hasText(reply.getMentionedUserId())) {
                         User mentionedUser = userRepository.findById(reply.getMentionedUserId()).orElse(null);
                         if (mentionedUser != null) {
-                            replyResponse.setMentionedUsername(mentionedUser.getUsername());
+                            replyResponse.setMentionedUsername(mentionedUser.getName());
                         }
                     }
                     
@@ -237,7 +237,7 @@ public class CommentServiceImpl implements CommentService {
             if (ObjectUtils.hasText(comment.getMentionedUserId())) {
                 User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
                 if (mentionedUser != null) {
-                    response.setMentionedUsername(mentionedUser.getUsername());
+                    response.setMentionedUsername(mentionedUser.getName());
                 }
             }
             
@@ -260,15 +260,15 @@ public class CommentServiceImpl implements CommentService {
      * @param commentId ID của comment cần lấy replies
      * @return Danh sách các replies
      */
+    @Transactional(readOnly = true)
     @Override
     public List<CommentResponse> getRepliesByCommentId(String commentId) {
-        
-        if (!commentRepo.existsById(commentId)) {
-            throw new ResourceNotFoundException(
-                    ResultCode.MSG_COMMENT_NOT_FOUND.message(),
-                    ResultCode.MSG_COMMENT_NOT_FOUND.code()
-            );
-        }
+        commentRepo.findById(commentId).orElseThrow(
+                () -> new ResourceNotFoundException(
+                        ResultCode.MSG_COMMENT_NOT_FOUND.message(),
+                        ResultCode.MSG_COMMENT_NOT_FOUND.code()
+                )
+        );
         
         List<Comment> replies = commentRepo.findByParentIdOrderByCreatedDateAsc(commentId);
         List<CommentResponse> replyResponses = new ArrayList<>();
@@ -280,7 +280,7 @@ public class CommentServiceImpl implements CommentService {
             if (ObjectUtils.hasText(reply.getMentionedUserId())) {
                 User mentionedUser = userRepository.findById(reply.getMentionedUserId()).orElse(null);
                 if (mentionedUser != null) {
-                    replyResponse.setMentionedUsername(mentionedUser.getUsername());
+                    replyResponse.setMentionedUsername(mentionedUser.getName());
                 }
             }
             

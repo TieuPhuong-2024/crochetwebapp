@@ -15,7 +15,7 @@ public interface CommentMapper {
     CommentMapper INSTANCE = Mappers.getMapper(CommentMapper.class);
     
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.username", target = "username")
+    @Mapping(source = "user.name", target = "username")
     @Mapping(target = "userAvatar", expression = "java(comment.getUser().getUserProfile() != null ? comment.getUser().getUserProfile().getBackgroundImageUrl() : null)")
     @Mapping(source = "parent.id", target = "parentId")
     @Mapping(source = "mentionedUserId", target = "mentionedUserId")
