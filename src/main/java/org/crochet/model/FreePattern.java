@@ -90,4 +90,7 @@ public class FreePattern extends BaseEntity {
     @OneToMany(mappedBy = "freePattern", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<ColFrep> colfreps = new HashSet<>();
+
+    @OneToMany(mappedBy = "freePattern", cascade = CascadeType.ALL)
+    private Set<Review> reviews = new HashSet<>();
 }

@@ -32,6 +32,11 @@ public class FreePatternResponse {
     private List<FileResponse> files;
     private CategoryResponse category;
     private String fileContent;
+    
+    // Thông tin đánh giá
+    private Double averageRating;
+    private Integer reviewCount;
+    private List<ReviewResponse> topReviews;
 
     public FreePatternResponse(String id,
                                String name,

@@ -55,7 +55,9 @@ public enum ResultCode {
     MSG_LOGOUT_SUCCESS(60, "Logged out success"),
     MSG_NO_PERMISSION_UPDATE_CATEGORY(62, "No permission to update this category"),
     MSG_NO_PERMISSION(63, "No permission"),
-    MSG_NO_PERMISSION_DELETE_CATEGORY(61, "No permission to delete this category");
+    MSG_NO_PERMISSION_DELETE_CATEGORY(61, "No permission to delete this category"),
+    MSG_BLOG_POST_NOT_FOUND(4500, "Blog post not found"),
+    MSG_REVIEW_NOT_FOUND(4900, "Review not found");
 
     private final int code;
     private final String message;
