@@ -11,4 +11,10 @@ public class CommentRequest {
     @NotBlank
     private String blogPostId;
     private String content;
+    
+    // ID của comment cha (nếu đây là reply comment)
+    private String parentId;
+    
+    // ID của người dùng được mention 
+    private String mentionedUserId;
 }

@@ -14,6 +14,7 @@ import org.crochet.payload.request.BlogPostRequest;
 import org.crochet.payload.response.BlogPostResponse;
 import org.crochet.payload.response.PaginationResponse;
 import org.crochet.repository.BlogPostRepository;
+import org.crochet.repository.CommentRepository;
 import org.crochet.service.BlogCategoryService;
 import org.crochet.service.BlogPostService;
 import org.crochet.service.PermissionService;
@@ -42,15 +43,18 @@ public class BlogPostServiceImpl implements BlogPostService {
     private final BlogCategoryService blogCategoryService;
     private final SettingsUtil settingsUtil;
     private final PermissionService permissionService;
+    private final CommentRepository commentRepository;
 
     public BlogPostServiceImpl(BlogPostRepository blogPostRepo,
                                BlogCategoryService blogCategoryService,
                                SettingsUtil settingsUtil,
-                               PermissionService permissionService) {
+                               PermissionService permissionService,
+                               CommentRepository commentRepository) {
         this.blogPostRepo = blogPostRepo;
         this.blogCategoryService = blogCategoryService;
         this.settingsUtil = settingsUtil;
         this.permissionService = permissionService;
+        this.commentRepository = commentRepository;
     }
 
     /**
@@ -118,7 +122,15 @@ public class BlogPostServiceImpl implements BlogPostService {
         } else {
             page = blogPostRepo.findPostWithPageable(pageable);
         }
-        return PaginationMapper.toPagination(page);
+        
+        // Thêm số lượng comments cho mỗi bài viết
+        var paginationResponse = PaginationMapper.toPagination(page);
+        for (BlogPostResponse post : paginationResponse.getContents()) {
+            long commentCount = commentRepository.countByBlogPostId(post.getId());
+            post.setCommentCount(commentCount);
+        }
+        
+        return paginationResponse;
     }
 
     /**
@@ -151,7 +163,13 @@ public class BlogPostServiceImpl implements BlogPostService {
                         ResultCode.MSG_BLOG_NOT_FOUND.message(),
                         ResultCode.MSG_BLOG_NOT_FOUND.code()
                 ));
-        return BlogPostMapper.INSTANCE.toResponse(blogPost);
+        BlogPostResponse response = BlogPostMapper.INSTANCE.toResponse(blogPost);
+        
+        // Thêm số lượng comments
+        long commentCount = commentRepository.countByBlogPostId(id);
+        response.setCommentCount(commentCount);
+        
+        return response;
     }
 
     /**
@@ -180,7 +198,15 @@ public class BlogPostServiceImpl implements BlogPostService {
         ).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
-        return blogPostRepo.findLimitedNumPosts(pageable);
+        List<BlogPostResponse> posts = blogPostRepo.findLimitedNumPosts(pageable);
+        
+        // Thêm số lượng comments cho mỗi bài viết
+        for (BlogPostResponse post : posts) {
+            long commentCount = commentRepository.countByBlogPostId(post.getId());
+            post.setCommentCount(commentCount);
+        }
+        
+        return posts;
     }
 
     /**
