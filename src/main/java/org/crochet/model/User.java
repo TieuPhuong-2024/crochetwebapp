@@ -84,11 +84,14 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<RefreshToken> refreshTokens;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Collection> collections;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserProfile userProfile;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<Heart> hearts;
 
     @Transient
     private Map<String, Object> attributes;

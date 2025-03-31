@@ -21,6 +21,7 @@ import org.crochet.repository.FreePatternSpecifications;
 import org.crochet.service.CategoryService;
 import org.crochet.service.FreePatternService;
 import org.crochet.service.PermissionService;
+import org.crochet.service.HeartService;
 import org.crochet.service.UserService;
 import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
@@ -51,6 +52,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final PermissionService permissionService;
     private final CategoryService categoryService;
     private final UserService userService;
+    private final HeartService heartService;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -210,31 +212,21 @@ public class FreePatternServiceImpl implements FreePatternService {
     @Transactional(readOnly = true)
     @Override
     public FreePatternResponse getDetail(String id) {
-        var frep = freePatternRepo.findFrepById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.message(),
-                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
-                ));
-        var user = userService.getById(frep.getCreatedBy());
-        var images = FileMapper.INSTANCE.toResponses(frep.getImages());
-        var files = FileMapper.INSTANCE.toResponses(frep.getFiles());
-        var category = CategoryMapper.INSTANCE.toResponse(frep.getCategory());
-        return FreePatternResponse.builder()
-                .id(frep.getId())
-                .name(frep.getName())
-                .description(frep.getDescription())
-                .author(frep.getAuthor())
-                .isHome(frep.isHome())
-                .link(frep.getLink())
-                .content(frep.getContent())
-                .status(frep.getStatus())
-                .userId(user.getId())
-                .username(user.getName())
-                .userAvatar(user.getImageUrl())
-                .images(images)
-                .files(files)
-                .category(category)
-                .build();
+        var freePattern = findById(id);
+        var freePatternResponse = FreePatternMapper.INSTANCE.toResponse(freePattern);
+        
+        // Bổ sung thông tin về người tạo
+        if (ObjectUtils.hasText(freePattern.getCreatedBy())) {
+            var user = userService.getById(freePattern.getCreatedBy());
+            freePatternResponse.setUsername(user.getName());
+            freePatternResponse.setUserId(user.getId());
+            freePatternResponse.setUserAvatar(user.getImageUrl());
+        }
+        
+        // Bổ sung thông tin thả tim
+        heartService.getHeartInfoForFreePattern(id, freePatternResponse);
+
+        return freePatternResponse;
     }
 
     /**

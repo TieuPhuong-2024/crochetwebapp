@@ -33,6 +33,10 @@ public class FreePatternResponse {
     private CategoryResponse category;
     private String fileContent;
 
+    // Thông tin thả tim
+    private Integer heartCount;
+    private Boolean isHearted;
+
     public FreePatternResponse(String id,
                                String name,
                                String description,

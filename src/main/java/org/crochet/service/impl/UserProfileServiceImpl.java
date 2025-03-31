@@ -7,11 +7,14 @@ import org.crochet.model.User;
 import org.crochet.model.UserProfile;
 import org.crochet.payload.request.UserProfileRequest;
 import org.crochet.payload.response.CommentResponse;
+import org.crochet.payload.response.FreePatternResponse;
+import org.crochet.payload.response.PaginationResponse;
 import org.crochet.payload.response.UserProfileResponse;
 import org.crochet.repository.CollectionRepo;
 import org.crochet.repository.CommentRepository;
 import org.crochet.repository.UserProfileRepo;
 import org.crochet.repository.UserRepository;
+import org.crochet.service.HeartService;
 import org.crochet.service.UserProfileService;
 import org.crochet.util.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     private final CommentRepository commentRepo;
     private final UserProfileRepo userProfileRepo;
     private final UserRepository userRepo;
+    private final HeartService heartService;
 
     /**
      * Load user profile
@@ -44,6 +48,14 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         // Get recent comments by user id
         List<CommentResponse> recentComments = commentRepo.getRecentCommentsByUserId(user.getId());
+        
+        // Get hearted patterns by user id
+        List<String> heartedPatternIds = heartService.getHeartedFreePatternIds(user.getId());
+        int heartedPatternsCount = heartedPatternIds.size();
+        
+        // Lấy một số pattern đã thả tim gần đây (giới hạn 3)
+        PaginationResponse<FreePatternResponse> heartedPatterns = 
+                heartService.getHeartedFreePatterns(user.getId(), 0, 3);
 
         // Get user profile
         var userProfile = user.getUserProfile();
@@ -65,6 +77,8 @@ public class UserProfileServiceImpl implements UserProfileService {
                 .backgroundImageUrl(userProfile.getBackgroundImageUrl())
                 .collections(collections)
                 .recentComments(recentComments)
+                .heartedPatterns(heartedPatterns.getContents())
+                .heartedPatternsCount(heartedPatternsCount)
                 .build();
     }
 

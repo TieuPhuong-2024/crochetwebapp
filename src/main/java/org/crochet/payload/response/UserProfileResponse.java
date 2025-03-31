@@ -41,4 +41,8 @@ public class UserProfileResponse {
     
     // Recent activities
     private List<CommentResponse> recentComments;
+    
+    // Hearted patterns
+    private List<FreePatternResponse> heartedPatterns;
+    private Integer heartedPatternsCount;
 }
