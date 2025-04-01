@@ -83,7 +83,7 @@ public class CommentServiceImpl implements CommentService {
         BlogPost blog = null;
         Product product = null;
         FreePattern freePattern = null;
-        
+
         // Đếm số lượng các ID không null để đảm bảo chỉ có 1 loại được chỉ định
         int idCount = 0;
         if (ObjectUtils.hasText(request.getBlogPostId())) {
@@ -95,7 +95,7 @@ public class CommentServiceImpl implements CommentService {
             );
             idCount++;
         }
-        
+
         if (ObjectUtils.hasText(request.getProductId())) {
             product = productRepo.findById(request.getProductId()).orElseThrow(
                     () -> new ResourceNotFoundException(
@@ -105,7 +105,7 @@ public class CommentServiceImpl implements CommentService {
             );
             idCount++;
         }
-        
+
         if (ObjectUtils.hasText(request.getFreePatternId())) {
             freePattern = freePatternRepo.findById(request.getFreePatternId()).orElseThrow(
                     () -> new ResourceNotFoundException(
@@ -115,7 +115,7 @@ public class CommentServiceImpl implements CommentService {
             );
             idCount++;
         }
-        
+
         // Đảm bảo chỉ có một loại ID được chỉ định
         if (idCount != 1) {
             throw new IllegalArgumentException("Phải chỉ định chính xác một trong ba loại ID: blogPostId, productId hoặc freePatternId");
@@ -140,10 +140,10 @@ public class CommentServiceImpl implements CommentService {
                     )
             );
         }
-        
+
         comment.setContent(request.getContent());
         comment.setCreatedDate(LocalDateTime.now());
-        
+
         // Xử lý mention
         if (ObjectUtils.hasText(request.getMentionedUserId())) {
             // Kiểm tra người dùng được mention có tồn tại không
@@ -155,27 +155,25 @@ public class CommentServiceImpl implements CommentService {
             );
             comment.setMentionedUserId(request.getMentionedUserId());
         }
-        
+
         comment = commentRepo.save(comment);
         CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
-        
+
         // Thêm thông tin về người dùng được mention
         if (ObjectUtils.hasText(comment.getMentionedUserId())) {
-            User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
-            if (mentionedUser != null) {
-                response.setMentionedUsername(mentionedUser.getName());
-            }
+            userRepository.findById(comment.getMentionedUserId())
+                    .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
         }
-        
+
         return response;
     }
-    
+
     /**
      * Lấy danh sách root comments cho một bài viết với phân trang
      *
      * @param blogPostId ID của bài viết cần lấy comments
-     * @param pageNo Số trang (bắt đầu từ 0)
-     * @param pageSize Số lượng comments mỗi trang
+     * @param pageNo     Số trang (bắt đầu từ 0)
+     * @param pageSize   Số lượng comments mỗi trang
      * @return PaginationResponse chứa danh sách root comments và thông tin phân trang
      */
     @Transactional(readOnly = true)
@@ -184,33 +182,31 @@ public class CommentServiceImpl implements CommentService {
         // Kiểm tra xem bài viết có tồn tại không
         blogPostRepo.findById(blogPostId).orElseThrow(
                 () -> new ResourceNotFoundException(
-                    ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                    ResultCode.MSG_BLOG_NOT_FOUND.code()
+                        ResultCode.MSG_BLOG_NOT_FOUND.message(),
+                        ResultCode.MSG_BLOG_NOT_FOUND.code()
                 )
-            );
-        
+        );
+
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Comment> commentPage = commentRepo.findByBlogPostIdAndParentIsNullOrderByCreatedDateDesc(blogPostId, pageable);
         List<CommentResponse> rootComments = new ArrayList<>();
-        
+
         for (Comment comment : commentPage.getContent()) {
             CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
-            
+
             // Đếm số lượng replies cho comment này
             long replyCount = commentRepo.countByParentId(comment.getId());
             response.setReplyCount(replyCount);
-            
+
             // Thêm thông tin về người dùng được mention
             if (ObjectUtils.hasText(comment.getMentionedUserId())) {
-                User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
-                if (mentionedUser != null) {
-                    response.setMentionedUsername(mentionedUser.getName());
-                }
+                userRepository.findById(comment.getMentionedUserId())
+                        .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
             }
-            
+
             rootComments.add(response);
         }
-        
+
         return PaginationResponse.<CommentResponse>builder()
                 .contents(rootComments)
                 .pageNo(pageNo)
@@ -220,13 +216,13 @@ public class CommentServiceImpl implements CommentService {
                 .last(commentPage.isLast())
                 .build();
     }
-    
+
     /**
      * Lấy tất cả các comments cho một bài viết (bao gồm cả root và replies)
      *
      * @param blogPostId ID của bài viết cần lấy comments
-     * @param pageNo Số trang (bắt đầu từ 0)
-     * @param pageSize Số lượng comments mỗi trang
+     * @param pageNo     Số trang (bắt đầu từ 0)
+     * @param pageSize   Số lượng comments mỗi trang
      * @return PaginationResponse chứa danh sách comments và thông tin phân trang
      */
     @Override
@@ -238,25 +234,23 @@ public class CommentServiceImpl implements CommentService {
                         ResultCode.MSG_BLOG_NOT_FOUND.code()
                 )
         );
-        
+
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Comment> commentPage = commentRepo.findByBlogPostIdOrderByCreatedDateDesc(blogPostId, pageable);
         List<CommentResponse> comments = new ArrayList<>();
-        
+
         for (Comment comment : commentPage.getContent()) {
             CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
-            
+
             // Thêm thông tin về người dùng được mention
             if (ObjectUtils.hasText(comment.getMentionedUserId())) {
-                User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
-                if (mentionedUser != null) {
-                    response.setMentionedUsername(mentionedUser.getName());
-                }
+                userRepository.findById(comment.getMentionedUserId())
+                        .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
             }
-            
+
             comments.add(response);
         }
-        
+
         return PaginationResponse.<CommentResponse>builder()
                 .contents(comments)
                 .pageNo(pageNo)
@@ -266,13 +260,13 @@ public class CommentServiceImpl implements CommentService {
                 .last(commentPage.isLast())
                 .build();
     }
-    
+
     /**
      * Lấy danh sách root comments cho một product với phân trang
      *
      * @param productId ID của product cần lấy comments
-     * @param pageNo Số trang (bắt đầu từ 0)
-     * @param pageSize Số lượng comments mỗi trang
+     * @param pageNo    Số trang (bắt đầu từ 0)
+     * @param pageSize  Số lượng comments mỗi trang
      * @return PaginationResponse chứa danh sách root comments và thông tin phân trang
      */
     @Transactional(readOnly = true)
@@ -281,33 +275,31 @@ public class CommentServiceImpl implements CommentService {
         // Kiểm tra xem product có tồn tại không
         productRepo.findById(productId).orElseThrow(
                 () -> new ResourceNotFoundException(
-                    ResultCode.MSG_PRODUCT_NOT_FOUND.message(),
-                    ResultCode.MSG_PRODUCT_NOT_FOUND.code()
+                        ResultCode.MSG_PRODUCT_NOT_FOUND.message(),
+                        ResultCode.MSG_PRODUCT_NOT_FOUND.code()
                 )
-            );
-        
+        );
+
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Comment> commentPage = commentRepo.findByProductIdAndParentIsNullOrderByCreatedDateDesc(productId, pageable);
         List<CommentResponse> rootComments = new ArrayList<>();
-        
+
         for (Comment comment : commentPage.getContent()) {
             CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
-            
+
             // Đếm số lượng replies cho comment này
             long replyCount = commentRepo.countByParentId(comment.getId());
             response.setReplyCount(replyCount);
-            
+
             // Thêm thông tin về người dùng được mention
             if (ObjectUtils.hasText(comment.getMentionedUserId())) {
-                User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
-                if (mentionedUser != null) {
-                    response.setMentionedUsername(mentionedUser.getName());
-                }
+                userRepository.findById(comment.getMentionedUserId())
+                        .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
             }
-            
+
             rootComments.add(response);
         }
-        
+
         return PaginationResponse.<CommentResponse>builder()
                 .contents(rootComments)
                 .pageNo(pageNo)
@@ -317,13 +309,13 @@ public class CommentServiceImpl implements CommentService {
                 .last(commentPage.isLast())
                 .build();
     }
-    
+
     /**
      * Lấy tất cả các comments cho một product (bao gồm cả root và replies)
      *
      * @param productId ID của product cần lấy comments
-     * @param pageNo Số trang (bắt đầu từ 0)
-     * @param pageSize Số lượng comments mỗi trang
+     * @param pageNo    Số trang (bắt đầu từ 0)
+     * @param pageSize  Số lượng comments mỗi trang
      * @return PaginationResponse chứa danh sách comments và thông tin phân trang
      */
     @Override
@@ -335,25 +327,23 @@ public class CommentServiceImpl implements CommentService {
                         ResultCode.MSG_PRODUCT_NOT_FOUND.code()
                 )
         );
-        
+
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Comment> commentPage = commentRepo.findByProductIdOrderByCreatedDateDesc(productId, pageable);
         List<CommentResponse> comments = new ArrayList<>();
-        
+
         for (Comment comment : commentPage.getContent()) {
             CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
-            
+
             // Thêm thông tin về người dùng được mention
             if (ObjectUtils.hasText(comment.getMentionedUserId())) {
-                User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
-                if (mentionedUser != null) {
-                    response.setMentionedUsername(mentionedUser.getName());
-                }
+                userRepository.findById(comment.getMentionedUserId())
+                        .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
             }
-            
+
             comments.add(response);
         }
-        
+
         return PaginationResponse.<CommentResponse>builder()
                 .contents(comments)
                 .pageNo(pageNo)
@@ -363,13 +353,13 @@ public class CommentServiceImpl implements CommentService {
                 .last(commentPage.isLast())
                 .build();
     }
-    
+
     /**
      * Lấy danh sách root comments cho một free pattern với phân trang
      *
      * @param freePatternId ID của free pattern cần lấy comments
-     * @param pageNo Số trang (bắt đầu từ 0)
-     * @param pageSize Số lượng comments mỗi trang
+     * @param pageNo        Số trang (bắt đầu từ 0)
+     * @param pageSize      Số lượng comments mỗi trang
      * @return PaginationResponse chứa danh sách root comments và thông tin phân trang
      */
     @Transactional(readOnly = true)
@@ -378,33 +368,31 @@ public class CommentServiceImpl implements CommentService {
         // Kiểm tra xem free pattern có tồn tại không
         freePatternRepo.findById(freePatternId).orElseThrow(
                 () -> new ResourceNotFoundException(
-                    ResultCode.MSG_FREE_PATTERN_NOT_FOUND.message(),
-                    ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
+                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.message(),
+                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
                 )
-            );
-        
+        );
+
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Comment> commentPage = commentRepo.findByFreePatternIdAndParentIsNullOrderByCreatedDateDesc(freePatternId, pageable);
         List<CommentResponse> rootComments = new ArrayList<>();
-        
+
         for (Comment comment : commentPage.getContent()) {
             CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
-            
+
             // Đếm số lượng replies cho comment này
             long replyCount = commentRepo.countByParentId(comment.getId());
             response.setReplyCount(replyCount);
-            
+
             // Thêm thông tin về người dùng được mention
             if (ObjectUtils.hasText(comment.getMentionedUserId())) {
-                User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
-                if (mentionedUser != null) {
-                    response.setMentionedUsername(mentionedUser.getName());
-                }
+                userRepository.findById(comment.getMentionedUserId())
+                        .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
             }
-            
+
             rootComments.add(response);
         }
-        
+
         return PaginationResponse.<CommentResponse>builder()
                 .contents(rootComments)
                 .pageNo(pageNo)
@@ -414,13 +402,13 @@ public class CommentServiceImpl implements CommentService {
                 .last(commentPage.isLast())
                 .build();
     }
-    
+
     /**
      * Lấy tất cả các comments cho một free pattern (bao gồm cả root và replies)
      *
      * @param freePatternId ID của free pattern cần lấy comments
-     * @param pageNo Số trang (bắt đầu từ 0)
-     * @param pageSize Số lượng comments mỗi trang
+     * @param pageNo        Số trang (bắt đầu từ 0)
+     * @param pageSize      Số lượng comments mỗi trang
      * @return PaginationResponse chứa danh sách comments và thông tin phân trang
      */
     @Override
@@ -432,25 +420,23 @@ public class CommentServiceImpl implements CommentService {
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
                 )
         );
-        
+
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Comment> commentPage = commentRepo.findByFreePatternIdOrderByCreatedDateDesc(freePatternId, pageable);
         List<CommentResponse> comments = new ArrayList<>();
-        
+
         for (Comment comment : commentPage.getContent()) {
             CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
-            
+
             // Thêm thông tin về người dùng được mention
             if (ObjectUtils.hasText(comment.getMentionedUserId())) {
-                User mentionedUser = userRepository.findById(comment.getMentionedUserId()).orElse(null);
-                if (mentionedUser != null) {
-                    response.setMentionedUsername(mentionedUser.getName());
-                }
+                userRepository.findById(comment.getMentionedUserId())
+                        .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
             }
-            
+
             comments.add(response);
         }
-        
+
         return PaginationResponse.<CommentResponse>builder()
                 .contents(comments)
                 .pageNo(pageNo)
@@ -460,7 +446,7 @@ public class CommentServiceImpl implements CommentService {
                 .last(commentPage.isLast())
                 .build();
     }
-    
+
     /**
      * Lấy danh sách replies cho một comment cụ thể
      *
@@ -477,27 +463,25 @@ public class CommentServiceImpl implements CommentService {
                         ResultCode.MSG_COMMENT_NOT_FOUND.code()
                 )
         );
-        
+
         List<Comment> replies = commentRepo.findByParentIdOrderByCreatedDateAsc(commentId);
         List<CommentResponse> responses = new ArrayList<>();
-        
+
         for (Comment reply : replies) {
             CommentResponse response = CommentMapper.INSTANCE.toResponse(reply);
-            
+
             // Thêm thông tin về người dùng được mention
             if (ObjectUtils.hasText(reply.getMentionedUserId())) {
-                User mentionedUser = userRepository.findById(reply.getMentionedUserId()).orElse(null);
-                if (mentionedUser != null) {
-                    response.setMentionedUsername(mentionedUser.getName());
-                }
+                userRepository.findById(reply.getMentionedUserId())
+                        .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
             }
-            
+
             responses.add(response);
         }
-        
+
         return responses;
     }
-    
+
     /**
      * Xóa một comment
      *
@@ -513,25 +497,25 @@ public class CommentServiceImpl implements CommentService {
                         ResultCode.MSG_COMMENT_NOT_FOUND.code()
                 )
         );
-        
+
         // Chỉ cho phép người dùng xóa comment của chính họ hoặc admin
-        if (currentUser == null || (!currentUser.getId().equals(comment.getUser().getId()) 
+        if (currentUser == null || (!currentUser.getId().equals(comment.getUser().getId())
                 && !SecurityUtils.hasRole("ROLE_ADMIN"))) {
             throw new ResourceNotFoundException(
                     ResultCode.MSG_FORBIDDEN.message(),
                     ResultCode.MSG_FORBIDDEN.code()
             );
         }
-        
+
         // Nếu là root comment, xóa cả replies
         if (comment.getParent() == null) {
             List<Comment> replies = commentRepo.findByParentIdOrderByCreatedDateAsc(commentId);
             commentRepo.deleteAll(replies);
         }
-        
+
         commentRepo.delete(comment);
     }
-    
+
     /**
      * Đếm số lượng root comments cho một bài viết
      *
@@ -542,7 +526,7 @@ public class CommentServiceImpl implements CommentService {
     public long countRootCommentsByBlogPost(String blogPostId) {
         return commentRepo.countByBlogPostIdAndParentIsNull(blogPostId);
     }
-    
+
     /**
      * Đếm số lượng comments cho một bài viết
      *
@@ -553,7 +537,7 @@ public class CommentServiceImpl implements CommentService {
     public long countCommentsByBlogPost(String blogPostId) {
         return commentRepo.countByBlogPostId(blogPostId);
     }
-    
+
     /**
      * Đếm số lượng root comments cho một product
      *
@@ -564,7 +548,7 @@ public class CommentServiceImpl implements CommentService {
     public long countRootCommentsByProduct(String productId) {
         return commentRepo.countByProductIdAndParentIsNull(productId);
     }
-    
+
     /**
      * Đếm số lượng comments cho một product
      *
@@ -575,7 +559,7 @@ public class CommentServiceImpl implements CommentService {
     public long countCommentsByProduct(String productId) {
         return commentRepo.countByProductId(productId);
     }
-    
+
     /**
      * Đếm số lượng root comments cho một free pattern
      *
@@ -586,7 +570,7 @@ public class CommentServiceImpl implements CommentService {
     public long countRootCommentsByFreePattern(String freePatternId) {
         return commentRepo.countByFreePatternIdAndParentIsNull(freePatternId);
     }
-    
+
     /**
      * Đếm số lượng comments cho một free pattern
      *
