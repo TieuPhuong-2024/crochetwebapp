@@ -13,6 +13,7 @@ import org.crochet.model.Settings;
 import org.crochet.payload.request.ProductRequest;
 import org.crochet.payload.response.PaginationResponse;
 import org.crochet.payload.response.ProductResponse;
+import org.crochet.repository.CommentRepository;
 import org.crochet.repository.ProductRepository;
 import org.crochet.repository.ProductSpecifications;
 import org.crochet.service.CategoryService;
@@ -43,6 +44,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepo;
     private final CategoryService categoryService;
     private final SettingsUtil settingsUtil;
+    private final CommentRepository commentRepository;
 
     /**
      * Creates a new product or updates an existing one based on the provided
@@ -170,7 +172,13 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getDetail(String id) {
         var product = findById(id);
-        return ProductMapper.INSTANCE.toResponse(product);
+        ProductResponse response = ProductMapper.INSTANCE.toResponse(product);
+        
+        // Thêm số lượng comments
+        long commentCount = commentRepository.countByProductId(id);
+        response.setCommentCount(commentCount);
+        
+        return response;
     }
 
     @Override

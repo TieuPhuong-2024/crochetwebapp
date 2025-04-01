@@ -18,6 +18,7 @@ import org.crochet.payload.response.PaginationResponse;
 import org.crochet.repository.FreePatternRepoCustom;
 import org.crochet.repository.FreePatternRepository;
 import org.crochet.repository.FreePatternSpecifications;
+import org.crochet.repository.CommentRepository;
 import org.crochet.service.CategoryService;
 import org.crochet.service.FreePatternService;
 import org.crochet.service.PermissionService;
@@ -51,6 +52,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final PermissionService permissionService;
     private final CategoryService categoryService;
     private final UserService userService;
+    private final CommentRepository commentRepository;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -219,6 +221,7 @@ public class FreePatternServiceImpl implements FreePatternService {
         var images = FileMapper.INSTANCE.toResponses(frep.getImages());
         var files = FileMapper.INSTANCE.toResponses(frep.getFiles());
         var category = CategoryMapper.INSTANCE.toResponse(frep.getCategory());
+        var commentCount = commentRepository.countByFreePatternId(id);
         return FreePatternResponse.builder()
                 .id(frep.getId())
                 .name(frep.getName())
@@ -234,6 +237,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .images(images)
                 .files(files)
                 .category(category)
+                .commentCount(commentCount)
                 .build();
     }
 

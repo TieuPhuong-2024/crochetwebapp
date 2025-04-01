@@ -26,9 +26,19 @@ import java.util.Set;
 @AllArgsConstructor
 public class Comment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "post_id", referencedColumnName = "id")
     @JsonBackReference
     private BlogPost blogPost;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", referencedColumnName = "id")
+    @JsonBackReference
+    private Product product;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "free_pattern_id", referencedColumnName = "id")
+    @JsonBackReference
+    private FreePattern freePattern;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
