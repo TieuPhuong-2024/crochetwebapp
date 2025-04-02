@@ -2,6 +2,7 @@ package org.crochet.util;
 
 import org.crochet.model.User;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public class SecurityUtils {
@@ -31,5 +32,13 @@ public class SecurityUtils {
         return authentication != null 
                && authentication.isAuthenticated()
                && !authentication.getPrincipal().equals("anonymousUser");
+    }
+
+    public static boolean hasRole(String role) {
+        Authentication authentication = getAuthentication();
+        if (!isValidAuthentication(authentication)) {
+            return false;
+        }
+        return authentication.getAuthorities().contains(new SimpleGrantedAuthority(role));
     }
 }

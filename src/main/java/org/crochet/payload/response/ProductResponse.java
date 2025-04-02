@@ -26,6 +26,7 @@ public class ProductResponse {
     private Boolean isHome;
     private String link;
     private String content;
+    private long commentCount;
     private List<FileResponse> images;
     private CategoryResponse category;
     private String fileContent;
