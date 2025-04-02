@@ -40,4 +40,30 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
     
     // Đếm số lượng comments cho một bài viết
     long countByBlogPostId(String blogPostId);
+    
+    // Product comments
+    // Lấy tất cả root comments (không có parent) cho một product, hỗ trợ phân trang
+    Page<Comment> findByProductIdAndParentIsNullOrderByCreatedDateDesc(String productId, Pageable pageable);
+    
+    // Lấy tất cả comments (cả root và replies) cho một product
+    Page<Comment> findByProductIdOrderByCreatedDateDesc(String productId, Pageable pageable);
+    
+    // Đếm số lượng root comments cho một product
+    long countByProductIdAndParentIsNull(String productId);
+    
+    // Đếm số lượng comments cho một product
+    long countByProductId(String productId);
+    
+    // Free Pattern comments
+    // Lấy tất cả root comments (không có parent) cho một free pattern, hỗ trợ phân trang
+    Page<Comment> findByFreePatternIdAndParentIsNullOrderByCreatedDateDesc(String freePatternId, Pageable pageable);
+    
+    // Lấy tất cả comments (cả root và replies) cho một free pattern
+    Page<Comment> findByFreePatternIdOrderByCreatedDateDesc(String freePatternId, Pageable pageable);
+    
+    // Đếm số lượng root comments cho một free pattern
+    long countByFreePatternIdAndParentIsNull(String freePatternId);
+    
+    // Đếm số lượng comments cho một free pattern
+    long countByFreePatternId(String freePatternId);
 }
