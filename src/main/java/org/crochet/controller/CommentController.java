@@ -140,7 +140,7 @@ public class CommentController {
     
     @Operation(summary = "Xóa một comment")
     @ApiResponse(responseCode = "204", description = "Comment deleted successfully")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @SecurityRequirement(name = "BearerAuth")
