@@ -148,4 +148,52 @@ public class CommentController {
         commentService.deleteComment(id);
         return ResponseUtil.success();
     }
+
+    @Operation(summary = "Count root comments cho một blog post")
+    @ApiResponse(responseCode = "200", description = "Count root comments successfully")
+    @GetMapping("/blog/{blogId}/root/count")
+    public ResponseData<Long> countRootCommentsByBlogPost(@PathVariable("blogId") String blogId) {
+        long count = commentService.countRootCommentsByBlogPost(blogId);
+        return ResponseUtil.success(count);
+    }
+
+    @Operation(summary = "Count tất cả comments cho một blog post")
+    @ApiResponse(responseCode = "200", description = "Count all comments successfully")
+    @GetMapping("/blog/{blogId}/count")
+    public ResponseData<Long> countCommentsByBlogPost(@PathVariable("blogId") String blogId) {
+        long count = commentService.countCommentsByBlogPost(blogId);
+        return ResponseUtil.success(count);
+    }
+
+    @Operation(summary = "Count root comments cho một sản phẩm")
+    @ApiResponse(responseCode = "200", description = "Count root comments successfully")
+    @GetMapping("/product/{productId}/root/count")
+    public ResponseData<Long> countRootCommentsByProduct(@PathVariable("productId") String productId) {
+        long count = commentService.countRootCommentsByProduct(productId);
+        return ResponseUtil.success(count);
+    }
+
+    @Operation(summary = "Count tất cả comments cho một sản phẩm")
+    @ApiResponse(responseCode = "200", description = "Count all comments successfully")
+    @GetMapping("/product/{productId}/count")
+    public ResponseData<Long> countCommentsByProduct(@PathVariable("productId") String productId) {
+        long count = commentService.countCommentsByProduct(productId);
+        return ResponseUtil.success(count);
+    }
+
+    @Operation(summary = "Count root comments cho một free pattern")
+    @ApiResponse(responseCode = "200", description = "Count root comments successfully")
+    @GetMapping("/free-pattern/{freePatternId}/root/count")
+    public ResponseData<Long> countRootCommentsByFreePattern(@PathVariable("freePatternId") String freePatternId) {
+        long count = commentService.countRootCommentsByFreePattern(freePatternId);
+        return ResponseUtil.success(count);
+    }
+
+    @Operation(summary = "Count tất cả comments cho một free pattern")
+    @ApiResponse(responseCode = "200", description = "Count all comments successfully")
+    @GetMapping("/free-pattern/{freePatternId}/count")
+    public ResponseData<Long> countCommentsByFreePattern(@PathVariable("freePatternId") String freePatternId) {
+        long count = commentService.countCommentsByFreePattern(freePatternId);
+        return ResponseUtil.success(count);
+    }
 }
