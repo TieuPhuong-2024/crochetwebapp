@@ -128,9 +128,18 @@ public class PatternServiceImpl implements PatternService {
         if (settingsMap.isEmpty()) {
             return Collections.emptyList();
         }
-        var direction = settingsMap.get("homepage.pattern.direction").getValue();
-        var orderBy = settingsMap.get("homepage.pattern.orderBy").getValue();
-        var limit = settingsMap.get("homepage.pattern.limit").getValue();
+        var direction = settingsMap.getOrDefault(
+                "homepage.pattern.direction",
+                new Settings("homepage.pattern.direction", "desc")
+        ).getValue();
+        var orderBy = settingsMap.getOrDefault(
+                "homepage.pattern.orderBy",
+                new Settings("homepage.pattern.orderBy", "createdDate")
+        ).getValue();
+        var limit = settingsMap.getOrDefault(
+                "homepage.pattern.limit",
+                new Settings("homepage.pattern.limit", "12")
+        ).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         return patternRepo.findLimitedNumPattern(pageable);

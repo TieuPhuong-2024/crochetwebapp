@@ -30,6 +30,7 @@ public class BlogPostResponse {
     private String userId;
     private String username;
     private String userAvatar;
+    private Long commentCount;
 
     public BlogPostResponse(String id,
                             String title,
