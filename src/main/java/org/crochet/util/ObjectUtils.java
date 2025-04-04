@@ -4,9 +4,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
 
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Utility class for common Object operations.
@@ -205,9 +219,9 @@ public final class ObjectUtils {
     /**
      * Parses a JSON string to an object using the provided ObjectMapper.
      *
-     * @param <T> the type of the target object
-     * @param json the JSON string to parse
-     * @param clazz the class of the target type
+     * @param <T>    the type of the target object
+     * @param json   the JSON string to parse
+     * @param clazz  the class of the target type
      * @param mapper the ObjectMapper to use
      * @return the parsed object or null if parsing failed
      */
@@ -245,7 +259,7 @@ public final class ObjectUtils {
      */
     private static String[] getNullPropertyNames(Object source) {
         final org.springframework.beans.BeanWrapper src =
-            new org.springframework.beans.BeanWrapperImpl(source);
+                new org.springframework.beans.BeanWrapperImpl(source);
 
         java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
         Set<String> nullNames = new HashSet<>();
@@ -260,4 +274,149 @@ public final class ObjectUtils {
         return nullNames.toArray(new String[0]);
     }
 
+    /**
+     * Xử lý danh sách lớn bằng cách chia nhỏ và thực hiện các thao tác song song
+     *
+     * @param <T>       kiểu dữ liệu của phần tử trong danh sách
+     * @param <R>       kiểu dữ liệu của kết quả
+     * @param largeList danh sách lớn cần xử lý
+     * @param batchSize kích thước mỗi batch
+     * @param processor hàm xử lý cho mỗi phần tử
+     * @return danh sách kết quả sau khi xử lý
+     */
+    public static <T, R> List<R> processBatched(List<T> largeList, int batchSize,
+                                                Function<T, R> processor) {
+        if (isEmpty(largeList)) {
+            return Collections.emptyList();
+        }
+
+        return largeList.stream()
+                .parallel()
+                .collect(Collectors.groupingBy(e -> Math.abs(
+                        Objects.hashCode(e) % (largeList.size() / batchSize + 1))))
+                .values().stream()
+                .parallel()
+                .flatMap(batch -> batch.stream().map(processor))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Xử lý danh sách lớn theo từng batch và thực hiện hành động trên mỗi batch
+     *
+     * @param <T>            kiểu dữ liệu của phần tử trong danh sách
+     * @param largeList      danh sách lớn cần xử lý
+     * @param batchSize      kích thước mỗi batch
+     * @param batchProcessor hàm xử lý cho mỗi batch
+     */
+    public static <T> void forEachBatch(List<T> largeList, int batchSize,
+                                        Consumer<List<T>> batchProcessor) {
+        if (isEmpty(largeList)) {
+            return;
+        }
+
+        int totalSize = largeList.size();
+        for (int i = 0; i < totalSize; i += batchSize) {
+            int end = Math.min(i + batchSize, totalSize);
+            List<T> batch = largeList.subList(i, end);
+            batchProcessor.accept(batch);
+        }
+    }
+
+    /**
+     * Tạo ra một stream đã được phân vùng để xử lý song song hiệu quả
+     *
+     * @param <T>           kiểu dữ liệu của phần tử trong danh sách
+     * @param largeList     danh sách lớn cần xử lý
+     * @param partitionSize kích thước mỗi phân vùng
+     * @return Stream các phân vùng (mỗi phân vùng là một List)
+     */
+    public static <T> Stream<List<T>> partitionedStream(List<T> largeList, int partitionSize) {
+        if (isEmpty(largeList)) {
+            return Stream.empty();
+        }
+
+        int size = largeList.size();
+        int fullChunks = size / partitionSize;
+
+        return IntStream.range(0, fullChunks + 1)
+                .mapToObj(n -> {
+                    int start = n * partitionSize;
+                    int end = Math.min(size, start + partitionSize);
+                    return start >= end ? Collections.<T>emptyList()
+                            : largeList.subList(start, end);
+                })
+                .filter(chunk -> !chunk.isEmpty());
+    }
+
+    /**
+     * Phân trang danh sách lớn để xử lý hiệu quả hoặc trả về cho UI
+     *
+     * @param <T>        kiểu dữ liệu của phần tử trong danh sách
+     * @param largeList  danh sách lớn cần phân trang
+     * @param pageSize   kích thước của mỗi trang
+     * @param pageNumber số thứ tự trang (bắt đầu từ 0)
+     * @return danh sách các phần tử trong trang được chỉ định
+     */
+    public static <T> List<T> getPage(List<T> largeList, int pageSize, int pageNumber) {
+        if (isEmpty(largeList) || pageSize <= 0 || pageNumber < 0) {
+            return Collections.emptyList();
+        }
+
+        int start = pageNumber * pageSize;
+        if (start >= largeList.size()) {
+            return Collections.emptyList();
+        }
+
+        int end = Math.min(start + pageSize, largeList.size());
+        return new ArrayList<>(largeList.subList(start, end));
+    }
+
+    /**
+     * Lọc hiệu quả danh sách lớn sử dụng xử lý song song
+     *
+     * @param <T>       kiểu dữ liệu của phần tử trong danh sách
+     * @param largeList danh sách lớn cần lọc
+     * @param predicate điều kiện lọc
+     * @return danh sách các phần tử thỏa mãn điều kiện
+     */
+    public static <T> List<T> filterParallel(List<T> largeList, Predicate<T> predicate) {
+        if (isEmpty(largeList)) {
+            return Collections.emptyList();
+        }
+
+        return largeList.parallelStream()
+                .filter(predicate)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Chuyển đổi danh sách lớn thành map với khả năng xử lý conflict key
+     *
+     * @param <T>            kiểu dữ liệu của phần tử trong danh sách
+     * @param <K>            kiểu dữ liệu của key trong map
+     * @param <V>            kiểu dữ liệu của value trong map
+     * @param collection     danh sách lớn cần chuyển đổi
+     * @param keyExtractor   hàm trích xuất key từ phần tử
+     * @param valueExtractor hàm trích xuất value từ phần tử
+     * @param mergeFunction  hàm xử lý khi có conflict key
+     * @return map sau khi chuyển đổi
+     */
+    public static <T, K, V> Map<K, V> toMapWithMerge(
+            Collection<T> collection,
+            Function<? super T, ? extends K> keyExtractor,
+            Function<? super T, ? extends V> valueExtractor,
+            BinaryOperator<V> mergeFunction) {
+
+        if (isEmpty(collection)) {
+            return Collections.emptyMap();
+        }
+
+        return collection.parallelStream()
+                .collect(Collectors.toMap(
+                        keyExtractor,
+                        valueExtractor,
+                        mergeFunction,
+                        () -> new ConcurrentHashMap<>(collection.size())
+                ));
+    }
 }
