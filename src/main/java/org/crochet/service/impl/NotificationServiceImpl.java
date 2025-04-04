@@ -6,6 +6,7 @@ import org.crochet.model.Notification;
 import org.crochet.model.User;
 import org.crochet.payload.request.NotificationRequest;
 import org.crochet.payload.response.NotificationResponse;
+import org.crochet.payload.response.PaginationResponse;
 import org.crochet.repository.NotificationRepository;
 import org.crochet.repository.UserRepository;
 import org.crochet.service.NotificationService;
@@ -42,14 +43,21 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Page<NotificationResponse> getUserNotifications(String userId, int page, int size) {
+    public PaginationResponse<NotificationResponse> getUserNotifications(String userId, int page, int size) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Notification> notificationsPage = notificationRepository.findByUserOrderByCreatedAtDesc(user, pageable);
-
-        return notificationsPage.map(this::convertToResponse);
+        Page<NotificationResponse> notifications = notificationsPage.map(this::convertToResponse);
+        return PaginationResponse.<NotificationResponse>builder()
+                .contents(notifications.getContent())
+                .pageNo(notificationsPage.getNumber())
+                .pageSize(notificationsPage.getSize())
+                .totalPages(notificationsPage.getTotalPages())
+                .totalElements(notificationsPage.getTotalElements())
+                .last(notificationsPage.isLast())
+                .build();
     }
 
     @Override
@@ -68,7 +76,7 @@ public class NotificationServiceImpl implements NotificationService {
     public long countUnreadNotifications(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        
+
         return notificationRepository.countUnreadNotifications(user);
     }
 
@@ -77,10 +85,10 @@ public class NotificationServiceImpl implements NotificationService {
     public void markAllAsRead(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        
+
         // Fetch all notifications for the user
         Page<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user, Pageable.unpaged());
-        
+
         notifications.forEach(notification -> {
             notification.setRead(true);
             notificationRepository.save(notification);
@@ -101,7 +109,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void deleteAllUserNotifications(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        
+
         notificationRepository.deleteAllByUser(user);
     }
 

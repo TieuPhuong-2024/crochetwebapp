@@ -1,15 +1,14 @@
 package org.crochet.service;
 
-import org.crochet.model.Notification;
 import org.crochet.payload.request.NotificationRequest;
 import org.crochet.payload.response.NotificationResponse;
-import org.springframework.data.domain.Page;
+import org.crochet.payload.response.PaginationResponse;
 
 public interface NotificationService {
     
     NotificationResponse createNotification(NotificationRequest notificationRequest);
     
-    Page<NotificationResponse> getUserNotifications(String userId, int page, int size);
+    PaginationResponse<NotificationResponse> getUserNotifications(String userId, int page, int size);
     
     NotificationResponse markAsRead(String notificationId);
     

@@ -2,6 +2,7 @@ package org.crochet.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
+import org.crochet.event.CommentCreatedEvent;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.CommentMapper;
 import org.crochet.model.BlogPost;
@@ -20,6 +21,7 @@ import org.crochet.repository.UserRepository;
 import org.crochet.service.CommentService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,17 +40,20 @@ public class CommentServiceImpl implements CommentService {
     private final ProductRepository productRepo;
     private final FreePatternRepository freePatternRepo;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public CommentServiceImpl(CommentRepository commentRepo,
                               BlogPostRepository blogPostRepo,
                               ProductRepository productRepo,
                               FreePatternRepository freePatternRepo,
-                              UserRepository userRepository) {
+                              UserRepository userRepository,
+                              ApplicationEventPublisher eventPublisher) {
         this.commentRepo = commentRepo;
         this.blogPostRepo = blogPostRepo;
         this.productRepo = productRepo;
         this.freePatternRepo = freePatternRepo;
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -157,6 +162,8 @@ public class CommentServiceImpl implements CommentService {
         }
 
         comment = commentRepo.save(comment);
+        // Gửi sự kiện khi comment được tạo
+        eventPublisher.publishEvent(new CommentCreatedEvent(comment));
         CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
 
         // Thêm thông tin về người dùng được mention
