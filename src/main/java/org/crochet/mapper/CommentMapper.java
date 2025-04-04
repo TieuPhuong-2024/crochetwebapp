@@ -16,7 +16,7 @@ public interface CommentMapper {
     
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "user.name", target = "username")
-    @Mapping(target = "userAvatar", expression = "java(comment.getUser().getUserProfile() != null ? comment.getUser().getUserProfile().getBackgroundImageUrl() : null)")
+    @Mapping(target = "userAvatar", expression = "java(comment.getUser() != null ? comment.getUser().getImageUrl() : null)")
     @Mapping(source = "parent.id", target = "parentId")
     @Mapping(source = "mentionedUserId", target = "mentionedUserId")
     @Mapping(target = "replies", ignore = true)

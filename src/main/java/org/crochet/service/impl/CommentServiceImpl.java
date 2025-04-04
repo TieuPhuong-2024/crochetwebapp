@@ -2,6 +2,7 @@ package org.crochet.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
+import org.crochet.event.CommentCreatedEvent;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.CommentMapper;
 import org.crochet.model.BlogPost;
@@ -20,6 +21,7 @@ import org.crochet.repository.UserRepository;
 import org.crochet.service.CommentService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,17 +40,20 @@ public class CommentServiceImpl implements CommentService {
     private final ProductRepository productRepo;
     private final FreePatternRepository freePatternRepo;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public CommentServiceImpl(CommentRepository commentRepo,
                               BlogPostRepository blogPostRepo,
                               ProductRepository productRepo,
                               FreePatternRepository freePatternRepo,
-                              UserRepository userRepository) {
+                              UserRepository userRepository,
+                              ApplicationEventPublisher eventPublisher) {
         this.commentRepo = commentRepo;
         this.blogPostRepo = blogPostRepo;
         this.productRepo = productRepo;
         this.freePatternRepo = freePatternRepo;
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -77,6 +82,12 @@ public class CommentServiceImpl implements CommentService {
                             ResultCode.MSG_COMMENT_NOT_FOUND.code()
                     )
             );
+
+            // Đảm bảo chỉ cho phép độ sâu tối đa là 2 (root comment và replies)
+            if (parent.getParent() != null) {
+                // Nếu parent là reply, thì sử dụng parent của parent
+                parent = parent.getParent();
+            }
         }
 
         // Kiểm tra và lấy đối tượng tương ứng (blog post, product hoặc free pattern)
@@ -157,6 +168,8 @@ public class CommentServiceImpl implements CommentService {
         }
 
         comment = commentRepo.save(comment);
+        // Gửi sự kiện khi comment được tạo
+        eventPublisher.publishEvent(new CommentCreatedEvent(comment));
         CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
 
         // Thêm thông tin về người dùng được mention
