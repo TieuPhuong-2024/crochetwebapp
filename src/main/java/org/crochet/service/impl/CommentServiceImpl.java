@@ -82,6 +82,12 @@ public class CommentServiceImpl implements CommentService {
                             ResultCode.MSG_COMMENT_NOT_FOUND.code()
                     )
             );
+
+            // Đảm bảo chỉ cho phép độ sâu tối đa là 2 (root comment và replies)
+            if (parent.getParent() != null) {
+                // Nếu parent là reply, thì sử dụng parent của parent
+                parent = parent.getParent();
+            }
         }
 
         // Kiểm tra và lấy đối tượng tương ứng (blog post, product hoặc free pattern)
