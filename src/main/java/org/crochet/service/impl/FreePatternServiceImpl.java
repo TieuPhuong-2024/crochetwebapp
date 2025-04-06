@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
 import org.crochet.enums.RoleType;
-import org.crochet.event.CreatedNewChartEvent;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.CategoryMapper;
 import org.crochet.mapper.FileMapper;
@@ -28,7 +27,6 @@ import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
 import org.crochet.util.SettingsUtil;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,7 +53,6 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final CategoryService categoryService;
     private final UserService userService;
     private final CommentRepository commentRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -93,11 +90,6 @@ public class FreePatternServiceImpl implements FreePatternService {
             freePattern = FreePatternMapper.INSTANCE.update(request, freePattern);
         }
         freePatternRepo.save(freePattern);
-        eventPublisher.publishEvent(new CreatedNewChartEvent(
-                freePattern.getCreatedBy(),
-                freePattern.getId(),
-                freePattern.getName()
-        ));
     }
 
     /**
