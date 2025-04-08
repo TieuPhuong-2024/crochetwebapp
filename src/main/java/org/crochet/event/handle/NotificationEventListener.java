@@ -4,11 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
 import org.crochet.event.CommentCreatedEvent;
-import org.crochet.event.CreatedNewChartEvent;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.model.Comment;
 import org.crochet.model.Notification.NotificationType;
-import org.crochet.model.User;
 import org.crochet.payload.request.NotificationRequest;
 import org.crochet.repository.UserRepository;
 import org.crochet.service.NotificationService;
@@ -16,10 +14,6 @@ import org.crochet.util.CommentUtils;
 import org.crochet.util.ObjectUtils;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -51,7 +45,8 @@ public class NotificationEventListener {
                         .title("Bình luận mới")
                         .message(CommentUtils.getMessage(comment))
                         .link(CommentUtils.getLink(comment))
-                        .userId(contentCreator.getId())
+                        .receiverId(contentCreator.getId())
+                        .senderId(comment.getUser().getId())
                         .notificationType(NotificationType.COMMENT)
                         .build();
 
@@ -77,7 +72,8 @@ public class NotificationEventListener {
                         .title("Bạn được nhắc đến trong bình luận")
                         .message(comment.getUser().getName() + " đã nhắc đến bạn trong một bình luận")
                         .link(CommentUtils.getLink(comment))
-                        .userId(mentionedUser.getId())
+                        .receiverId(mentionedUser.getId())
+                        .senderId(comment.getUser().getId())
                         .notificationType(NotificationType.COMMENT)
                         .build();
 
@@ -85,57 +81,5 @@ public class NotificationEventListener {
                 log.info("Mention notification created successfully");
             }
         }
-    }
-
-    @EventListener
-    public void handleCreateNewChart(CreatedNewChartEvent event) {
-        var creator = userRepository.findById(event.getCreatorId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        ResultCode.MSG_USER_NOT_FOUND.message(),
-                        ResultCode.MSG_USER_NOT_FOUND.code()
-                ));
-        var groupUsers = userRepository.findAll()
-                .stream()
-                .filter(user -> ObjectUtils.notEqual(user.getId(), creator.getId()))
-                .toList();
-        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            // Sử dụng CountDownLatch để đợi tất cả các task hoàn thành
-            CountDownLatch latch = new CountDownLatch(
-                    (groupUsers.size() + 49) / 50); // Tính số lượng batch
-
-            ObjectUtils.forEachBatch(groupUsers, 50, users -> {
-                executor.submit(() -> {
-                    try {
-                        // Xử lý từng batch ở đây
-                        for (User user : users) {
-                            try {
-                                NotificationRequest notification = NotificationRequest.builder()
-                                        .title("Chart mới")
-                                        .message(creator.getName() + " mới vừa đăng chart " + event.getChartName())
-                                        .link("/free-patterns/" + event.getChartId())
-                                        .userId(user.getId())
-                                        .notificationType(NotificationType.NEW_PATTERN)
-                                        .build();
-                                notificationService.createNotification(notification);
-                            } catch (Exception e) {
-                                log.error("Failed to create notification for user: {}", user.getId(), e);
-                            }
-                        }
-                        log.info("Processed batch of {} notifications", users.size());
-                    } finally {
-                        latch.countDown();
-                    }
-                });
-            });
-
-            // Đợi tất cả các batch hoàn thành (với timeout)
-            if (!latch.await(5, TimeUnit.MINUTES)) {
-                log.warn("Timeout waiting for all notification batches to complete");
-            }
-        } catch (InterruptedException e) {
-            log.error("Notification processing was interrupted", e);
-            Thread.currentThread().interrupt();
-        }
-        log.info("Finished sending chart creation notifications to {} users", groupUsers.size());
     }
 }

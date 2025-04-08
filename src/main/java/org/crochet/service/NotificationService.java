@@ -8,15 +8,15 @@ public interface NotificationService {
     
     NotificationResponse createNotification(NotificationRequest notificationRequest);
     
-    PaginationResponse<NotificationResponse> getUserNotifications(String userId, int page, int size);
+    PaginationResponse<NotificationResponse> getUserNotifications(String receiverId, int page, int size);
     
     NotificationResponse markAsRead(String notificationId);
     
-    long countUnreadNotifications(String userId);
+    long countUnreadNotifications(String receiverId);
     
-    void markAllAsRead(String userId);
+    void markAllAsRead(String receiverId);
     
     void deleteNotification(String notificationId);
     
-    void deleteAllUserNotifications(String userId);
+    void deleteAllUserNotifications(String receiverId);
 } 
