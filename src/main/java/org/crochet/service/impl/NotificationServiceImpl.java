@@ -2,6 +2,7 @@ package org.crochet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.crochet.exception.ResourceNotFoundException;
+import org.crochet.mapper.NotificationMapper;
 import org.crochet.model.Notification;
 import org.crochet.model.User;
 import org.crochet.payload.request.NotificationRequest;
@@ -22,6 +23,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final NotificationMapper notificationMapper = NotificationMapper.INSTANCE;
 
     @Override
     @Transactional
@@ -29,19 +31,27 @@ public class NotificationServiceImpl implements NotificationService {
         User user = userRepository.findById(notificationRequest.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + notificationRequest.getUserId()));
 
+        User sender = null;
+        if (notificationRequest.getSenderId() != null) {
+            sender = userRepository.findById(notificationRequest.getSenderId())
+                    .orElse(null);
+        }
+
         Notification notification = Notification.builder()
                 .title(notificationRequest.getTitle())
                 .message(notificationRequest.getMessage())
                 .link(notificationRequest.getLink())
                 .isRead(false)
                 .user(user)
+                .sender(sender)
                 .notificationType(notificationRequest.getNotificationType())
                 .build();
 
         notification = notificationRepository.save(notification);
-        return convertToResponse(notification);
+        return notificationMapper.toResponse(notification);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public PaginationResponse<NotificationResponse> getUserNotifications(String userId, int page, int size) {
         User user = userRepository.findById(userId)
@@ -49,7 +59,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Notification> notificationsPage = notificationRepository.findByUserOrderByCreatedAtDesc(user, pageable);
-        Page<NotificationResponse> notifications = notificationsPage.map(this::convertToResponse);
+        Page<NotificationResponse> notifications = notificationsPage.map(notificationMapper::toResponse);
         return PaginationResponse.<NotificationResponse>builder()
                 .contents(notifications.getContent())
                 .pageNo(notificationsPage.getNumber())
@@ -69,7 +79,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setRead(true);
         notification = notificationRepository.save(notification);
 
-        return convertToResponse(notification);
+        return notificationMapper.toResponse(notification);
     }
 
     @Override
@@ -111,17 +121,5 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         notificationRepository.deleteAllByUser(user);
-    }
-
-    private NotificationResponse convertToResponse(Notification notification) {
-        return NotificationResponse.builder()
-                .id(notification.getId())
-                .title(notification.getTitle())
-                .message(notification.getMessage())
-                .link(notification.getLink())
-                .read(notification.isRead())
-                .createdAt(notification.getCreatedAt())
-                .notificationType(notification.getNotificationType())
-                .build();
     }
 } 

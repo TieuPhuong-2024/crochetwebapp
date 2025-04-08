@@ -25,6 +25,8 @@ public class NotificationRequest {
     @NotBlank
     private String userId;
     
+    private String senderId;
+    
     @NotNull
     private NotificationType notificationType;
 } 
