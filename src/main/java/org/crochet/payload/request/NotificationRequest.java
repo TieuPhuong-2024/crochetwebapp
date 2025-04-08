@@ -23,7 +23,7 @@ public class NotificationRequest {
     private String link;
     
     @NotBlank
-    private String userId;
+    private String receiverId;
     
     private String senderId;
     

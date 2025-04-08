@@ -45,7 +45,7 @@ public class NotificationEventListener {
                         .title("Bình luận mới")
                         .message(CommentUtils.getMessage(comment))
                         .link(CommentUtils.getLink(comment))
-                        .userId(contentCreator.getId())
+                        .receiverId(contentCreator.getId())
                         .senderId(comment.getUser().getId())
                         .notificationType(NotificationType.COMMENT)
                         .build();
@@ -72,7 +72,7 @@ public class NotificationEventListener {
                         .title("Bạn được nhắc đến trong bình luận")
                         .message(comment.getUser().getName() + " đã nhắc đến bạn trong một bình luận")
                         .link(CommentUtils.getLink(comment))
-                        .userId(mentionedUser.getId())
+                        .receiverId(mentionedUser.getId())
                         .senderId(comment.getUser().getId())
                         .notificationType(NotificationType.COMMENT)
                         .build();

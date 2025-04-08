@@ -28,8 +28,8 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public NotificationResponse createNotification(NotificationRequest notificationRequest) {
-        User user = userRepository.findById(notificationRequest.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + notificationRequest.getUserId()));
+        User receiver = userRepository.findById(notificationRequest.getReceiverId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + notificationRequest.getReceiverId()));
 
         User sender = null;
         if (notificationRequest.getSenderId() != null) {
@@ -42,7 +42,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .message(notificationRequest.getMessage())
                 .link(notificationRequest.getLink())
                 .isRead(false)
-                .user(user)
+                .receiver(receiver)
                 .sender(sender)
                 .notificationType(notificationRequest.getNotificationType())
                 .build();
@@ -53,12 +53,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Transactional(readOnly = true)
     @Override
-    public PaginationResponse<NotificationResponse> getUserNotifications(String userId, int page, int size) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    public PaginationResponse<NotificationResponse> getUserNotifications(String receiverId, int page, int size) {
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + receiverId));
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Notification> notificationsPage = notificationRepository.findByUserOrderByCreatedAtDesc(user, pageable);
+        Page<Notification> notificationsPage = notificationRepository.findByReceiverOrderByCreatedAtDesc(receiver, pageable);
         Page<NotificationResponse> notifications = notificationsPage.map(notificationMapper::toResponse);
         return PaginationResponse.<NotificationResponse>builder()
                 .contents(notifications.getContent())
@@ -92,12 +92,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void markAllAsRead(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    public void markAllAsRead(String receiverId) {
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + receiverId));
 
-        // Fetch all notifications for the user
-        Page<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user, Pageable.unpaged());
+        // Fetch all notifications for the receiver
+        Page<Notification> notifications = notificationRepository.findByReceiverOrderByCreatedAtDesc(receiver, Pageable.unpaged());
 
         notifications.forEach(notification -> {
             notification.setRead(true);
@@ -116,10 +116,10 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void deleteAllUserNotifications(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    public void deleteAllUserNotifications(String receiverId) {
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + receiverId));
 
-        notificationRepository.deleteAllByUser(user);
+        notificationRepository.deleteAllByReceiver(receiver);
     }
 } 
