@@ -12,8 +12,6 @@ import org.crochet.service.NotificationService;
 import org.crochet.util.ResponseUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,20 +49,20 @@ public class NotificationController {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/user/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.username")
+    @GetMapping("/user/{receiverId}")
+    @PreAuthorize("hasRole('ADMIN') or #receiverId == authentication.principal.username")
     public ResponseData<PaginationResponse<NotificationResponse>> getUserNotifications(
-            @PathVariable String userId,
+            @PathVariable String receiverId,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size) {
-        var response = notificationService.getUserNotifications(userId, page, size);
+        var response = notificationService.getUserNotifications(receiverId, page, size);
         return ResponseUtil.success(response);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/unread/count")
-    public ResponseData<Long> getUnreadNotificationCount(@CurrentUser User user) {
-        var countUnreadNotifications = notificationService.countUnreadNotifications(user.getId());
+    public ResponseData<Long> getUnreadNotificationCount(@CurrentUser User receiver) {
+        var countUnreadNotifications = notificationService.countUnreadNotifications(receiver.getId());
         return ResponseUtil.success(countUnreadNotifications);
     }
 
@@ -77,8 +75,8 @@ public class NotificationController {
 
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/read-all")
-    public ResponseData<Void> markAllNotificationsAsRead(@CurrentUser User user) {
-        notificationService.markAllAsRead(user.getId());
+    public ResponseData<Void> markAllNotificationsAsRead(@CurrentUser User receiver) {
+        notificationService.markAllAsRead(receiver.getId());
         return ResponseUtil.success();
     }
 
@@ -91,8 +89,8 @@ public class NotificationController {
 
     @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/all")
-    public ResponseData<Void> deleteAllCurrentUserNotifications(@AuthenticationPrincipal UserDetails userDetails) {
-        notificationService.deleteAllUserNotifications(userDetails.getUsername());
+    public ResponseData<Void> deleteAllCurrentUserNotifications(@CurrentUser User receiver) {
+        notificationService.deleteAllUserNotifications(receiver.getUsername());
         return ResponseUtil.success();
     }
 } 

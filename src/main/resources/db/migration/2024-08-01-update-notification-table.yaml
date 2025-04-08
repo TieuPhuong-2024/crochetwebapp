@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2024-08-01-update-notification-table
+      author: admin
+      changes:
+        - addColumn:
+            tableName: notifications
+            columns:
+              - column:
+                  name: sender_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseColumnNames: sender_id
+            baseTableName: notifications
+            constraintName: fk_notification_sender
+            onDelete: SET NULL
+            onUpdate: CASCADE
+            referencedColumnNames: id
+            referencedTableName: users
+        - createIndex:
+            indexName: idx_notification_sender_id
+            tableName: notifications
+            columns:
+              - column:
+                  name: sender_id 

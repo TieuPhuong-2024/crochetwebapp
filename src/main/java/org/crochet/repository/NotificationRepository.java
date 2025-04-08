@@ -12,10 +12,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, String> {
     
-    Page<Notification> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+    Page<Notification> findByReceiverOrderByCreatedAtDesc(User receiver, Pageable pageable);
     
-    @Query("SELECT COUNT(n) FROM Notification n WHERE n.user = :user AND n.isRead = false")
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.receiver = :user AND n.isRead = false")
     long countUnreadNotifications(@Param("user") User user);
     
-    void deleteAllByUser(User user);
+    void deleteAllByReceiver(User receiver);
 } 
