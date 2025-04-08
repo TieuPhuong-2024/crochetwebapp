@@ -2,6 +2,7 @@ package org.crochet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.crochet.exception.ResourceNotFoundException;
+import org.crochet.mapper.NotificationMapper;
 import org.crochet.model.Notification;
 import org.crochet.model.User;
 import org.crochet.payload.request.NotificationRequest;
@@ -22,34 +23,43 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final NotificationMapper notificationMapper = NotificationMapper.INSTANCE;
 
     @Override
     @Transactional
     public NotificationResponse createNotification(NotificationRequest notificationRequest) {
-        User user = userRepository.findById(notificationRequest.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + notificationRequest.getUserId()));
+        User receiver = userRepository.findById(notificationRequest.getReceiverId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + notificationRequest.getReceiverId()));
+
+        User sender = null;
+        if (notificationRequest.getSenderId() != null) {
+            sender = userRepository.findById(notificationRequest.getSenderId())
+                    .orElse(null);
+        }
 
         Notification notification = Notification.builder()
                 .title(notificationRequest.getTitle())
                 .message(notificationRequest.getMessage())
                 .link(notificationRequest.getLink())
                 .isRead(false)
-                .user(user)
+                .receiver(receiver)
+                .sender(sender)
                 .notificationType(notificationRequest.getNotificationType())
                 .build();
 
         notification = notificationRepository.save(notification);
-        return convertToResponse(notification);
+        return notificationMapper.toResponse(notification);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public PaginationResponse<NotificationResponse> getUserNotifications(String userId, int page, int size) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    public PaginationResponse<NotificationResponse> getUserNotifications(String receiverId, int page, int size) {
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + receiverId));
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Notification> notificationsPage = notificationRepository.findByUserOrderByCreatedAtDesc(user, pageable);
-        Page<NotificationResponse> notifications = notificationsPage.map(this::convertToResponse);
+        Page<Notification> notificationsPage = notificationRepository.findByReceiverOrderByCreatedAtDesc(receiver, pageable);
+        Page<NotificationResponse> notifications = notificationsPage.map(notificationMapper::toResponse);
         return PaginationResponse.<NotificationResponse>builder()
                 .contents(notifications.getContent())
                 .pageNo(notificationsPage.getNumber())
@@ -69,7 +79,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setRead(true);
         notification = notificationRepository.save(notification);
 
-        return convertToResponse(notification);
+        return notificationMapper.toResponse(notification);
     }
 
     @Override
@@ -82,12 +92,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void markAllAsRead(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    public void markAllAsRead(String receiverId) {
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + receiverId));
 
-        // Fetch all notifications for the user
-        Page<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user, Pageable.unpaged());
+        // Fetch all notifications for the receiver
+        Page<Notification> notifications = notificationRepository.findByReceiverOrderByCreatedAtDesc(receiver, Pageable.unpaged());
 
         notifications.forEach(notification -> {
             notification.setRead(true);
@@ -106,22 +116,10 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void deleteAllUserNotifications(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    public void deleteAllUserNotifications(String receiverId) {
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + receiverId));
 
-        notificationRepository.deleteAllByUser(user);
-    }
-
-    private NotificationResponse convertToResponse(Notification notification) {
-        return NotificationResponse.builder()
-                .id(notification.getId())
-                .title(notification.getTitle())
-                .message(notification.getMessage())
-                .link(notification.getLink())
-                .read(notification.isRead())
-                .createdAt(notification.getCreatedAt())
-                .notificationType(notification.getNotificationType())
-                .build();
+        notificationRepository.deleteAllByReceiver(receiver);
     }
 } 

@@ -20,4 +20,6 @@ public class NotificationResponse {
     private boolean read;
     private LocalDateTime createdAt;
     private NotificationType notificationType;
+    private String senderName;
+    private String senderImageUrl;
 } 

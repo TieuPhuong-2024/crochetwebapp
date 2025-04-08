@@ -87,7 +87,7 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Collection> collections;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
     private Set<Notification> notifications;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
