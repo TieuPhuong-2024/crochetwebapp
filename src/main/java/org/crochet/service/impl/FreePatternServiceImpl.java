@@ -81,8 +81,8 @@ public class FreePatternServiceImpl implements FreePatternService {
                     .link(request.getLink())
                     .content(request.getContent())
                     .status(request.getStatus())
-                    .files(FileMapper.INSTANCE.toEntities(sortedFiles))
-                    .images(FileMapper.INSTANCE.toEntities(sortedImages))
+                    .patternFiles(FileMapper.INSTANCE.toEntities(sortedFiles))
+                    .patternImages(FileMapper.INSTANCE.toEntities(sortedImages))
                     .build();
         } else {
             freePattern = findById(request.getId());

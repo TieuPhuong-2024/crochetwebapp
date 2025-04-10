@@ -1,16 +1,14 @@
 package org.crochet.model;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
@@ -63,29 +61,25 @@ public class FreePattern extends BaseEntity {
 
     @BatchSize(size = 10)
     @OrderBy("order ASC")
-    @ElementCollection
-    @CollectionTable(name = "free_pattern_file",
-            joinColumns = @JoinColumn(name = "free_pattern_id", referencedColumnName = "id", nullable = false))
-    @AttributeOverrides({
-            @AttributeOverride(name = "fileName", column = @Column(name = "file_name")),
-            @AttributeOverride(name = "fileContent", column = @Column(name = "file_content", columnDefinition = "TEXT")),
-            @AttributeOverride(name = "order", column = @Column(name = "display_order")),
-            @AttributeOverride(name = "lastModified", column = @Column(name = "last_modified", columnDefinition = "datetime default current_timestamp"))
-    })
-    private Set<File> files;
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "free_pattern_file",
+        joinColumns = @JoinColumn(name = "free_pattern_id"),
+        inverseJoinColumns = @JoinColumn(name = "file_id")
+    )
+    @Builder.Default
+    private Set<File> patternFiles = new HashSet<>();
 
     @BatchSize(size = 10)
     @OrderBy("order ASC")
-    @ElementCollection
-    @CollectionTable(name = "free_pattern_image",
-            joinColumns = @JoinColumn(name = "free_pattern_id", referencedColumnName = "id", nullable = false))
-    @AttributeOverrides({
-            @AttributeOverride(name = "fileName", column = @Column(name = "file_name")),
-            @AttributeOverride(name = "fileContent", column = @Column(name = "file_content", columnDefinition = "TEXT")),
-            @AttributeOverride(name = "order", column = @Column(name = "display_order")),
-            @AttributeOverride(name = "lastModified", column = @Column(name = "last_modified", columnDefinition = "datetime default current_timestamp"))
-    })
-    private Set<File> images;
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "free_pattern_image",
+        joinColumns = @JoinColumn(name = "free_pattern_id"),
+        inverseJoinColumns = @JoinColumn(name = "file_id")
+    )
+    @Builder.Default
+    private Set<File> patternImages = new HashSet<>();
 
     @OneToMany(mappedBy = "freePattern", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

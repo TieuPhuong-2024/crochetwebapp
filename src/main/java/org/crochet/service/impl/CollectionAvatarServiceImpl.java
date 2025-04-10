@@ -19,8 +19,8 @@ public class CollectionAvatarServiceImpl implements CollectionAvatarService {
 
     @Override
     public void updateAvatar(Collection collection, FreePattern freePattern) {
-        if (!freePattern.getImages().isEmpty()) {
-            var firstImage = freePattern.getImages()
+        if (!freePattern.getPatternImages().isEmpty()) {
+            var firstImage = freePattern.getPatternImages()
                     .stream()
                     .findFirst()
                     .get()

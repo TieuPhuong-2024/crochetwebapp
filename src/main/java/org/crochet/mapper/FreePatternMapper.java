@@ -52,11 +52,11 @@ public interface FreePatternMapper {
         }
         if (ObjectUtils.isNotEmpty(req.getImages())) {
             var sortedImages = ImageUtils.sortFiles(req.getImages());
-            freePattern.setImages(FileMapper.INSTANCE.toEntities(sortedImages));
+            freePattern.setPatternImages(FileMapper.INSTANCE.toEntities(sortedImages));
         }
         if (ObjectUtils.isNotEmpty(req.getFiles())) {
             var sortedFiles = ImageUtils.sortFiles(req.getFiles());
-            freePattern.setFiles(FileMapper.INSTANCE.toEntities(sortedFiles));
+            freePattern.setPatternFiles(FileMapper.INSTANCE.toEntities(sortedFiles));
         }
         return freePattern;
     }
