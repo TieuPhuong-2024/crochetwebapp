@@ -7,10 +7,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.crochet.command.commands.CreateFreePatternCommand;
+import org.crochet.command.commands.DeleteFreePatternCommand;
+import org.crochet.command.dispatcher.Dispatcher;
 import org.crochet.constant.AppConstant;
 import org.crochet.enums.ResultCode;
 import org.crochet.model.FreePattern;
-import org.crochet.payload.request.FreePatternRequest;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginationResponse;
 import org.crochet.payload.response.ResponseData;
@@ -35,9 +37,12 @@ import java.util.List;
 @RequestMapping("/api/v1/free-pattern")
 public class FreePatternController {
     private final FreePatternService freePatternService;
+    private final Dispatcher dispatcher;
 
-    public FreePatternController(FreePatternService freePatternService) {
+    public FreePatternController(FreePatternService freePatternService,
+                                 Dispatcher dispatcher) {
         this.freePatternService = freePatternService;
+        this.dispatcher = dispatcher;
     }
 
     @Operation(summary = "Create a free pattern")
@@ -48,8 +53,8 @@ public class FreePatternController {
     @PostMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @SecurityRequirement(name = "BearerAuth")
-    public ResponseData<String> createPattern(@RequestBody FreePatternRequest request) {
-        freePatternService.createOrUpdate(request);
+    public ResponseData<String> createPattern(@RequestBody CreateFreePatternCommand command) {
+        dispatcher.dispatch(command);
         return ResponseUtil.success(ResultCode.MSG_CREATE_OR_UPDATE_SUCCESS.message());
     }
 
@@ -77,7 +82,8 @@ public class FreePatternController {
     public ResponseData<String> delete(
             @Parameter(description = "ID of the pattern to delete")
             @PathVariable("id") String id) {
-        freePatternService.delete(id);
+        DeleteFreePatternCommand command = new DeleteFreePatternCommand(id);
+        dispatcher.dispatch(command);
         return ResponseUtil.success(ResultCode.MSG_DELETE_SUCCESS.message());
     }
 

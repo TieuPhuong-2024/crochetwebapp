@@ -1,4 +1,4 @@
-package org.crochet.payload.request;
+package org.crochet.command.commands;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,7 +17,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FreePatternRequest {
+public class CreateFreePatternCommand implements Command<String> {
     private String id;
     @JsonProperty("category_id")
     private String categoryId;

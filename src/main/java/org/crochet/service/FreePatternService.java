@@ -1,7 +1,7 @@
 package org.crochet.service;
 
 import org.crochet.model.FreePattern;
-import org.crochet.payload.request.FreePatternRequest;
+import org.crochet.command.commands.CreateFreePatternCommand;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginationResponse;
 import org.springframework.data.jpa.domain.Specification;
@@ -9,7 +9,7 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
 public interface FreePatternService {
-    void createOrUpdate(FreePatternRequest request);
+    void createOrUpdate(CreateFreePatternCommand request);
 
     PaginationResponse<FreePatternResponse>
     getAllFreePatterns(int offset,

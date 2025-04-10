@@ -1,7 +1,7 @@
 package org.crochet.mapper;
 
 import org.crochet.model.FreePattern;
-import org.crochet.payload.request.FreePatternRequest;
+import org.crochet.command.commands.CreateFreePatternCommand;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
@@ -25,7 +25,7 @@ public interface FreePatternMapper {
 
     List<FreePatternResponse> toResponses(Collection<FreePattern> freePatterns);
 
-    default FreePattern update(FreePatternRequest req, FreePattern freePattern) {
+    default FreePattern update(CreateFreePatternCommand req, FreePattern freePattern) {
         if (freePattern == null) {
             return null;
         }

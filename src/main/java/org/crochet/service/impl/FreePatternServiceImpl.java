@@ -12,7 +12,7 @@ import org.crochet.mapper.FreePatternMapper;
 import org.crochet.mapper.PaginationMapper;
 import org.crochet.model.FreePattern;
 import org.crochet.model.Settings;
-import org.crochet.payload.request.FreePatternRequest;
+import org.crochet.command.commands.CreateFreePatternCommand;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginationResponse;
 import org.crochet.repository.CommentRepository;
@@ -56,17 +56,17 @@ public class FreePatternServiceImpl implements FreePatternService {
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
-     * {@link FreePatternRequest}.
+     * {@link CreateFreePatternCommand}.
      * If the request contains an ID, it updates the existing FreePattern with the
      * corresponding ID.
      * If the request does not contain an ID, it creates a new FreePattern.
      *
-     * @param request The {@link FreePatternRequest} containing information for
+     * @param request The {@link CreateFreePatternCommand} containing information for
      *                creating or updating the FreePattern.
      */
     @Transactional
     @Override
-    public void createOrUpdate(FreePatternRequest request) {
+    public void createOrUpdate(CreateFreePatternCommand request) {
         FreePattern freePattern;
         if (!ObjectUtils.hasText(request.getId())) {
             var category = categoryService.findById(request.getCategoryId());
