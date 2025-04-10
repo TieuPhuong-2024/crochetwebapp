@@ -227,8 +227,8 @@ public class FreePatternServiceImpl implements FreePatternService {
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
                 ));
         var user = userService.getById(frep.getCreatedBy());
-        var images = FileMapper.INSTANCE.toResponses(frep.getImages());
-        var files = FileMapper.INSTANCE.toResponses(frep.getFiles());
+        var images = FileMapper.INSTANCE.toResponses(frep.getPatternImages());
+        var files = FileMapper.INSTANCE.toResponses(frep.getPatternFiles());
         var category = CategoryMapper.INSTANCE.toResponse(frep.getCategory());
         var commentCount = commentRepository.countByFreePatternId(id);
         return FreePatternResponse.builder()

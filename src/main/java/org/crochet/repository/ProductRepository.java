@@ -29,7 +29,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
               )
             FROM
               Product p
-              LEFT JOIN p.images i
+              LEFT JOIN p.productImages i
             WITH
               i.order = 0
             WHERE
@@ -44,7 +44,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
             FROM
               Product p
               LEFT JOIN
-            FETCH p.images
+            FETCH p.productImages
             JOIN
             FETCH p.category
             WHERE
@@ -64,7 +64,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
               )
             FROM
               Product p
-              LEFT JOIN p.images i
+              LEFT JOIN p.productImages i
             WITH
               i.order = 0
             WHERE
@@ -84,7 +84,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
               )
             FROM
               Product p
-              LEFT JOIN p.images i
+              LEFT JOIN p.productImages i
             WITH
               i.order = 0
             """)

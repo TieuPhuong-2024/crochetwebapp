@@ -13,7 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class HomeResponse {
     private List<ProductResponse> products;
-    private List<PatternResponse> patterns;
     private List<FreePatternResponse> freePatterns;
     private List<BannerResponse> banners;
     private List<BlogPostResponse> blogs;

@@ -48,7 +48,7 @@ public interface BlogPostMapper extends PartialUpdate<BlogPost, BlogPostRequest>
         }
         if (ObjectUtils.isNotEmpty(request.getFiles())) {
             var sortedFiles = ImageUtils.sortFiles(request.getFiles());
-            post.setFiles(FileMapper.INSTANCE.toEntities(sortedFiles));
+            post.setPostFiles(FileMapper.INSTANCE.toEntities(sortedFiles));
         }
         return post;
     }

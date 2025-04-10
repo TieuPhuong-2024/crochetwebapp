@@ -83,7 +83,7 @@ public class BlogPostServiceImpl implements BlogPostService {
                     .title(request.getTitle())
                     .content(request.getContent())
                     .home(request.isHome())
-                    .files(FileMapper.INSTANCE.toEntities(images))
+                    .postFiles(FileMapper.INSTANCE.toEntities(images))
                     .build();
         } else {
             blogPost = getById(request.getId());

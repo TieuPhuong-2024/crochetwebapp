@@ -42,8 +42,8 @@ public class Category extends BaseEntity {
     @OneToMany(mappedBy = "category")
     private Set<Product> products;
 
-    @OneToMany(mappedBy = "category")
-    private Set<Pattern> patterns;
+//    @OneToMany(mappedBy = "category")
+//    private Set<Pattern> patterns;
 
     @OneToMany(mappedBy = "category")
     private Set<FreePattern> freePatterns;

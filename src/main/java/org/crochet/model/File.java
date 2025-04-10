@@ -49,4 +49,12 @@ public class File extends BaseEntity {
     @ManyToMany(mappedBy = "patternImages")
     @Builder.Default
     private Set<FreePattern> freePatternsAsImage = new HashSet<>();
+
+    @ManyToMany(mappedBy = "postFiles")
+    @Builder.Default
+    private Set<BlogPost> posts = new HashSet<>();
+
+    @ManyToMany(mappedBy = "productImages")
+    @Builder.Default
+    private Set<Product> products = new HashSet<>();
 }

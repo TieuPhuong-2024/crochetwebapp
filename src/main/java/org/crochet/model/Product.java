@@ -3,6 +3,7 @@ package org.crochet.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -11,10 +12,13 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,6 +26,7 @@ import lombok.experimental.SuperBuilder;
 import org.crochet.enums.CurrencyCode;
 import org.hibernate.annotations.BatchSize;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -63,14 +68,12 @@ public class Product extends BaseEntity {
 
     @BatchSize(size = 10)
     @OrderBy("order ASC")
-    @ElementCollection
-    @CollectionTable(name = "product_image",
-            joinColumns = @JoinColumn(name = "product_id", referencedColumnName = "id", nullable = false))
-    @AttributeOverrides({
-            @AttributeOverride(name = "fileName", column = @Column(name = "file_name")),
-            @AttributeOverride(name = "fileContent", column = @Column(name = "file_content", columnDefinition = "TEXT")),
-            @AttributeOverride(name = "order", column = @Column(name = "display_order")),
-            @AttributeOverride(name = "lastModified", column = @Column(name = "last_modified", columnDefinition = "datetime default current_timestamp"))
-    })
-    private Set<File> images;
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "product_image",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "file_id")
+    )
+    @Builder.Default
+    private Set<File> productImages = new HashSet<>();
 }

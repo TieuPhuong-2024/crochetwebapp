@@ -51,9 +51,9 @@ public interface ProductMapper {
         if (request.getContent() != null) {
             product.setContent(request.getContent());
         }
-        if (ObjectUtils.isNotEmpty(product.getImages())) {
+        if (ObjectUtils.isNotEmpty(product.getProductImages())) {
             var sortedImages = ImageUtils.sortFiles(request.getImages());
-            product.setImages(FileMapper.INSTANCE.toEntities(sortedImages));
+            product.setProductImages(FileMapper.INSTANCE.toEntities(sortedImages));
         }
         return product;
     }
