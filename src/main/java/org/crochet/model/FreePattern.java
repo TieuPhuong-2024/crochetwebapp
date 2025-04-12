@@ -61,6 +61,10 @@ public class FreePattern extends BaseEntity {
     @Column(name = "status", columnDefinition = "VARCHAR(25)")
     private ChartStatus status;
 
+    @Column(name = "view_count", columnDefinition = "BIGINT DEFAULT 0")
+    @Builder.Default
+    private Long viewCount = 0L;
+
     @BatchSize(size = 10)
     @OrderBy("order ASC")
     @ElementCollection
