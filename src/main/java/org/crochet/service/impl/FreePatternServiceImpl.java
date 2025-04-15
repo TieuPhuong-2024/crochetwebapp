@@ -319,4 +319,10 @@ public class FreePatternServiceImpl implements FreePatternService {
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
                 ));
     }
+
+    @Override
+    @Transactional
+    public FreePattern save(FreePattern freePattern) {
+        return freePatternRepo.save(freePattern);
+    }
 }
