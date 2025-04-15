@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
 import org.crochet.constant.AppConstant;
 import org.crochet.enums.ResultCode;
 import org.crochet.model.FreePattern;
@@ -15,7 +16,9 @@ import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginationResponse;
 import org.crochet.payload.response.ResponseData;
 import org.crochet.service.FreePatternService;
+import org.crochet.service.ViewCountService;
 import org.crochet.util.ResponseUtil;
+import org.crochet.util.SecurityUtils;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,9 +38,11 @@ import java.util.List;
 @RequestMapping("/api/v1/free-pattern")
 public class FreePatternController {
     private final FreePatternService freePatternService;
+    private final ViewCountService viewCountService;
 
-    public FreePatternController(FreePatternService freePatternService) {
+    public FreePatternController(FreePatternService freePatternService, ViewCountService viewCountService) {
         this.freePatternService = freePatternService;
+        this.viewCountService = viewCountService;
     }
 
     @Operation(summary = "Create a free pattern")
@@ -61,8 +66,10 @@ public class FreePatternController {
     @GetMapping("/{id}")
     public ResponseData<FreePatternResponse> getDetail(
             @Parameter(description = "ID of the pattern to retrieve")
-            @PathVariable("id") String id) {
+            @PathVariable("id") String id,
+            HttpServletRequest request) {
         var response = freePatternService.getDetail(id);
+        viewCountService.incrementViewCount(id, SecurityUtils.getClientIpAddress(request));
         return ResponseUtil.success(response);
     }
 

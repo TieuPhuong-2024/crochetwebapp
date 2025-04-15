@@ -33,6 +33,8 @@ public class FreePatternResponse {
     private List<FileResponse> files;
     private CategoryResponse category;
     private String fileContent;
+    private Long viewCount = 0L;
+
 
     public FreePatternResponse(String id,
                                String name,

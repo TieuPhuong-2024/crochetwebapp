@@ -47,4 +47,6 @@ public interface FreePatternService {
             String sortDir);
 
     FreePattern findById(String id);
+
+    FreePattern save(FreePattern freePattern);
 }
