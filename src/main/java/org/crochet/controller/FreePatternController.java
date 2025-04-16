@@ -69,7 +69,9 @@ public class FreePatternController {
             @PathVariable("id") String id,
             HttpServletRequest request) {
         var response = freePatternService.getDetail(id);
-        viewCountService.incrementViewCount(id, SecurityUtils.getClientIpAddress(request));
+        String ipAddress = SecurityUtils.getClientIpAddress(request);
+        String userAgent = request.getHeader("User-Agent");
+        viewCountService.incrementViewCount(id, ipAddress, userAgent);
         return ResponseUtil.success(response);
     }
 
