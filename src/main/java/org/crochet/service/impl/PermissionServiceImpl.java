@@ -6,11 +6,10 @@ import org.crochet.exception.AccessDeniedException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.model.BaseEntity;
 import org.crochet.service.PermissionService;
+import org.crochet.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
-
-import static org.crochet.util.SecurityUtils.getCurrentUser;
 
 @Service
 public class PermissionServiceImpl implements PermissionService {
@@ -28,7 +27,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public void validateUserLoggedIn() {
-        var user = getCurrentUser();
+        var user = SecurityUtils.getCurrentUser();
         if (user == null) {
             throw new ResourceNotFoundException(
                     ResultCode.MSG_USER_LOGIN_REQUIRED.message(),
@@ -39,13 +38,13 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public boolean isAdmin() {
-        var user = getCurrentUser();
+        var user = SecurityUtils.getCurrentUser();
         return user != null && user.getRole() == RoleType.ADMIN;
     }
 
     @Override
     public boolean isOwner(BaseEntity entity) {
-        var user = getCurrentUser();
+        var user = SecurityUtils.getCurrentUser();
         return user != null && Objects.equals(entity.getCreatedBy(), user.getId());
     }
 }

@@ -23,7 +23,7 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
                 p.title,
                 p.content,
                 f.fileContent,
-                p.createdDate,
+                p.createdAt,
                 u.id,
                 u.name,
                 u.imageUrl
@@ -55,7 +55,7 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
                 p.title,
                 p.content,
                 f.fileContent,
-                p.createdDate,
+                p.createdAt,
                 u.id,
                 u.name,
                 u.imageUrl
@@ -76,7 +76,7 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
                 p.title,
                 p.content,
                 f.fileContent,
-                p.createdDate,
+                p.createdAt,
                 u.id,
                 u.name,
                 u.imageUrl
@@ -94,7 +94,7 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
             FROM
               BlogPost p
             ORDER BY
-              p.createdDate DESC
+              p.createdAt DESC
             """)
     List<String> getBlogIds(Pageable pageable);
 }

@@ -33,6 +33,7 @@ public class FreePatternResponse {
     private List<FileResponse> files;
     private CategoryResponse category;
     private String fileContent;
+    @Builder.Default
     private Long viewCount = 0L;
 
 

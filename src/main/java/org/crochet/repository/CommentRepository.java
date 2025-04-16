@@ -14,23 +14,23 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, String> {
     @Query("""
-            SELECT new org.crochet.payload.response.CommentResponse(c.id, c.content, c.createdDate)
+            SELECT new org.crochet.payload.response.CommentResponse(c.id, c.content, c.createdAt)
             FROM Comment c
             LEFT JOIN User u ON c.user.id = u.id
             WHERE u.id = :userId
-            ORDER BY c.createdDate DESC
+            ORDER BY c.createdAt DESC
             LIMIT 5
             """)
     List<CommentResponse> getRecentCommentsByUserId(@Param("userId") String userId);
     
     // Lấy tất cả root comments (không có parent) cho một bài viết, hỗ trợ phân trang
-    Page<Comment> findByBlogPostIdAndParentIsNullOrderByCreatedDateDesc(String blogPostId, Pageable pageable);
+    Page<Comment> findByBlogPostIdAndParentIsNullOrderByCreatedAtDesc(String blogPostId, Pageable pageable);
     
     // Lấy tất cả replies cho một comment cụ thể
-    List<Comment> findByParentIdOrderByCreatedDateAsc(String parentId);
+    List<Comment> findByParentIdOrderByCreatedAtAsc(String parentId);
     
     // Lấy tất cả comments (cả root và replies) cho một bài viết
-    Page<Comment> findByBlogPostIdOrderByCreatedDateDesc(String blogPostId, Pageable pageable);
+    Page<Comment> findByBlogPostIdOrderByCreatedAtDesc(String blogPostId, Pageable pageable);
     
     // Đếm số lượng replies cho một comment
     long countByParentId(String parentId);
@@ -43,10 +43,10 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
     
     // Product comments
     // Lấy tất cả root comments (không có parent) cho một product, hỗ trợ phân trang
-    Page<Comment> findByProductIdAndParentIsNullOrderByCreatedDateDesc(String productId, Pageable pageable);
+    Page<Comment> findByProductIdAndParentIsNullOrderByCreatedAtDesc(String productId, Pageable pageable);
     
     // Lấy tất cả comments (cả root và replies) cho một product
-    Page<Comment> findByProductIdOrderByCreatedDateDesc(String productId, Pageable pageable);
+    Page<Comment> findByProductIdOrderByCreatedAtDesc(String productId, Pageable pageable);
     
     // Đếm số lượng root comments cho một product
     long countByProductIdAndParentIsNull(String productId);
@@ -56,10 +56,10 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
     
     // Free Pattern comments
     // Lấy tất cả root comments (không có parent) cho một free pattern, hỗ trợ phân trang
-    Page<Comment> findByFreePatternIdAndParentIsNullOrderByCreatedDateDesc(String freePatternId, Pageable pageable);
+    Page<Comment> findByFreePatternIdAndParentIsNullOrderByCreatedAtDesc(String freePatternId, Pageable pageable);
     
     // Lấy tất cả comments (cả root và replies) cho một free pattern
-    Page<Comment> findByFreePatternIdOrderByCreatedDateDesc(String freePatternId, Pageable pageable);
+    Page<Comment> findByFreePatternIdOrderByCreatedAtDesc(String freePatternId, Pageable pageable);
     
     // Đếm số lượng root comments cho một free pattern
     long countByFreePatternIdAndParentIsNull(String freePatternId);

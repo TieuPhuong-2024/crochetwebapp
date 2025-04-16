@@ -26,7 +26,7 @@ public class UserResponse {
     private String imageUrl;
     private Boolean emailVerified;
     @JsonFormat(pattern = AppConstant.DATE_PATTERN)
-    private LocalDateTime createdDate;
+    private LocalDateTime createdAt;
     @JsonFormat(pattern = AppConstant.DATE_PATTERN)
-    private LocalDateTime lastModifiedDate;
+    private LocalDateTime updatedAt;
 }

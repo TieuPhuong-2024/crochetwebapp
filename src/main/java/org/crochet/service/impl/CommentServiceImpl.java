@@ -153,7 +153,7 @@ public class CommentServiceImpl implements CommentService {
         }
 
         comment.setContent(request.getContent());
-        comment.setCreatedDate(LocalDateTime.now());
+        comment.setCreatedAt(LocalDateTime.now());
 
         // Xử lý mention
         if (ObjectUtils.hasText(request.getMentionedUserId())) {
@@ -201,7 +201,7 @@ public class CommentServiceImpl implements CommentService {
         );
 
         Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Comment> commentPage = commentRepo.findByBlogPostIdAndParentIsNullOrderByCreatedDateDesc(blogPostId, pageable);
+        Page<Comment> commentPage = commentRepo.findByBlogPostIdAndParentIsNullOrderByCreatedAtDesc(blogPostId, pageable);
         List<CommentResponse> rootComments = new ArrayList<>();
 
         for (Comment comment : commentPage.getContent()) {
@@ -249,7 +249,7 @@ public class CommentServiceImpl implements CommentService {
         );
 
         Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Comment> commentPage = commentRepo.findByBlogPostIdOrderByCreatedDateDesc(blogPostId, pageable);
+        Page<Comment> commentPage = commentRepo.findByBlogPostIdOrderByCreatedAtDesc(blogPostId, pageable);
         List<CommentResponse> comments = new ArrayList<>();
 
         for (Comment comment : commentPage.getContent()) {
@@ -294,7 +294,7 @@ public class CommentServiceImpl implements CommentService {
         );
 
         Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Comment> commentPage = commentRepo.findByProductIdAndParentIsNullOrderByCreatedDateDesc(productId, pageable);
+        Page<Comment> commentPage = commentRepo.findByProductIdAndParentIsNullOrderByCreatedAtDesc(productId, pageable);
         List<CommentResponse> rootComments = new ArrayList<>();
 
         for (Comment comment : commentPage.getContent()) {
@@ -342,7 +342,7 @@ public class CommentServiceImpl implements CommentService {
         );
 
         Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Comment> commentPage = commentRepo.findByProductIdOrderByCreatedDateDesc(productId, pageable);
+        Page<Comment> commentPage = commentRepo.findByProductIdOrderByCreatedAtDesc(productId, pageable);
         List<CommentResponse> comments = new ArrayList<>();
 
         for (Comment comment : commentPage.getContent()) {
@@ -387,7 +387,7 @@ public class CommentServiceImpl implements CommentService {
         );
 
         Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Comment> commentPage = commentRepo.findByFreePatternIdAndParentIsNullOrderByCreatedDateDesc(freePatternId, pageable);
+        Page<Comment> commentPage = commentRepo.findByFreePatternIdAndParentIsNullOrderByCreatedAtDesc(freePatternId, pageable);
         List<CommentResponse> rootComments = new ArrayList<>();
 
         for (Comment comment : commentPage.getContent()) {
@@ -435,7 +435,7 @@ public class CommentServiceImpl implements CommentService {
         );
 
         Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Comment> commentPage = commentRepo.findByFreePatternIdOrderByCreatedDateDesc(freePatternId, pageable);
+        Page<Comment> commentPage = commentRepo.findByFreePatternIdOrderByCreatedAtDesc(freePatternId, pageable);
         List<CommentResponse> comments = new ArrayList<>();
 
         for (Comment comment : commentPage.getContent()) {
@@ -477,7 +477,7 @@ public class CommentServiceImpl implements CommentService {
                 )
         );
 
-        List<Comment> replies = commentRepo.findByParentIdOrderByCreatedDateAsc(commentId);
+        List<Comment> replies = commentRepo.findByParentIdOrderByCreatedAtAsc(commentId);
         List<CommentResponse> responses = new ArrayList<>();
 
         for (Comment reply : replies) {
@@ -522,7 +522,7 @@ public class CommentServiceImpl implements CommentService {
 
         // Nếu là root comment, xóa cả replies
         if (comment.getParent() == null) {
-            List<Comment> replies = commentRepo.findByParentIdOrderByCreatedDateAsc(commentId);
+            List<Comment> replies = commentRepo.findByParentIdOrderByCreatedAtAsc(commentId);
             commentRepo.deleteAll(replies);
         }
 
