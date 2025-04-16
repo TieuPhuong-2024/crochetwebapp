@@ -25,7 +25,7 @@ public class BlogPostResponse {
     private Boolean isHome;
     private List<FileResponse> files;
     @JsonFormat(pattern = AppConstant.DATE_PATTERN)
-    private LocalDateTime createdDate;
+    private LocalDateTime createdAt;
     private String fileContent;
     private String userId;
     private String username;
@@ -36,23 +36,23 @@ public class BlogPostResponse {
                             String title,
                             String content,
                             String fileContent,
-                            LocalDateTime createdDate) {
+                            LocalDateTime createdAt) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.fileContent = fileContent;
-        this.createdDate = createdDate;
+        this.createdAt = createdAt;
     }
 
     public BlogPostResponse(String id,
                             String title,
                             String content,
                             String fileContent,
-                            LocalDateTime createdDate,
+                            LocalDateTime createdAt,
                             String userId,
                             String username,
                             String userAvatar) {
-        this(id, title, content, fileContent, createdDate);
+        this(id, title, content, fileContent, createdAt);
         this.userId = userId;
         this.username = username;
         this.userAvatar = userAvatar;

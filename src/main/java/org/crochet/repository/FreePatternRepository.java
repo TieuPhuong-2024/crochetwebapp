@@ -112,7 +112,7 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
     })
     Page<FreePatternResponse> getFrepWithPageable(Pageable pageable);
 
-    @Query("select f.id from FreePattern f order by f.createdDate desc")
+    @Query("select f.id from FreePattern f order by f.createdAt desc")
     List<String> getFreePatternIds(Pageable pageable);
 
     @Query("""
