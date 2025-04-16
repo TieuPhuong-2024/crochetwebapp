@@ -80,3 +80,10 @@ resilience4j:
         waitDuration: 1s
         retryExceptions:
           - org.springframework.mail.MailException
+
+# Google Analytics configuration
+google:
+  analytics:
+    enabled: ${GOOGLE_ANALYTICS_ENABLED:false}
+    measurement-id: ${GOOGLE_ANALYTICS_MEASUREMENT_ID:}
+    api-secret: ${GOOGLE_ANALYTICS_API_SECRET:}
