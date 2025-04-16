@@ -1,9 +1,10 @@
 package org.crochet.model;
 
-import io.hypersistence.utils.hibernate.id.Tsid;
+import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +19,11 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class BaseEntity extends AuditTable {
     @Id
-    @Tsid
     @Column(name = "id", nullable = false, unique = true, length = 50)
     private String id;
+
+    @PrePersist
+    public void setup() {
+        id = UuidCreator.getTimeOrderedEpoch().toString();
+    }
 }

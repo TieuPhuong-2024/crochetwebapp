@@ -52,8 +52,6 @@ dependencies {
     implementation 'org.liquibase:liquibase-core:4.30.0'
     implementation 'com.h2database:h2:2.2.224'
     implementation 'org.postgresql:postgresql:42.7.4'
-    // implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
-    // testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
 
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
@@ -67,10 +65,10 @@ dependencies {
 
     implementation 'com.google.firebase:firebase-admin:9.4.1'
 
-    implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.9.2'
-
     // https://mvnrepository.com/artifact/com.turkraft.springfilter/jpa
     implementation 'com.turkraft.springfilter:jpa:3.1.9'
+
+    implementation 'com.github.f4b6a3:uuid-creator:5.3.3'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test:6.3.0'

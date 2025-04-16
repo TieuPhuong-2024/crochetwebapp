@@ -1,6 +1,6 @@
 package org.crochet.model;
 
-import io.hypersistence.utils.hibernate.id.Tsid;
+import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -29,7 +29,6 @@ import java.time.LocalDateTime;
 public class Notification {
 
     @Id
-    @Tsid
     @Column(name = "id",
             nullable = false,
             unique = true,
@@ -65,6 +64,9 @@ public class Notification {
 
     @PrePersist
     protected void onCreate() {
+        if (id == null) {
+            id = UuidCreator.getTimeOrderedEpoch().toString();
+        }
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
