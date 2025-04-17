@@ -30,7 +30,7 @@ public class ImageUtils {
 
         AtomicInteger order = new AtomicInteger(0);
         sortedFiles.forEach(file ->
-                file.setOrder(ObjectUtils.applyIfNotNull(file, f -> order.getAndIncrement(), -1))
+                file.setOrder(order.getAndIncrement())
         );
 
         return sortedFiles;
