@@ -61,5 +61,5 @@ COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 ENTRYPOINT ["java", \
     "-XX:+UseContainerSupport", \
     "-XX:MaxRAMPercentage=75.0", \
-    "-cp", "app:app/lib/*", \
+    "-cp", ".:/app/lib/*", \
     "org.crochet.CrochetApplication"]

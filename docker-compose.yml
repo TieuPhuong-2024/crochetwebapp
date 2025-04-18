@@ -1,22 +1,16 @@
 services:
   web:
-    image: phanvanluom97bd/crochet:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.slim
+      secrets:
+        - secrets
+    image: tieuphuongcrochet:latest
     ports:
       - "8080:8080"
     env_file:
       - .env.dev
-    depends_on:
-      - mysql
 
-  mysql:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: testdb
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-volumes:
-  mysql_data:
+secrets:
+  secrets:
+    file: ./secrets.txt
