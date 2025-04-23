@@ -2,7 +2,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.slim
+      dockerfile: Dockerfile
       secrets:
         - secrets
     image: tieuphuongcrochet:latest
