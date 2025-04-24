@@ -11,9 +11,11 @@ import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.FreePatternMapper;
 import org.crochet.mapper.PaginationMapper;
 import org.crochet.model.FreePattern;
+import org.crochet.model.Settings;
 import org.crochet.payload.request.FreePatternRequest;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginationResponse;
+import org.crochet.repository.CommentRepository;
 import org.crochet.repository.FreePatternRepoCustom;
 import org.crochet.repository.FreePatternRepository;
 import org.crochet.repository.FreePatternSpecifications;
@@ -50,6 +52,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final PermissionService permissionService;
     private final CategoryService categoryService;
     private final UserService userService;
+    private final CommentRepository commentRepository;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -103,7 +106,14 @@ public class FreePatternServiceImpl implements FreePatternService {
     @SuppressWarnings("ConstantValue")
     @Transactional(readOnly = true)
     @Override
-    public PaginationResponse<FreePatternResponse> getAllFreePatterns(int offset, int limit, String sortBy, String sortDir, String categoryId, Specification<FreePattern> spec) {
+    public PaginationResponse<FreePatternResponse> getAllFreePatterns(
+            int offset,
+            int limit,
+            String sortBy,
+            String sortDir,
+            String categoryId,
+            Specification<FreePattern> spec
+    ) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         var filter = ((FilterSpecification<FreePattern>) spec).getFilter();
@@ -136,12 +146,14 @@ public class FreePatternServiceImpl implements FreePatternService {
     @SuppressWarnings("ConstantValue")
     @Transactional(readOnly = true)
     @Override
-    public PaginationResponse<FreePatternResponse> getAllByUser(int offset,
-                                                                int limit,
-                                                                String sortBy,
-                                                                String sortDir,
-                                                                String userId,
-                                                                Specification<FreePattern> spec) {
+    public PaginationResponse<FreePatternResponse> getAllByUser(
+            int offset,
+            int limit,
+            String sortBy,
+            String sortDir,
+            String userId,
+            Specification<FreePattern> spec
+    ) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         var filter = ((FilterSpecification<FreePattern>) spec).getFilter();
@@ -168,9 +180,18 @@ public class FreePatternServiceImpl implements FreePatternService {
         if (settingsMap.isEmpty()) {
             return Collections.emptyList();
         }
-        var direction = settingsMap.get("homepage.fp.direction").getValue();
-        var orderBy = settingsMap.get("homepage.fp.orderBy").getValue();
-        var limit = settingsMap.get("homepage.fp.limit").getValue();
+        var direction = settingsMap.getOrDefault(
+                "homepage.fp.direction",
+                new Settings("homepage.fp.direction", "desc")
+        ).getValue();
+        var orderBy = settingsMap.getOrDefault(
+                "homepage.fp.orderBy",
+                new Settings("homepage.fp.orderBy", "createdDate")
+        ).getValue();
+        var limit = settingsMap.getOrDefault(
+                "homepage.fp.limit",
+                new Settings("homepage.fp.limit", "12")
+        ).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         return freePatternRepo.findLimitedNumFreePattern(pageable);
@@ -209,6 +230,7 @@ public class FreePatternServiceImpl implements FreePatternService {
         var images = FileMapper.INSTANCE.toResponses(frep.getImages());
         var files = FileMapper.INSTANCE.toResponses(frep.getFiles());
         var category = CategoryMapper.INSTANCE.toResponse(frep.getCategory());
+        var commentCount = commentRepository.countByFreePatternId(id);
         return FreePatternResponse.builder()
                 .id(frep.getId())
                 .name(frep.getName())
@@ -224,6 +246,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .images(images)
                 .files(files)
                 .category(category)
+                .commentCount(commentCount)
                 .build();
     }
 
@@ -235,11 +258,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     @Transactional
     @Override
     public void delete(String id) {
-        var freePattern = freePatternRepo.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(
-                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.message(),
-                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
-                ));
+        var freePattern = findById(id);
         permissionService.checkUserPermission(freePattern, "delete");
         freePatternRepo.delete(freePattern);
     }

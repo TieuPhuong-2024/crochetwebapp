@@ -29,6 +29,7 @@ public class FreePatternResponse {
     private String username;
     private String userAvatar;
     private List<FileResponse> images;
+    private long commentCount;
     private List<FileResponse> files;
     private CategoryResponse category;
     private String fileContent;

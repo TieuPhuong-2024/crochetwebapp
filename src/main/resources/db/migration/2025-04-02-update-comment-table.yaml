@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-product-freepattern-columns-to-comment
+      author: vanluom123
+      changes:
+        - addColumn:
+            tableName: comment
+            columns:
+              - column:
+                  name: product_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: free_pattern_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: true
+        - modifyDataType:
+            tableName: comment
+            columnName: post_id
+            newDataType: varchar(50)
+        - dropNotNullConstraint:
+            tableName: comment
+            columnName: post_id
+            columnDataType: varchar(50)
+        - addForeignKeyConstraint:
+            constraintName: fk_comment_product
+            baseTableName: comment
+            baseColumnNames: product_id
+            referencedTableName: product
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            constraintName: fk_comment_free_pattern
+            baseTableName: comment
+            baseColumnNames: free_pattern_id
+            referencedTableName: free_pattern
+            referencedColumnNames: id
+            onDelete: CASCADE

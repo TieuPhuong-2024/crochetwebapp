@@ -13,6 +13,7 @@ import org.crochet.model.Settings;
 import org.crochet.payload.request.ProductRequest;
 import org.crochet.payload.response.PaginationResponse;
 import org.crochet.payload.response.ProductResponse;
+import org.crochet.repository.CommentRepository;
 import org.crochet.repository.ProductRepository;
 import org.crochet.repository.ProductSpecifications;
 import org.crochet.service.CategoryService;
@@ -43,6 +44,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepo;
     private final CategoryService categoryService;
     private final SettingsUtil settingsUtil;
+    private final CommentRepository commentRepository;
 
     /**
      * Creates a new product or updates an existing one based on the provided
@@ -141,9 +143,18 @@ public class ProductServiceImpl implements ProductService {
         if (settingsMap.isEmpty()) {
             return Collections.emptyList();
         }
-        var direction = settingsMap.get("homepage.product.direction").getValue();
-        var orderBy = settingsMap.get("homepage.product.orderBy").getValue();
-        var limit = settingsMap.get("homepage.product.limit").getValue();
+        var direction = settingsMap.getOrDefault(
+                "homepage.product.direction",
+                new Settings("homepage.product.direction", "desc")
+        ).getValue();
+        var orderBy = settingsMap.getOrDefault(
+                "homepage.product.orderBy",
+                new Settings("homepage.product.orderBy", "createdDate")
+        ).getValue();
+        var limit = settingsMap.getOrDefault(
+                "homepage.product.limit",
+                new Settings("homepage.product.limit", "12")
+        ).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         return productRepo.findLimitedNumProduct(pageable);
@@ -161,7 +172,13 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getDetail(String id) {
         var product = findById(id);
-        return ProductMapper.INSTANCE.toResponse(product);
+        ProductResponse response = ProductMapper.INSTANCE.toResponse(product);
+        
+        // Thêm số lượng comments
+        long commentCount = commentRepository.countByProductId(id);
+        response.setCommentCount(commentCount);
+        
+        return response;
     }
 
     @Override

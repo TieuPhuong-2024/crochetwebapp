@@ -1,17 +1,8 @@
-# Build stage
+# Stage 1: Build app và custom JRE
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace/app
+COPY . .
 
-# Copy chỉ các file cần thiết cho build
-COPY gradlew .
-COPY gradle gradle
-COPY version.properties .
-COPY version.gradle .
-COPY build.gradle .
-COPY settings.gradle .
-COPY src src
-
-# Arguments for the build
 ARG ENV
 ARG EMAIL
 ARG DB_HOST
@@ -41,25 +32,23 @@ ENV ENV ${ENV} \
     SERVICE_ACCOUNT_KEY ${SERVICE_ACCOUNT_KEY} \
     ALLOWED_ORIGINS ${ALLOWED_ORIGINS}
 
-# Build project
-RUN --mount=type=cache,target=/root/.gradle \
-    chmod +x gradlew \
-    && ./gradlew clean bootJar --no-daemon -x test \
-    && mkdir -p build/dependency \
-    && (cd build/dependency; jar -xf ../libs/*-SNAPSHOT.jar)
+RUN chmod +x gradlew
+RUN ./gradlew bootJar --no-daemon -x test
 
-# Runtime stage
-FROM eclipse-temurin:21-jre-alpine
-VOLUME /tmp
+RUN mkdir -p build/extracted && (cd build/extracted && jar xf ../libs/*.jar)
+RUN jdeps --ignore-missing-deps -q --recursive --multi-release 21 \
+    --print-module-deps --class-path 'build/extracted/BOOT-INF/lib/*' build/libs/*.jar > deps.info
+RUN jlink --add-modules $(cat deps.info),jdk.crypto.ec,jdk.crypto.cryptoki --compress 2 --no-header-files --no-man-pages --output /custom_jre
 
-ARG DEPENDENCY=/workspace/app/build/dependency
-COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
-COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
-COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+# Stage 2: Runtime siêu nhỏ bằng Alpine
+FROM alpine:3.18
+RUN apk add --no-cache ca-certificates bash libc6-compat
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+COPY --from=build /custom_jre $JAVA_HOME
+WORKDIR /app
+COPY --from=build /workspace/app/build/extracted/BOOT-INF/lib /app/lib
+COPY --from=build /workspace/app/build/extracted/META-INF /app/META-INF
+COPY --from=build /workspace/app/build/extracted/BOOT-INF/classes /app
 
-# JVM tối ưu cho container
-ENTRYPOINT ["java", \
-    "-XX:+UseContainerSupport", \
-    "-XX:MaxRAMPercentage=75.0", \
-    "-cp", "app:app/lib/*", \
-    "org.crochet.CrochetApplication"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-cp", ".:/app/lib/*", "org.crochet.CrochetApplication"]

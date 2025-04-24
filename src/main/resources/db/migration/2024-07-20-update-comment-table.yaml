@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2024-07-20-update-comment-table
+      author: admin
+      changes:
+        - addColumn:
+            tableName: comment
+            columns:
+              - column:
+                  name: parent_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: mentioned_user_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseColumnNames: parent_id
+            baseTableName: comment
+            constraintName: fk_comment_parent
+            onDelete: CASCADE
+            onUpdate: CASCADE
+            referencedColumnNames: id
+            referencedTableName: comment
+        - addForeignKeyConstraint:
+            baseColumnNames: mentioned_user_id
+            baseTableName: comment
+            constraintName: fk_comment_mentioned_user
+            onDelete: SET NULL
+            onUpdate: CASCADE
+            referencedColumnNames: id
+            referencedTableName: user
+        - createIndex:
+            indexName: idx_comment_parent_id
+            tableName: comment
+            columns:
+              - column:
+                  name: parent_id
+        - createIndex:
+            indexName: idx_comment_mentioned_user_id
+            tableName: comment
+            columns:
+              - column:
+                  name: mentioned_user_id 

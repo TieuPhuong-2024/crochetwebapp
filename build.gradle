@@ -42,6 +42,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-aop"
     implementation "org.springframework.boot:spring-boot-starter-cache"
     implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
     
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0-RC1'
 
@@ -51,8 +52,8 @@ dependencies {
     implementation 'org.liquibase:liquibase-core:4.30.0'
     implementation 'com.h2database:h2:2.2.224'
     implementation 'org.postgresql:postgresql:42.7.4'
-//    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
-//    testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
+    // implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
+    // testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
 
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
@@ -68,7 +69,7 @@ dependencies {
 
     implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.9.2'
 
-// https://mvnrepository.com/artifact/com.turkraft.springfilter/jpa
+    // https://mvnrepository.com/artifact/com.turkraft.springfilter/jpa
     implementation 'com.turkraft.springfilter:jpa:3.1.9'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
