@@ -28,6 +28,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
@@ -71,6 +72,13 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     @Column(name = "roles", columnDefinition = "VARCHAR(10) DEFAULT 'USER'")
     @Builder.Default
     private RoleType role = RoleType.USER;
+
+    @Column(name = "is_vip", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Builder.Default
+    private boolean isVip = false;
+
+    @Column(name = "vip_expiry_date")
+    private LocalDateTime vipExpiryDate;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<ConfirmationToken> confirmationTokens;

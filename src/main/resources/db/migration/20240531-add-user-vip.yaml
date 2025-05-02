@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2024-05-31-add-user-vip
+      author: luomp
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: is_vip
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: vip_expiry_date
+                  type: DATETIME
+                  constraints:
+                    nullable: true 

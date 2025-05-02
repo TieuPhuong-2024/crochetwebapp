@@ -12,6 +12,7 @@ import org.crochet.enums.AuthProvider;
 import org.crochet.enums.RoleType;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -28,6 +29,9 @@ public class UserProfileResponse {
     private AuthProvider provider;
     private Boolean emailVerified;
     private RoleType role;
+    private Boolean isVip;
+    @JsonFormat(pattern = AppConstant.DATE_PATTERN)
+    private LocalDateTime vipExpiryDate;
     
     // Profile info
     private String phone;

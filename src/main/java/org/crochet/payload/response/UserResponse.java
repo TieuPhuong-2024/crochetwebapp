@@ -25,6 +25,9 @@ public class UserResponse {
     private RoleType role;
     private String imageUrl;
     private Boolean emailVerified;
+    private Boolean isVip;
+    @JsonFormat(pattern = AppConstant.DATE_PATTERN)
+    private LocalDateTime vipExpiryDate;
     @JsonFormat(pattern = AppConstant.DATE_PATTERN)
     private LocalDateTime createdDate;
     @JsonFormat(pattern = AppConstant.DATE_PATTERN)

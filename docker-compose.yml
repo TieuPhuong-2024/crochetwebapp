@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
       secrets:
         - secrets
-    image: tieuphuongcrochet:latest
+    image: phanvanluom97bd/crochet:latest
     ports:
       - "8080:8080"
     env_file:
