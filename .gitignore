@@ -165,3 +165,6 @@ gradle-app.setting
 # Ignore environment file
 .env
 .env.*
+
+#ignore secret.txt
+secrets.txt
