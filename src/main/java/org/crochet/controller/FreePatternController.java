@@ -140,4 +140,13 @@ public class FreePatternController {
         var res = freePatternService.getFreePatternIds(pageNo, pageSize);
         return ResponseUtil.success(res);
     }
+
+    @Operation(summary = "Increment view count for a free pattern")
+    @ApiResponse(responseCode = "200", description = "View count incremented successfully")
+    @ApiResponse(responseCode = "404", description = "Free pattern not found")
+    @PostMapping("/{id}/view")
+    @ResponseStatus(HttpStatus.OK)
+    public void incrementViewCount(@PathVariable String id) {
+        freePatternService.incrementViewCount(id);
+    }
 }

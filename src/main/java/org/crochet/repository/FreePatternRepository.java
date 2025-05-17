@@ -199,4 +199,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
     void deleteAllByIdAndCreatedBy(
             @Param("ids") List<String> ids,
             @Param("userId") String userId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE FreePattern fp SET fp.viewCount = fp.viewCount + 1 WHERE fp.id = :id")
+    void incrementViewCount(@Param("id") String id);
 }

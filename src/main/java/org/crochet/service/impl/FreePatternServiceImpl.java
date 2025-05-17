@@ -93,7 +93,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     }
 
     /**
-     * Get all free patterns with filter
+     * Get all free patterns with a filter
      *
      * @param offset     Page number
      * @param limit      Page size
@@ -279,7 +279,7 @@ public class FreePatternServiceImpl implements FreePatternService {
             );
         }
 
-        // Delete all free patterns if user is admin. Otherwise, delete only free patterns created by the user
+        // Delete all free patterns if the user is admin. Otherwise, delete only free patterns created by the user
         if (currentUser.getRole() == RoleType.ADMIN) {
             freePatternRepo.deleteAllById(ids);
         } else {
@@ -324,5 +324,17 @@ public class FreePatternServiceImpl implements FreePatternService {
     @Transactional
     public FreePattern save(FreePattern freePattern) {
         return freePatternRepo.save(freePattern);
+    }
+
+    @Transactional
+    @Override
+    public void incrementViewCount(String id) {
+        freePatternRepo.incrementViewCount(id);
+    }
+
+    @Transactional
+    @Override
+    public void deleteFreePattern(String id) {
+        freePatternRepo.deleteById(id);
     }
 }

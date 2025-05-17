@@ -49,4 +49,8 @@ public interface FreePatternService {
     FreePattern findById(String id);
 
     FreePattern save(FreePattern freePattern);
+
+    void deleteFreePattern(String id);
+
+    void incrementViewCount(String id);
 }
