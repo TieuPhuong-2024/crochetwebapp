@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250115-optimize-free-pattern-count-query
+      author: pvanluom
+      comment: "Tối ưu hóa truy vấn COUNT cho free_pattern với các index composite"
+      changes:
+        # Index composite cho free_pattern_image - tối ưu JOIN với display_order
+        - createIndex:
+            indexName: idx_free_pattern_image_fp_id_display_order
+            tableName: free_pattern_image
+            columns:
+              - column:
+                  name: free_pattern_id
+              - column:
+                  name: display_order
+                  
+        # Index cho free_pattern.created_by - tối ưu JOIN với users
+        - createIndex:
+            indexName: idx_free_pattern_created_by
+            tableName: free_pattern
+            columns:
+              - column:
+                  name: created_by
+                  
+        # Index composite cho free_pattern - tối ưu truy vấn COUNT với JOIN
+        - createIndex:
+            indexName: idx_free_pattern_created_by_status
+            tableName: free_pattern
+            columns:
+              - column:
+                  name: created_by
+              - column:
+                  name: status
+                  
+        # Index cho users.id - đảm bảo JOIN nhanh
+        - createIndex:
+            indexName: idx_users_id_optimized
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  
+      rollback:
+        - dropIndex:
+            indexName: idx_free_pattern_image_fp_id_display_order
+            tableName: free_pattern_image
+        - dropIndex:
+            indexName: idx_free_pattern_created_by
+            tableName: free_pattern
+        - dropIndex:
+            indexName: idx_free_pattern_created_by_status
+            tableName: free_pattern
+        - dropIndex:
+            indexName: idx_users_id_optimized
+            tableName: users

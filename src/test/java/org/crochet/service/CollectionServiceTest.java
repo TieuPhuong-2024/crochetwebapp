@@ -67,7 +67,7 @@ public class CollectionServiceTest {
         when(collectionRepo.findColById(collectionId)).thenReturn(Optional.of(collection));
         when(freePatternRepository.findFrepById(freePatternId)).thenReturn(Optional.of(freePattern));
         // Simulate it is the first pattern in the collection
-        when(colFrepRepo.countByCollectionId(collectionId)).thenReturn(1L);
+        when(colFrepRepo.countByCollectionIdOptimized(collectionId)).thenReturn(1L);
 
         // Act
         collectionService.addFreePatternToCollection(collectionId, freePatternId);
@@ -98,7 +98,7 @@ public class CollectionServiceTest {
         when(collectionRepo.findColById(collectionId)).thenReturn(Optional.of(collection));
         when(freePatternRepository.findFrepById(freePatternId)).thenReturn(Optional.of(freePattern));
         // Simulate collection already has one or more patterns
-        when(colFrepRepo.countByCollectionId(collectionId)).thenReturn(2L);
+        when(colFrepRepo.countByCollectionIdOptimized(collectionId)).thenReturn(2L);
 
         // Act
         collectionService.addFreePatternToCollection(collectionId, freePatternId);
@@ -158,7 +158,7 @@ public class CollectionServiceTest {
         try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
             mockedSecurity.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
-            when(colFrepRepo.findColByUserAndFreePattern(user.getId(), freePatternId)).thenReturn(collection);
+            when(colFrepRepo.findCollectionByUserAndFreePattern(user.getId(), freePatternId)).thenReturn(Optional.of(collection));
 
             collectionService.removeFreePatternFromCollection(freePatternId);
 
@@ -193,7 +193,7 @@ public class CollectionServiceTest {
             mockedSecurity.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
             // When no collection is found for the user and pattern, return null
-            when(colFrepRepo.findColByUserAndFreePattern(user.getId(), freePatternId)).thenReturn(null);
+            when(colFrepRepo.findCollectionByUserAndFreePattern(user.getId(), freePatternId)).thenReturn(null);
 
             assertThrows(ResourceNotFoundException.class, () ->
                     collectionService.removeFreePatternFromCollection(freePatternId));
