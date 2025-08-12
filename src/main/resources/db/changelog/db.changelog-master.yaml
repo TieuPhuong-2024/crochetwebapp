@@ -1,31 +1,7 @@
 databaseChangeLog:
   - include:
-      file: src/main/resources/db/migration/2024-05-02-first-creation-schemas.yaml
+      file: src/main/resources/db/migration/20250115-add-collection-performance-indexes.yaml
   - include:
-      file: src/main/resources/db/migration/2024-05-03-add-constraint.yaml
+      file: src/main/resources/db/migration/20250115-optimize-collection-free-pattern.yaml
   - include:
-      file: src/main/resources/db/migration/2024-05-03-add-token-blacklist.yaml
-  - include:
-      file: src/main/resources/db/migration/2024-05-12-remove-avatar-column-in-blog-table.yaml
-  - include:
-      file: src/main/resources/db/migration/2024-05-18-add-blog-category-table.yaml
-  - include:
-      file: src/main/resources/db/migration/2024-07-08-drop-unique-constraint-for-name.yaml
-  - include:
-      file: src/main/resources/db/migration/2024-07-11-create-settings-table.yaml
-  - include:
-      file: src/main/resources/db/migration/2024-09-04-add-status-for-pattern.yaml
-  - include:
-      file: src/main/resources/db/migration/2024-11-08-order-image.yaml
-  - include:
-      file: src/main/resources/db/migration/20241108-add-indexes-free-pattern.yaml
-  - include:
-      file: src/main/resources/db/migration/20241108-add-indexes-pattern.yaml
-  - include:
-      file: src/main/resources/db/migration/20241108-add-indexes-product.yaml
-  - include:
-      file: src/main/resources/db/migration/20241109-add-additional-indexes.yaml
-  - include:
-      file: src/main/resources/db/migration/20241126-add-collection-table.yaml
-  - include:
-      file: src/main/resources/db/migration/20241213-add-user-profile.yaml
+      file: src/main/resources/db/migration/20250115-optimize-free-pattern-count-query.yaml
