@@ -181,9 +181,14 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
               JOIN colFrep.collection c
               LEFT JOIN User u ON u.id = fp.createdBy
             WHERE
-              c.id =:colId
-              and c.user.id = :userId
+              c.id = :colId
+              AND c.user.id = :userId
+            ORDER BY colFrep.createdDate DESC
             """)
+    @QueryHints(value = {
+            @QueryHint(name = HINT_FETCH_SIZE, value = "50"),
+            @QueryHint(name = HINT_READ_ONLY, value = "true")
+    })
     Page<FreePatternResponse> getFrepsByCollection(@Param("userId") String userId,
                                                    @Param("colId") String collectionId,
                                                    Pageable pageable);
@@ -199,4 +204,59 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
     void deleteAllByIdAndCreatedBy(
             @Param("ids") List<String> ids,
             @Param("userId") String userId);
+
+    // Tối ưu hóa: Truy vấn COUNT riêng biệt không cần JOIN với users và images
+    @Query("""
+            SELECT COUNT(fp.id)
+            FROM FreePattern fp
+            """)
+    @QueryHints(value = {
+            @QueryHint(name = HINT_READ_ONLY, value = "true")
+    })
+    long countAllFreePatterns();
+
+    // Tối ưu hóa: Truy vấn COUNT với filter theo user
+    @Query("""
+            SELECT COUNT(fp.id)
+            FROM FreePattern fp
+            WHERE fp.createdBy = :userId
+            """)
+    @QueryHints(value = {
+            @QueryHint(name = HINT_READ_ONLY, value = "true")
+    })
+    long countByUserId(@Param("userId") String userId);
+
+    // Tối ưu hóa: Truy vấn COUNT với filter theo category (bao gồm parent categories)
+    @Query("""
+            SELECT COUNT(fp.id)
+            FROM FreePattern fp
+            WHERE fp.category.id = :categoryId
+            OR fp.category.parent.id = :categoryId
+            """)
+    @QueryHints(value = {
+            @QueryHint(name = HINT_READ_ONLY, value = "true")
+    })
+    long countByCategoryId(@Param("categoryId") String categoryId);
+
+    // Tối ưu hóa: Truy vấn COUNT với filter theo status
+    @Query("""
+            SELECT COUNT(fp.id)
+            FROM FreePattern fp
+            WHERE fp.status = :status
+            """)
+    @QueryHints(value = {
+            @QueryHint(name = HINT_READ_ONLY, value = "true")
+    })
+    long countByStatus(@Param("status") String status);
+
+    // Tối ưu hóa: Truy vấn COUNT với filter theo isHome
+    @Query("""
+            SELECT COUNT(fp.id)
+            FROM FreePattern fp
+            WHERE fp.isHome = :isHome
+            """)
+    @QueryHints(value = {
+            @QueryHint(name = HINT_READ_ONLY, value = "true")
+    })
+    long countByIsHome(@Param("isHome") boolean isHome);
 }

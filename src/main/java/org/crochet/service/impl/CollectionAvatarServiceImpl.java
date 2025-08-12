@@ -32,7 +32,7 @@ public class CollectionAvatarServiceImpl implements CollectionAvatarService {
 
     @Override
     public void updateAvatarFromNextPattern(Collection collection) {
-        var remainingPatterns = colFrepRepo.findFirstFreePatternByCollectionId(collection.getId());
+        var remainingPatterns = colFrepRepo.findFreePatternsByCollectionId(collection.getId());
         if (!remainingPatterns.isEmpty()) {
             updateAvatar(collection, remainingPatterns.getFirst());
         } else {

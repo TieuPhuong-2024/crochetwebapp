@@ -33,6 +33,9 @@ public class FreePatternResponse {
     private List<FileResponse> files;
     private CategoryResponse category;
     private String fileContent;
+    
+    @JsonProperty("in_collection")
+    private Boolean inCollection;
 
     public FreePatternResponse(String id,
                                String name,

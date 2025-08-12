@@ -20,6 +20,7 @@ import org.crochet.repository.FreePatternRepoCustom;
 import org.crochet.repository.FreePatternRepository;
 import org.crochet.repository.FreePatternSpecifications;
 import org.crochet.service.CategoryService;
+import org.crochet.service.CollectionService;
 import org.crochet.service.FreePatternService;
 import org.crochet.service.PermissionService;
 import org.crochet.service.UserService;
@@ -27,7 +28,6 @@ import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
 import org.crochet.util.SettingsUtil;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * FreePatternServiceImpl class
@@ -53,6 +54,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final CategoryService categoryService;
     private final UserService userService;
     private final CommentRepository commentRepository;
+    private final CollectionService collectionService;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -118,17 +120,74 @@ public class FreePatternServiceImpl implements FreePatternService {
         Pageable pageable = PageRequest.of(offset, limit, sort);
         var filter = ((FilterSpecification<FreePattern>) spec).getFilter();
         var hasCategory = categoryId != null && !categoryId.isBlank();
-        Page<FreePatternResponse> page;
+
+        // Tối ưu hóa: Sử dụng truy vấn COUNT riêng biệt thay vì dựa vào Page
+        long totalElements;
+        List<FreePatternResponse> content;
+
         if (hasCategory) {
             spec = spec.and(FreePatternSpecifications.getAllByCategoryId(categoryId));
-        }
-        if ((filter != null && ObjectUtils.isNotEmpty(filter.getChildren())) || hasCategory) {
+            // Sử dụng COUNT riêng biệt cho category với filter
+            if (filter != null && ObjectUtils.isNotEmpty(filter.getChildren())) {
+                List<String> ids = freePatternRepoCustom.findAllIds(spec);
+                content = freePatternRepo.getFrepByIds(ids, pageable).getContent();
+                totalElements = ids.size();
+            } else {
+                totalElements = freePatternRepo.countByCategoryId(categoryId);
+                // Sử dụng specification để filter data thay vì getFrepWithPageable
+                content = freePatternRepo.findAll(spec, pageable).stream()
+                        .map(this::convertToResponse)
+                        .toList();
+            }
+        } else if (filter != null && ObjectUtils.isNotEmpty(filter.getChildren())) {
             List<String> ids = freePatternRepoCustom.findAllIds(spec);
-            page = freePatternRepo.getFrepByIds(ids, pageable);
+            content = freePatternRepo.getFrepByIds(ids, pageable).getContent();
+            totalElements = ids.size();
         } else {
-            page = freePatternRepo.getFrepWithPageable(pageable);
+            // Sử dụng COUNT riêng biệt cho trường hợp không có filter
+            totalElements = freePatternRepo.countAllFreePatterns();
+            content = freePatternRepo.getFrepWithPageable(pageable).getContent();
         }
-        return PaginationMapper.toPagination(page);
+
+        // Thêm collection status cho từng pattern (chỉ khi user đã login)
+        if (!content.isEmpty()) {
+            // Kiểm tra xem user có login không
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    Set<String> patternIds = content.stream()
+                            .map(FreePatternResponse::getId)
+                            .collect(java.util.stream.Collectors.toSet());
+
+                    java.util.Map<String, Boolean> collectionStatus =
+                            collectionService.checkFreePatternsInCollection(patternIds);
+
+                    // Cập nhật trạng thái collection cho từng pattern
+                    content.forEach(pattern ->
+                            pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false))
+                    );
+                } catch (Exception e) {
+                    // Nếu có lỗi, set tất cả patterns là false
+                    content.forEach(pattern -> pattern.setInCollection(false));
+                }
+            } else {
+                // Nếu user chưa login, set tất cả patterns là false
+                content.forEach(pattern -> pattern.setInCollection(false));
+            }
+        }
+
+        // Tính toán thông tin phân trang
+        int totalPages = (int) Math.ceil((double) totalElements / limit);
+        boolean isLast = offset >= totalPages - 1;
+
+        return PaginationResponse.<FreePatternResponse>builder()
+                .contents(content)
+                .pageNo(offset)
+                .pageSize(limit)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .last(isLast)
+                .build();
     }
 
     /**
@@ -157,14 +216,60 @@ public class FreePatternServiceImpl implements FreePatternService {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         var filter = ((FilterSpecification<FreePattern>) spec).getFilter();
-        Page<FreePatternResponse> page;
+
+        // Tối ưu hóa: Sử dụng truy vấn COUNT riêng biệt
+        long totalElements;
+        List<FreePatternResponse> content;
+
         if (filter != null && ObjectUtils.isNotEmpty(filter.getChildren())) {
             var freePatternIds = freePatternRepoCustom.findAllIds(spec);
-            page = freePatternRepo.getByUserAndIds(userId, freePatternIds, pageable);
+            content = freePatternRepo.getByUserAndIds(userId, freePatternIds, pageable).getContent();
+            totalElements = freePatternIds.size();
         } else {
-            page = freePatternRepo.getByUserWithPageable(userId, pageable);
+            // Sử dụng COUNT riêng biệt cho user
+            totalElements = freePatternRepo.countByUserId(userId);
+            content = freePatternRepo.getByUserWithPageable(userId, pageable).getContent();
         }
-        return PaginationMapper.toPagination(page);
+        
+        // Thêm collection status cho từng pattern (chỉ khi user đã login)
+        if (!content.isEmpty()) {
+            // Kiểm tra xem user có login không
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    Set<String> patternIds = content.stream()
+                            .map(FreePatternResponse::getId)
+                            .collect(java.util.stream.Collectors.toSet());
+                    
+                    java.util.Map<String, Boolean> collectionStatus = 
+                        collectionService.checkFreePatternsInCollection(patternIds);
+                    
+                    // Cập nhật trạng thái collection cho từng pattern
+                    content.forEach(pattern -> 
+                        pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false))
+                    );
+                } catch (Exception e) {
+                    // Nếu có lỗi, set tất cả patterns là false
+                    content.forEach(pattern -> pattern.setInCollection(false));
+                }
+            } else {
+                // Nếu user chưa login, set tất cả patterns là false
+                content.forEach(pattern -> pattern.setInCollection(false));
+            }
+        }
+
+        // Tính toán thông tin phân trang
+        int totalPages = (int) Math.ceil((double) totalElements / limit);
+        boolean isLast = offset >= totalPages - 1;
+
+        return PaginationResponse.<FreePatternResponse>builder()
+                .contents(content)
+                .pageNo(offset)
+                .pageSize(limit)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .last(isLast)
+                .build();
     }
 
     /**
@@ -194,7 +299,37 @@ public class FreePatternServiceImpl implements FreePatternService {
         ).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
-        return freePatternRepo.findLimitedNumFreePattern(pageable);
+
+        List<FreePatternResponse> patterns = freePatternRepo.findLimitedNumFreePattern(pageable);
+        
+        // Thêm collection status cho từng pattern (chỉ khi user đã login)
+        if (!patterns.isEmpty()) {
+            // Kiểm tra xem user có login không
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    Set<String> patternIds = patterns.stream()
+                            .map(FreePatternResponse::getId)
+                            .collect(java.util.stream.Collectors.toSet());
+                    
+                    java.util.Map<String, Boolean> collectionStatus = 
+                        collectionService.checkFreePatternsInCollection(patternIds);
+                    
+                    // Cập nhật trạng thái collection cho từng pattern
+                    patterns.forEach(pattern -> 
+                        pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false))
+                    );
+                } catch (Exception e) {
+                    // Nếu có lỗi, set tất cả patterns là false
+                    patterns.forEach(pattern -> pattern.setInCollection(false));
+                }
+            } else {
+                // Nếu user chưa login, set tất cả patterns là false
+                patterns.forEach(pattern -> pattern.setInCollection(false));
+            }
+        }
+
+        return patterns;
     }
 
     /**
@@ -231,6 +366,19 @@ public class FreePatternServiceImpl implements FreePatternService {
         var files = FileMapper.INSTANCE.toResponses(frep.getFiles());
         var category = CategoryMapper.INSTANCE.toResponse(frep.getCategory());
         var commentCount = commentRepository.countByFreePatternId(id);
+        
+        // Kiểm tra collection status (chỉ khi user đã login)
+        Boolean inCollection = false;
+        try {
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                inCollection = collectionService.checkFreePatternInCollection(id);
+            }
+        } catch (Exception e) {
+            // Nếu user chưa login hoặc có lỗi, set là false
+            inCollection = false;
+        }
+
         return FreePatternResponse.builder()
                 .id(frep.getId())
                 .name(frep.getName())
@@ -247,6 +395,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .files(files)
                 .category(category)
                 .commentCount(commentCount)
+                .inCollection(inCollection)
                 .build();
     }
 
@@ -308,6 +457,12 @@ public class FreePatternServiceImpl implements FreePatternService {
             String sortDir) {
         Pageable pageable = PageRequest.of(offset, limit, Sort.Direction.fromString(sortDir), sortBy);
         var frepResponse = freePatternRepo.getFrepsByCollection(userId, collectionId, pageable);
+        
+        // Thêm collection status cho từng pattern (patterns trong collection nên luôn có inCollection = true)
+        if (!frepResponse.getContent().isEmpty()) {
+            frepResponse.getContent().forEach(pattern -> pattern.setInCollection(true));
+        }
+        
         return PaginationMapper.toPagination(frepResponse);
     }
 
@@ -319,4 +474,34 @@ public class FreePatternServiceImpl implements FreePatternService {
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
                 ));
     }
+
+    /**
+     * Convert FreePattern entity to FreePatternResponse
+     * @param freePattern the entity to convert
+     * @return FreePatternResponse
+     */
+    private FreePatternResponse convertToResponse(FreePattern freePattern) {
+        var user = userService.getById(freePattern.getCreatedBy());
+        var images = FileMapper.INSTANCE.toResponses(freePattern.getImages());
+        var files = FileMapper.INSTANCE.toResponses(freePattern.getFiles());
+        var category = CategoryMapper.INSTANCE.toResponse(freePattern.getCategory());
+
+        return FreePatternResponse.builder()
+                .id(freePattern.getId())
+                .name(freePattern.getName())
+                .description(freePattern.getDescription())
+                .author(freePattern.getAuthor())
+                .isHome(freePattern.isHome())
+                .link(freePattern.getLink())
+                .content(freePattern.getContent())
+                .status(freePattern.getStatus())
+                .userId(user.getId())
+                .username(user.getName())
+                .userAvatar(user.getImageUrl())
+                .images(images)
+                .files(files)
+                .category(category)
+                .build();
+    }
+
 }

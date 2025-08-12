@@ -37,4 +37,12 @@ public class FreePatternSpecifications {
             return cb.in(root.get("category").get("id")).value(subquery);
         };
     }
+
+    public static Specification<FreePattern> getByStatus(String status) {
+        return (root, query, cb) -> cb.equal(root.get("status"), status);
+    }
+
+    public static Specification<FreePattern> getByIsHome(boolean isHome) {
+        return (root, query, cb) -> cb.equal(root.get("isHome"), isHome);
+    }
 }
