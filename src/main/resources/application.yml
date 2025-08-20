@@ -61,6 +61,15 @@ authorize:
 firebase:
   serviceAccountKey: ${SERVICE_ACCOUNT_KEY}
 
+# NATS JetStream configuration
+nats:
+  servers: nats://localhost:4222
+  connection-name: crochet-webapp
+  jetstream:
+    enabled: true  # Enable JetStream for Docker NATS
+    stream-name: notifications
+    consumer-name: notification-processor
+
 # Resilience4j configuration
 resilience4j:
   ratelimiter:
