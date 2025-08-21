@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
 import org.crochet.event.CommentCreatedEvent;
-import org.crochet.event.NatsNotificationEvent;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.model.Comment;
 import org.crochet.model.Notification.NotificationType;
+import org.crochet.payload.request.NotificationRequest;
 import org.crochet.repository.UserRepository;
 import org.crochet.service.NatsPublisherService;
 import org.crochet.util.ObjectUtils;
@@ -32,15 +32,15 @@ public class NotificationEventListener {
         log.info("Handling comment created event for comment ID: {}", comment.getId());
 
         if (natsEnabled) {
-            // Publish events to NATS for asynchronous processing
-            publishCommentNotificationEvents(comment);
+            // Publish notification requests directly to NATS
+            publishCommentNotificationRequests(comment);
         } else {
             // Fallback to direct processing if NATS is disabled
             processCommentNotificationsDirectly(comment);
         }
     }
 
-    private void publishCommentNotificationEvents(Comment comment) {
+    private void publishCommentNotificationRequests(Comment comment) {
         try {
             // Publish notification for content creator
             if (comment.getFreePattern() != null) {
@@ -50,19 +50,17 @@ public class NotificationEventListener {
                                 ResultCode.MSG_USER_NOT_FOUND.code()));
 
                 if (ObjectUtils.notEqual(comment.getUser().getId(), contentCreator.getId())) {
-                    NatsNotificationEvent event = NatsNotificationEvent.builder()
-                            .eventId(java.util.UUID.randomUUID().toString())
+                    NotificationRequest request = NotificationRequest.builder()
                             .title("Bình luận mới")
                             .message("Có bình luận mới trong pattern của bạn")
-                            .link("/patterns/" + comment.getFreePattern().getId())
+                            .link("/free-patterns/" + comment.getFreePattern().getId())
                             .receiverId(contentCreator.getId())
                             .senderId(comment.getUser().getId())
                             .notificationType(NotificationType.COMMENT)
-                            .timestamp(java.time.LocalDateTime.now())
                             .build();
 
-                    natsPublisherService.publishNotificationEvent("notifications.comment", event);
-                    log.info("Content creator notification event published for user: {}", contentCreator.getId());
+                    natsPublisherService.publishNotificationEvent("notifications.comment", request);
+                    log.info("Content creator notification request published for user: {}", contentCreator.getId());
                 }
             }
 
@@ -74,23 +72,21 @@ public class NotificationEventListener {
                                 ResultCode.MSG_USER_NOT_FOUND.code()));
 
                 if (!ObjectUtils.equals(comment.getUser().getId(), mentionedUser.getId())) {
-                    NatsNotificationEvent event = NatsNotificationEvent.builder()
-                            .eventId(java.util.UUID.randomUUID().toString())
+                    NotificationRequest request = NotificationRequest.builder()
                             .title("Bạn được nhắc đến trong bình luận")
                             .message(comment.getUser().getName() + " đã nhắc đến bạn trong một bình luận")
-                            .link("/patterns/" + comment.getFreePattern().getId())
+                            .link("/free-patterns/" + comment.getFreePattern().getId())
                             .receiverId(mentionedUser.getId())
                             .senderId(comment.getUser().getId())
                             .notificationType(NotificationType.COMMENT)
-                            .timestamp(java.time.LocalDateTime.now())
                             .build();
 
-                    natsPublisherService.publishNotificationEvent("notifications.comment", event);
-                    log.info("Mention notification event published for user: {}", mentionedUser.getId());
+                    natsPublisherService.publishNotificationEvent("notifications.comment", request);
+                    log.info("Mention notification request published for user: {}", mentionedUser.getId());
                 }
             }
         } catch (Exception e) {
-            log.error("Failed to publish notification events to NATS", e);
+            log.error("Failed to publish notification requests to NATS", e);
             // Fallback to direct processing if NATS fails
             processCommentNotificationsDirectly(comment);
         }
@@ -98,9 +94,7 @@ public class NotificationEventListener {
 
     private void processCommentNotificationsDirectly(Comment comment) {
         log.info("Processing notifications directly (NATS fallback)");
-
-        // This is the original logic for direct processing
-        // You can implement this if needed as a fallback
+        // TODO: Implement direct notification processing if needed
         log.warn("Direct notification processing not implemented - this is a fallback scenario");
     }
 }
