@@ -38,7 +38,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * FreePatternServiceImpl class
@@ -157,9 +159,9 @@ public class FreePatternServiceImpl implements FreePatternService {
                 try {
                     Set<String> patternIds = content.stream()
                             .map(FreePatternResponse::getId)
-                            .collect(java.util.stream.Collectors.toSet());
+                            .collect(Collectors.toSet());
 
-                    java.util.Map<String, Boolean> collectionStatus =
+                    Map<String, Boolean> collectionStatus =
                             collectionService.checkFreePatternsInCollection(patternIds);
 
                     // Cập nhật trạng thái collection cho từng pattern
@@ -239,9 +241,9 @@ public class FreePatternServiceImpl implements FreePatternService {
                 try {
                     Set<String> patternIds = content.stream()
                             .map(FreePatternResponse::getId)
-                            .collect(java.util.stream.Collectors.toSet());
+                            .collect(Collectors.toSet());
                     
-                    java.util.Map<String, Boolean> collectionStatus = 
+                    Map<String, Boolean> collectionStatus =
                         collectionService.checkFreePatternsInCollection(patternIds);
                     
                     // Cập nhật trạng thái collection cho từng pattern
@@ -310,9 +312,9 @@ public class FreePatternServiceImpl implements FreePatternService {
                 try {
                     Set<String> patternIds = patterns.stream()
                             .map(FreePatternResponse::getId)
-                            .collect(java.util.stream.Collectors.toSet());
+                            .collect(Collectors.toSet());
                     
-                    java.util.Map<String, Boolean> collectionStatus = 
+                    Map<String, Boolean> collectionStatus =
                         collectionService.checkFreePatternsInCollection(patternIds);
                     
                     // Cập nhật trạng thái collection cho từng pattern
