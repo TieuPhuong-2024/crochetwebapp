@@ -17,7 +17,8 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-        cacheManager.setCacheNames(List.of("settings"));
+        // Thêm cache names cho collection performance
+        cacheManager.setCacheNames(List.of("settings", "userCollections", "freePatterns", "patterns"));
         cacheManager.setCaffeine(settingsCacheBuilder());
         return cacheManager;
     }

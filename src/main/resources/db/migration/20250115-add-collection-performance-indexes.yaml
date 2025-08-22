@@ -1,0 +1,104 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250115-add-collection-performance-indexes
+      author: performance-optimization
+      changes:
+        # Index cho collection.user_id - tối ưu getAllByUserId
+        - createIndex:
+            indexName: idx_collection_user_id
+            tableName: collection
+            columns:
+              - column:
+                  name: user_id
+        
+        # Index cho collection_free_pattern.collection_id - tối ưu count patterns
+        - createIndex:
+            indexName: idx_collection_free_pattern_collection_id
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: collection_id
+        
+        # Index cho collection_free_pattern.free_pattern_id - tối ưu queries
+        - createIndex:
+            indexName: idx_collection_free_pattern_free_pattern_id
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: free_pattern_id
+        
+        # Composite index cho performance getFrepsByCollection
+        - createIndex:
+            indexName: idx_collection_free_pattern_composite
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: collection_id
+              - column:
+                  name: created_date
+        
+        # Index cho collection name uniqueness check
+        - createIndex:
+            indexName: idx_collection_user_name
+            tableName: collection
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: name
+        
+        # Index cho collection.created_date - tối ưu sorting
+        - createIndex:
+            indexName: idx_collection_created_date
+            tableName: collection
+            columns:
+              - column:
+                  name: created_date
+
+        # Composite index cho collection_free_pattern với user - tối ưu batch queries
+        - createIndex:
+            indexName: idx_collection_free_pattern_user_composite
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: collection_id
+              - column:
+                  name: free_pattern_id
+              - column:
+                  name: created_date
+
+        # Index cho collection_free_pattern.free_pattern_id + collection_id - tối ưu exists queries
+        - createIndex:
+            indexName: idx_collection_free_pattern_pattern_user
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: free_pattern_id
+              - column:
+                  name: collection_id
+
+      rollback:
+        - dropIndex:
+            indexName: idx_collection_user_id
+            tableName: collection
+        - dropIndex:
+            indexName: idx_collection_free_pattern_collection_id
+            tableName: collection_free_pattern
+        - dropIndex:
+            indexName: idx_collection_free_pattern_free_pattern_id
+            tableName: collection_free_pattern
+        - dropIndex:
+            indexName: idx_collection_free_pattern_composite
+            tableName: collection_free_pattern
+        - dropIndex:
+            indexName: idx_collection_user_name
+            tableName: collection
+        - dropIndex:
+            indexName: idx_collection_created_date
+            tableName: collection
+        - dropIndex:
+            indexName: idx_collection_free_pattern_user_composite
+            tableName: collection_free_pattern
+        - dropIndex:
+            indexName: idx_collection_free_pattern_pattern_user
+            tableName: collection_free_pattern
