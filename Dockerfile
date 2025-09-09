@@ -51,4 +51,6 @@ COPY --from=build /workspace/app/build/extracted/BOOT-INF/lib /app/lib
 COPY --from=build /workspace/app/build/extracted/META-INF /app/META-INF
 COPY --from=build /workspace/app/build/extracted/BOOT-INF/classes /app
 
+EXPOSE 8080
+
 ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-cp", ".:/app/lib/*", "org.crochet.CrochetApplication"]
