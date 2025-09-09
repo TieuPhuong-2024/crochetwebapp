@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -40,9 +39,10 @@ public class CollectionServiceImpl implements CollectionService {
      * @param freePatternId free pattern id
      */
     @Override
+    @CacheEvict(value = "userCollections", key = "#root.target.getCurrentUserId()")
     public void addFreePatternToCollection(String collectionId, String freePatternId) {
         // Kiểm tra sự tồn tại trước khi thực hiện các query khác
-        if (colFrepRepo.existsByFreePatternAndUser(freePatternId, getCurrentUserId())) {
+        if (colFrepRepo.existsByFreePatternAndUserOptimized(freePatternId, getCurrentUserId())) {
             throw new BadRequestException("Free pattern already exists in user collections");
         }
 
@@ -67,8 +67,15 @@ public class CollectionServiceImpl implements CollectionService {
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
                 ));
 
-        addNewPatternToCollection(collection, freePattern);
-        updateCollectionAvatarIfFirst(collection, freePattern);
+        ColFrep colFrep = new ColFrep();
+        colFrep.setCollection(collection);
+        colFrep.setFreePattern(freePattern);
+        colFrepRepo.save(colFrep);
+
+        long count = colFrepRepo.countByCollectionIdFast(collection.getId());
+        if (count == 1) {
+            avatarService.updateAvatar(collection, freePattern);
+        }
     }
 
     /**
@@ -109,7 +116,7 @@ public class CollectionServiceImpl implements CollectionService {
      * @param name         update collection request
      */
     @Override
-    @Cacheable(value = "userCollections", key = "#userId")
+    @CacheEvict(value = "userCollections", key = "#root.target.getCurrentUserId()")
     public void updateCollection(String collectionId, String name) {
         var user = SecurityUtils.getCurrentUser();
         if (user == null) {
@@ -139,6 +146,7 @@ public class CollectionServiceImpl implements CollectionService {
      * @param freePatternId free pattern id
      */
     @Override
+    @CacheEvict(value = "userCollections", key = "#root.target.getCurrentUserId()")
     public void removeFreePatternFromCollection(String freePatternId) {
         var user = SecurityUtils.getCurrentUser();
         if (user == null) {
@@ -187,7 +195,7 @@ public class CollectionServiceImpl implements CollectionService {
      * @throws AccessDeniedException     if the user does not have permission to modify the specified collection
      */
     @Override
-    @Cacheable(value = "userCollections", key = "#userId")
+    @CacheEvict(value = "userCollections", key = "#root.target.getCurrentUserId()")
     public void deleteCollection(String collectionId) {
         var user = SecurityUtils.getCurrentUser();
         if (user == null) {
@@ -211,98 +219,6 @@ public class CollectionServiceImpl implements CollectionService {
         }
 
         collectionRepo.delete(col);
-    }
-
-    /**
-     * Check if a free pattern is in a collection
-     *
-     * @param freePatternId free pattern id
-     * @return true if the free pattern is in the collection, false otherwise
-     */
-    @Override
-    public boolean checkFreePatternInCollection(String freePatternId) {
-        var user = SecurityUtils.getCurrentUser();
-        if (user == null) {
-            throw new ResourceNotFoundException(
-                    ResultCode.MSG_USER_LOGIN_REQUIRED.message(),
-                    ResultCode.MSG_USER_LOGIN_REQUIRED.code()
-            );
-        }
-        // Sử dụng method tối ưu không cần load entity
-        return colFrepRepo.existsByFreePatternAndUser(freePatternId, user.getId());
-    }
-
-    /**
-     * Check if multiple free patterns are in collections for the current user
-     * This method is optimized to avoid N+1 query problem
-     *
-     * @param freePatternIds list of free pattern ids to check
-     * @return Map of free pattern id to boolean indicating if it's in a collection
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Map<String, Boolean> checkFreePatternsInCollection(java.util.Set<String> freePatternIds) {
-        var user = SecurityUtils.getCurrentUser();
-        if (user == null) {
-            throw new ResourceNotFoundException(
-                    ResultCode.MSG_USER_LOGIN_REQUIRED.message(),
-                    ResultCode.MSG_USER_LOGIN_REQUIRED.code()
-            );
-        }
-        
-        if (freePatternIds == null || freePatternIds.isEmpty()) {
-            return java.util.Collections.emptyMap();
-        }
-        
-        // Lấy tất cả collection IDs chứa các patterns này
-        Set<String> collectionIds = colFrepRepo.findCollectionIdsByFreePatternsAndUser(freePatternIds, user.getId());
-        
-        // Tạo map kết quả
-        java.util.Map<String, Boolean> result = new java.util.HashMap<>();
-        
-        // Nếu có collection chứa patterns, kiểm tra chi tiết từng pattern
-        if (!collectionIds.isEmpty()) {
-            // Lấy tất cả patterns có trong collections
-            List<ColFrep> colFreps = colFrepRepo.findByFreePatternIdsAndUser(freePatternIds, user.getId());
-            
-            // Đánh dấu patterns có trong collections
-            for (ColFrep colFrep : colFreps) {
-                result.put(colFrep.getFreePattern().getId(), true);
-            }
-        }
-        
-        // Đánh dấu patterns không có trong collections
-        for (String patternId : freePatternIds) {
-            result.putIfAbsent(patternId, false);
-        }
-        
-        return result;
-    }
-
-    /**
-     * Add a new pattern to a collection
-     *
-     * @param collection  Collection
-     * @param freePattern FreePattern
-     */
-    private void addNewPatternToCollection(Collection collection, FreePattern freePattern) {
-        ColFrep colFrep = new ColFrep();
-        colFrep.setCollection(collection);
-        colFrep.setFreePattern(freePattern);
-        colFrepRepo.save(colFrep);
-    }
-
-    /**
-     * Update collection avatar if it is the first pattern in the collection
-     *
-     * @param collection  Collection
-     * @param freePattern FreePattern
-     */
-    private void updateCollectionAvatarIfFirst(Collection collection, FreePattern freePattern) {
-        long count = colFrepRepo.countByCollectionIdOptimized(collection.getId());
-        if (count == 1) {
-            avatarService.updateAvatar(collection, freePattern);
-        }
     }
 
     /**

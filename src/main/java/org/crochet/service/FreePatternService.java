@@ -1,6 +1,7 @@
 package org.crochet.service;
 
 import org.crochet.model.FreePattern;
+import org.crochet.model.User;
 import org.crochet.payload.request.FreePatternRequest;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginationResponse;
@@ -48,4 +49,5 @@ public interface FreePatternService {
 
     FreePattern findById(String id);
 
+    boolean existByFreePatternAndUser(String freePatternId, User user);
 }

@@ -4,10 +4,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.crochet.service.JwtTokenService;
 import org.crochet.util.TokenUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,9 +22,9 @@ import static org.springframework.util.StringUtils.hasText;
 /**
  * TokenAuthenticationFilter class
  */
+@Slf4j
 @Component
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(TokenAuthenticationFilter.class);
     private final JwtTokenService jwtTokenService;
     private final CustomUserDetailsService customUserDetailsService;
 
@@ -52,27 +51,27 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         try {
             // Get jwtToken
             var jwtToken = TokenUtils.getJwtFromAuthorizationHeader(request);
-
             // Check if the JWT exists and is valid
-            if (hasText(jwtToken) && jwtTokenService.validateToken(jwtToken)) {
-                String username = jwtTokenService.extractUsername(jwtToken);
-
-                // Load the user details by email
-                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-                if (jwtTokenService.isTokenValid(jwtToken, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (hasText(jwtToken)) {
+                if (jwtTokenService.validateToken(jwtToken)) {
+                    String username = jwtTokenService.extractUsername(jwtToken);
+                    // Load the user details by email
+                    UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+                    if (jwtTokenService.isTokenValid(jwtToken, userDetails)) {
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                        authToken.setDetails(
+                                new WebAuthenticationDetailsSource().buildDetails(request)
+                        );
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
             }
         } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex);
+            log.error("Could not set user authentication in security context for path: {}", request.getRequestURI(), ex);
         }
 
         // Continue the filter chain

@@ -10,10 +10,12 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.crochet.constant.AppConstant;
 import org.crochet.enums.ResultCode;
 import org.crochet.model.FreePattern;
+import org.crochet.model.User;
 import org.crochet.payload.request.FreePatternRequest;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginationResponse;
 import org.crochet.payload.response.ResponseData;
+import org.crochet.security.CurrentUser;
 import org.crochet.service.FreePatternService;
 import org.crochet.util.ResponseUtil;
 import org.springframework.data.jpa.domain.Specification;
@@ -129,6 +131,17 @@ public class FreePatternController {
     public ResponseData<List<String>> getFreePatternIds(@RequestParam("pageNo") int pageNo,
                                                         @RequestParam("pageSize") int pageSize) {
         var res = freePatternService.getFreePatternIds(pageNo, pageSize);
+        return ResponseUtil.success(res);
+    }
+
+    @Operation(summary = "Check if a free pattern exists in collection")
+    @ApiResponse(responseCode = "200", description = "Free pattern exists in collection",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = Boolean.class)))
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{id}/exist")
+    public ResponseData<Boolean> existsInCollection(@PathVariable("id") String id, @CurrentUser User user) {
+        var res = freePatternService.existByFreePatternAndUser(id, user);
         return ResponseUtil.success(res);
     }
 }
