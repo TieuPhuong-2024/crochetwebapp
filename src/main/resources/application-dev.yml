@@ -4,19 +4,19 @@ spring:
       on-profile: dev
   jpa:
     open-in-view: false
+    database-platform: org.hibernate.dialect.MySQL8Dialect
     properties:
       hibernate:
         # Cấu hình dev hiện tại
         format_sql: true
         use_sql_comments: true
-        generate_statistics: true
         jdbc:
-          batch_size: 50  # Tăng từ 25 lên 50
+          batch_size: 50 # Tăng từ 25 lên 50
           batch_versioned_data: true
           batch_builder: legacy
         order_inserts: true
         order_updates: true
-        
+
         # Thêm cấu hình optimization
         connection:
           provider_disables_autocommit: false
@@ -29,13 +29,8 @@ spring:
         batch_fetch_style: DYNAMIC
         default_batch_fetch_size: 16
         enable_lazy_load_no_trans: false
-        statistics:
-          enabled: true
-          log_slow_query: true
-          slow_query_threshold: 1000
-    database-platform: org.hibernate.dialect.MySQL8Dialect
 
-  # Thêm cấu hình datasource optimization
+  # Datasource optimization
   datasource:
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USERNAME}
@@ -52,22 +47,3 @@ spring:
 
   liquibase:
     enabled: false
-    # Thêm cấu hình để suppress warning
-    parameters:
-      logLevel: INFO
-      showSummary: true
-      showSummaryOutput: true
-
-logging:
-  level:
-    org:
-      liquibase: INFO  # Thay đổi từ debug xuống INFO
-      hibernate:
-        SQL: debug
-        type.descriptor.sql.BasicBinder: trace
-        stat: debug
-      springframework:
-        cache: debug
-    root: info
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
