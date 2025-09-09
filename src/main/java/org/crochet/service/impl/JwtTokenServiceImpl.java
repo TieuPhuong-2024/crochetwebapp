@@ -202,8 +202,9 @@ public class JwtTokenServiceImpl implements JwtTokenService {
      * @return The cryptographic key.
      */
     private Key getKey() {
-        // Decode the Base64-encoded token secret from the application properties
-        byte[] keyBytes = Decoders.BASE64.decode(appProperties.getAuth().getTokenSecret());
+        String tokenSecret = appProperties.getAuth().getTokenSecret();
+        
+        byte[] keyBytes = Decoders.BASE64.decode(tokenSecret);
 
         // Create and return an HMAC-based cryptographic key using the decoded key bytes
         return Keys.hmacShaKeyFor(keyBytes);
@@ -237,6 +238,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
      */
     @Override
     public boolean validateToken(String authToken) {
+        
         try {
             // Parse the token and validate it using the configured signing key
             Jwts.parser()
@@ -246,7 +248,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
             // Check if the token is blacklisted
             if (tokenBlacklistService.isTokenBlacklisted(authToken)) {
-                logger.error("Token is existed in blacklist");
+                logger.error("❌ Token is existed in blacklist");
                 return false;
             }
 
@@ -254,15 +256,17 @@ public class JwtTokenServiceImpl implements JwtTokenService {
             // considered valid
             return true;
         } catch (SecurityException ex) {
-            logger.error("Invalid JWT signature");
+            logger.error("❌ Invalid JWT signature: {}", ex.getMessage());
         } catch (MalformedJwtException ex) {
-            logger.error("Invalid JWT token");
+            logger.error("❌ Invalid JWT token format: {}", ex.getMessage());
         } catch (ExpiredJwtException ex) {
-            logger.error("Expired JWT token");
+            logger.error("❌ Expired JWT token: {}", ex.getMessage());
         } catch (UnsupportedJwtException ex) {
-            logger.error("Unsupported JWT token");
+            logger.error("❌ Unsupported JWT token: {}", ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            logger.error("JWT claims string is empty.");
+            logger.error("❌ JWT claims string is empty: {}", ex.getMessage());
+        } catch (Exception ex) {
+            logger.error("❌ Unexpected error during JWT validation: {} - {}", ex.getClass().getSimpleName(), ex.getMessage());
         }
         // If an exception is caught during parsing or validation, the token is
         // considered invalid
