@@ -18,9 +18,12 @@ public class SecurityUtils {
      */
     public static User getCurrentUser() {
         Authentication authentication = getAuthentication();
+        
         if (isValidAuthentication(authentication)) {
-            return (User) authentication.getPrincipal();
+            User user = (User) authentication.getPrincipal();
+            return user;
         }
+        
         return null;
     }
 
@@ -29,9 +32,12 @@ public class SecurityUtils {
     }
 
     private static boolean isValidAuthentication(Authentication authentication) {
-        return authentication != null
+        boolean isValid = authentication != null
                 && authentication.isAuthenticated()
                 && !authentication.getPrincipal().equals("anonymousUser");
+        
+        
+        return isValid;
     }
 
     public static boolean hasRole(String role) {

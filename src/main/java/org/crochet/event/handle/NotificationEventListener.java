@@ -26,8 +26,6 @@ public class NotificationEventListener {
     public void handleCommentCreated(CommentCreatedEvent event) {
         Comment comment = event.getComment();
 
-        log.info("Handling comment created event for comment ID: {}", comment.getId());
-
         // Xử lý thông báo cho người tạo nội dung (đã có sẵn)
         if (comment.getFreePattern() != null) {
             var contentCreator = userRepository.findById(comment.getFreePattern().getCreatedBy())
@@ -35,11 +33,8 @@ public class NotificationEventListener {
                             ResultCode.MSG_USER_NOT_FOUND.message(),
                             ResultCode.MSG_USER_NOT_FOUND.code()));
 
-            log.info("Found content creator with ID: {}", contentCreator.getId());
-
             // Không gửi thông báo cho người tạo nếu tự họ comment
             if (ObjectUtils.notEqual(comment.getUser().getId(), contentCreator.getId())) {
-                log.info("Creating notification for content creator: {}", contentCreator.getId());
 
                 NotificationRequest notification = NotificationRequest.builder()
                         .title("Bình luận mới")
@@ -51,7 +46,6 @@ public class NotificationEventListener {
                         .build();
 
                 notificationService.createNotification(notification);
-                log.info("Content creator notification created successfully");
             }
         }
 
@@ -62,11 +56,8 @@ public class NotificationEventListener {
                             ResultCode.MSG_USER_NOT_FOUND.message(),
                             ResultCode.MSG_USER_NOT_FOUND.code()));
 
-            log.info("Found mentioned user with ID: {}", mentionedUser.getId());
-
             // Không gửi thông báo nếu người được mention chính là người comment
             if (!ObjectUtils.equals(comment.getUser().getId(), mentionedUser.getId())) {
-                log.info("Creating notification for mentioned user: {}", mentionedUser.getId());
 
                 NotificationRequest notification = NotificationRequest.builder()
                         .title("Bạn được nhắc đến trong bình luận")
@@ -78,7 +69,6 @@ public class NotificationEventListener {
                         .build();
 
                 notificationService.createNotification(notification);
-                log.info("Mention notification created successfully");
             }
         }
     }

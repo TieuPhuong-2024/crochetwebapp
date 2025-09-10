@@ -238,25 +238,4 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
     })
     long countByCategoryId(@Param("categoryId") String categoryId);
 
-    // Tối ưu hóa: Truy vấn COUNT với filter theo status
-    @Query("""
-            SELECT COUNT(fp.id)
-            FROM FreePattern fp
-            WHERE fp.status = :status
-            """)
-    @QueryHints(value = {
-            @QueryHint(name = HINT_READ_ONLY, value = "true")
-    })
-    long countByStatus(@Param("status") String status);
-
-    // Tối ưu hóa: Truy vấn COUNT với filter theo isHome
-    @Query("""
-            SELECT COUNT(fp.id)
-            FROM FreePattern fp
-            WHERE fp.isHome = :isHome
-            """)
-    @QueryHints(value = {
-            @QueryHint(name = HINT_READ_ONLY, value = "true")
-    })
-    long countByIsHome(@Param("isHome") boolean isHome);
 }

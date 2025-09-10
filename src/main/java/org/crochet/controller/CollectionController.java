@@ -13,7 +13,6 @@ import org.crochet.util.ResponseUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -92,17 +91,5 @@ public class CollectionController {
             @Parameter(description = "Collection ID") @PathVariable("collection_id") String collectionId) {
         collectionService.deleteCollection(collectionId);
         return ResponseUtil.success(ResultCode.MSG_DELETE_SUCCESS.message());
-    }
-
-    @Operation(summary = "Check if a free pattern exists in user's collections")
-    @ApiResponse(responseCode = "200", description = "Returns true if pattern exists in any collection",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = ResponseData.class)))
-    @GetMapping("/{free_pattern_id}/exists")
-    public ResponseData<Boolean> checkFreePatternInCollection(
-            @Parameter(description = "Free pattern ID")
-            @PathVariable("free_pattern_id") String freePatternId) {
-        var res = collectionService.checkFreePatternInCollection(freePatternId);
-        return ResponseUtil.success(res);
     }
 }
