@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * BlogPostServiceImpl class
@@ -102,7 +103,8 @@ public class BlogPostServiceImpl implements BlogPostService {
      * @param sortDir The sorting direction, either "ASC" (ascending) or "DESC"
      *                (descending).
      * @param spec    The specification used to filter the blog posts.
-     * @return A {@link org.crochet.payload.response.PaginationResponse} containing the paginated list of
+     * @return A {@link org.crochet.payload.response.PaginationResponse} containing
+     * the paginated list of
      * blog posts.
      */
     @SuppressWarnings("ConstantValue")
@@ -122,14 +124,13 @@ public class BlogPostServiceImpl implements BlogPostService {
         } else {
             page = blogPostRepo.findPostWithPageable(pageable);
         }
-        
-        // Thêm số lượng comments cho mỗi bài viết
+
+        // Add amount comment for each posts
         var paginationResponse = PaginationMapper.toPagination(page);
-        for (BlogPostResponse post : paginationResponse.getContents()) {
-            long commentCount = commentRepository.countByBlogPostId(post.getId());
-            post.setCommentCount(commentCount);
-        }
-        
+
+        var posts = paginationResponse.getContents();
+        addCommentCounts(posts);
+
         return paginationResponse;
     }
 
@@ -161,14 +162,13 @@ public class BlogPostServiceImpl implements BlogPostService {
         var blogPost = blogPostRepo.getDetail(id).orElseThrow(
                 () -> new ResourceNotFoundException(
                         ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                        ResultCode.MSG_BLOG_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_BLOG_NOT_FOUND.code()));
         BlogPostResponse response = BlogPostMapper.INSTANCE.toResponse(blogPost);
-        
-        // Thêm số lượng comments
+
+        // Add amount comment
         long commentCount = commentRepository.countByBlogPostId(id);
         response.setCommentCount(commentCount);
-        
+
         return response;
     }
 
@@ -186,26 +186,20 @@ public class BlogPostServiceImpl implements BlogPostService {
         }
         String direction = settingsMap.getOrDefault(
                 "homepage.blog.direction",
-                new Settings("homepage.blog.direction", "desc")
-        ).getValue();
+                new Settings("homepage.blog.direction", "desc")).getValue();
         String orderBy = settingsMap.getOrDefault(
                 "homepage.blog.orderBy",
-                new Settings("homepage.blog.orderBy", "createdDate")
-        ).getValue();
+                new Settings("homepage.blog.orderBy", "createdDate")).getValue();
         String limit = settingsMap.getOrDefault(
                 "homepage.blog.limit",
-                new Settings("homepage.blog.limit", "12")
-        ).getValue();
+                new Settings("homepage.blog.limit", "12")).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         List<BlogPostResponse> posts = blogPostRepo.findLimitedNumPosts(pageable);
-        
-        // Thêm số lượng comments cho mỗi bài viết
-        for (BlogPostResponse post : posts) {
-            long commentCount = commentRepository.countByBlogPostId(post.getId());
-            post.setCommentCount(commentCount);
-        }
-        
+
+        // Add amount comment for each posts
+        addCommentCounts(posts);
+
         return posts;
     }
 
@@ -237,7 +231,30 @@ public class BlogPostServiceImpl implements BlogPostService {
         return blogPostRepo.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(
                         ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                        ResultCode.MSG_BLOG_NOT_FOUND.code()
+                        ResultCode.MSG_BLOG_NOT_FOUND.code()));
+    }
+
+    /**
+      * Adds comment counts to a list of blog posts using batch query for efficiency.
+      *
+      * @param posts The list of BlogPostResponse to update.
+      */
+      private void addCommentCounts(List<BlogPostResponse> posts) {
+        if (posts == null || posts.isEmpty()) {
+            return;
+        }
+        var postIds = posts.stream()
+                .map(BlogPostResponse::getId)
+                .toList();
+
+        List<Object[]> commentCounts = commentRepository.countByBlogPostIds(postIds);
+
+        Map<String, Long> commentMap = commentCounts.stream()
+                .collect(Collectors.toMap(
+                        result -> (String) result[0], // blogId
+                        result -> (Long) result[1]    // count
                 ));
+
+        posts.forEach(post -> post.setCommentCount(commentMap.getOrDefault(post.getId(), 0L)));
     }
 }
