@@ -11,59 +11,153 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repository interface for managing Comment entities.
+ * Provides methods for retrieving, counting, and managing comments for blog posts, products, and free patterns.
+ */
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, String> {
+    /**
+     * Retrieves the 5 most recent comments made by a specific user.
+     *
+     * @param userId The ID of the user whose comments to retrieve
+     * @return A list of CommentResponse objects containing comment details
+     */
     @Query("""
             SELECT new org.crochet.payload.response.CommentResponse(c.id, c.content, c.createdDate)
             FROM Comment c
-            LEFT JOIN User u ON c.user.id = u.id
-            WHERE u.id = :userId
+            WHERE c.user.id = :userId
             ORDER BY c.createdDate DESC
             LIMIT 5
             """)
     List<CommentResponse> getRecentCommentsByUserId(@Param("userId") String userId);
     
-    // Lấy tất cả root comments (không có parent) cho một bài viết, hỗ trợ phân trang
+    /**
+     * Retrieves all root comments (comments without a parent) for a specific blog post with pagination support.
+     *
+     * @param blogPostId The ID of the blog post
+     * @param pageable Pagination information
+     * @return A page of root comments for the specified blog post
+     */
     Page<Comment> findByBlogPostIdAndParentIsNullOrderByCreatedDateDesc(String blogPostId, Pageable pageable);
     
-    // Lấy tất cả replies cho một comment cụ thể
+    /**
+     * Retrieves all replies for a specific parent comment, ordered by creation date (ascending).
+     *
+     * @param parentId The ID of the parent comment
+     * @return A list of reply comments
+     */
     List<Comment> findByParentIdOrderByCreatedDateAsc(String parentId);
     
-    // Lấy tất cả comments (cả root và replies) cho một bài viết
+    /**
+     * Retrieves all comments (both root comments and replies) for a specific blog post with pagination support.
+     *
+     * @param blogPostId The ID of the blog post
+     * @param pageable Pagination information
+     * @return A page of all comments for the specified blog post
+     */
     Page<Comment> findByBlogPostIdOrderByCreatedDateDesc(String blogPostId, Pageable pageable);
     
-    // Đếm số lượng replies cho một comment
+    /**
+     * Counts the number of replies for a specific parent comment.
+     *
+     * @param parentId The ID of the parent comment
+     * @return The number of replies
+     */
     long countByParentId(String parentId);
     
-    // Đếm số lượng root comments cho một bài viết
+    /**
+     * Counts the number of root comments (comments without a parent) for a specific blog post.
+     *
+     * @param blogPostId The ID of the blog post
+     * @return The number of root comments
+     */
     long countByBlogPostIdAndParentIsNull(String blogPostId);
     
-    // Đếm số lượng comments cho một bài viết
+    /**
+     * Counts the total number of comments (both root comments and replies) for a specific blog post.
+     *
+     * @param blogPostId The ID of the blog post
+     * @return The total number of comments
+     */
     long countByBlogPostId(String blogPostId);
+
+    /**
+     * Counts the number of comments for multiple blog posts.
+     *
+     * @param blogPostIds A list of blog post IDs
+     * @return A list of Object arrays containing blog post ID and comment count pairs
+     */
+    @Query("SELECT c.blogPost.id, COUNT(c) FROM Comment c WHERE c.blogPost.id IN :blogPostIds GROUP BY c.blogPost.id")
+    List<Object[]> countByBlogPostIds(List<String> blogPostIds);
     
-    // Product comments
-    // Lấy tất cả root comments (không có parent) cho một product, hỗ trợ phân trang
+    /**
+     * Product comments
+     * Retrieves all root comments (comments without a parent) for a specific product with pagination support.
+     *
+     * @param productId The ID of the product
+     * @param pageable Pagination information
+     * @return A page of root comments for the specified product
+     */
     Page<Comment> findByProductIdAndParentIsNullOrderByCreatedDateDesc(String productId, Pageable pageable);
     
-    // Lấy tất cả comments (cả root và replies) cho một product
+    /**
+     * Retrieves all comments (both root comments and replies) for a specific product with pagination support.
+     *
+     * @param productId The ID of the product
+     * @param pageable Pagination information
+     * @return A page of all comments for the specified product
+     */
     Page<Comment> findByProductIdOrderByCreatedDateDesc(String productId, Pageable pageable);
     
-    // Đếm số lượng root comments cho một product
+    /**
+     * Counts the number of root comments (comments without a parent) for a specific product.
+     *
+     * @param productId The ID of the product
+     * @return The number of root comments
+     */
     long countByProductIdAndParentIsNull(String productId);
     
-    // Đếm số lượng comments cho một product
+    /**
+     * Counts the total number of comments (both root comments and replies) for a specific product.
+     *
+     * @param productId The ID of the product
+     * @return The total number of comments
+     */
     long countByProductId(String productId);
     
-    // Free Pattern comments
-    // Lấy tất cả root comments (không có parent) cho một free pattern, hỗ trợ phân trang
+    /**
+     * Free Pattern comments
+     * Retrieves all root comments (comments without a parent) for a specific free pattern with pagination support.
+     *
+     * @param freePatternId The ID of the free pattern
+     * @param pageable Pagination information
+     * @return A page of root comments for the specified free pattern
+     */
     Page<Comment> findByFreePatternIdAndParentIsNullOrderByCreatedDateDesc(String freePatternId, Pageable pageable);
     
-    // Lấy tất cả comments (cả root và replies) cho một free pattern
+    /**
+     * Retrieves all comments (both root comments and replies) for a specific free pattern with pagination support.
+     *
+     * @param freePatternId The ID of the free pattern
+     * @param pageable Pagination information
+     * @return A page of all comments for the specified free pattern
+     */
     Page<Comment> findByFreePatternIdOrderByCreatedDateDesc(String freePatternId, Pageable pageable);
     
-    // Đếm số lượng root comments cho một free pattern
+    /**
+     * Counts the number of root comments (comments without a parent) for a specific free pattern.
+     *
+     * @param freePatternId The ID of the free pattern
+     * @return The number of root comments
+     */
     long countByFreePatternIdAndParentIsNull(String freePatternId);
     
-    // Đếm số lượng comments cho một free pattern
+    /**
+     * Counts the total number of comments (both root comments and replies) for a specific free pattern.
+     *
+     * @param freePatternId The ID of the free pattern
+     * @return The total number of comments
+     */
     long countByFreePatternId(String freePatternId);
 }
