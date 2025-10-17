@@ -5,7 +5,6 @@ import org.crochet.payload.response.FileResponse;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ImageUtils {
     /**
@@ -21,17 +20,14 @@ public class ImageUtils {
         }
 
         List<T> sortedFiles = files.stream()
-                .sorted(Comparator.comparing(
-                                FileResponse::getLastModified,
-                                Comparator.nullsLast(Comparator.naturalOrder()))
-                        .reversed()
-                )
+                .sorted(Comparator.comparing(FileResponse::getLastModified,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
 
-        AtomicInteger order = new AtomicInteger(0);
-        sortedFiles.forEach(file ->
-                file.setOrder(ObjectUtils.applyIfNotNull(file, f -> order.getAndIncrement(), -1))
-        );
+        int order = 0;
+        for (T file : sortedFiles) {
+            file.setOrder(order++);
+        }
 
         return sortedFiles;
     }

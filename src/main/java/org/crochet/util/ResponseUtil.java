@@ -186,8 +186,8 @@ public class ResponseUtil {
      * @param <T>     Kiểu dữ liệu
      * @return Đối tượng ResponseData
      */
-    public static <T> ResponseData<T> error(int code, String message, Throwable error) {
-        return ResponseData.<T>builder()
+    public static ResponseData<String> error(int code, String message, Throwable error) {
+        return ResponseData.<String>builder()
                 .success(false)
                 .code(code)
                 .message(message)

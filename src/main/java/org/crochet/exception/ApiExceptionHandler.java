@@ -5,12 +5,11 @@ import org.crochet.enums.ResultCode;
 import org.crochet.payload.response.ResponseData;
 import org.crochet.util.ResponseUtil;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
@@ -18,129 +17,118 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @ResponseBody
 public class ApiExceptionHandler {
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler({Exception.class})
-    public ResponseData<String> handleException(Exception ex) {
+    public ResponseEntity<ResponseData<String>> handleException(Exception ex) {
+        log.error(ex.getMessage());
+        log.error(ex.toString());
+        var resultCode = ResultCode.INTERNAL_SERVER_ERROR;
         var error = ResponseData.<String>builder()
                 .success(false)
-                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .code(resultCode.code())
                 .message(ex.getMessage())
                 .error(ex.getCause())
                 .build();
-        log.error(ex.getMessage());
-        log.error(ex.toString());
-        return error;
+        return new ResponseEntity<>(error, resultCode.status());
     }
 
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler({AuthenticationException.class})
-    public ResponseData<String> handleAuthenticationException(AuthenticationException ex) {
-        var error = ResponseData.<String>builder()
-                .success(false)
-                .code(HttpStatus.UNAUTHORIZED.value())
-                .message(ex.getMessage())
-                .error(ex.getCause())
-                .build();
+    public ResponseEntity<ResponseData<String>> handleAuthenticationException(AuthenticationException ex) {
         log.error(ex.getMessage());
         log.error(ex.toString());
-        return error;
+        var resultCode = ResultCode.UNAUTHORIZED_ERROR;
+        var error = ResponseUtil.error(resultCode.code(), ex.getMessage(), ex.getCause());
+        return new ResponseEntity<>(error, resultCode.status());
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({BadRequestException.class})
-    public ResponseData<String> handleBadRequestException(BadRequestException ex) {
+    public ResponseEntity<ResponseData<String>> handleBadRequestException(BadRequestException ex) {
+        log.error(ex.getMessage());
+        log.error(ex.toString());
         var err = ResponseData.<String>builder()
                 .success(false)
                 .code(ex.getMessageCode())
                 .message(ex.getMessage())
                 .error(ex.getCause())
                 .build();
-        log.error(ex.getMessage());
-        log.error(ex.toString());
-        return err;
+        return new ResponseEntity<>(err, ResultCode.fromCode(ex.getMessageCode()).status());
     }
 
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler({OAuth2AuthenticationProcessingException.class})
-    public ResponseData<String> handleOAuth2AuthenticationProcessingException(
+    public ResponseEntity<ResponseData<String>> handleOAuth2AuthenticationProcessingException(
             OAuth2AuthenticationProcessingException ex) {
+        log.error(ex.getMessage());
+        log.error(ex.toString());
         var err = ResponseData.<String>builder()
                 .success(false)
                 .code(ex.getMessageCode())
                 .message(ex.getMessage())
                 .error(ex.getCause())
                 .build();
-        log.error(ex.getMessage());
-        log.error(ex.toString());
-        return err;
+        return new ResponseEntity<>(err, ResultCode.fromCode(ex.getMessageCode()).status());
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler({ResourceNotFoundException.class})
-    public ResponseData<String> handleResourceNotFoundException(ResourceNotFoundException ex) {
+    public ResponseEntity<ResponseData<String>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        log.error(ex.getMessage());
+        log.error(ex.toString());
         var err = ResponseData.<String>builder()
                 .success(false)
                 .message(ex.getMessage())
                 .code(ex.getMessageCode())
                 .error(ex.getCause())
                 .build();
-        log.error(ex.getMessage());
-        log.error(ex.toString());
-        return err;
+        return new ResponseEntity<>(err, ResultCode.fromCode(ex.getMessageCode()).status());
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler({EmailVerificationException.class})
-    public ResponseData<String> handleEmailVerificationException(EmailVerificationException ex) {
-        return handleInternalError(ex, ex.getMessageCode());
+    public ResponseEntity<ResponseData<String>> handleEmailVerificationException(EmailVerificationException ex) {
+        return new ResponseEntity<>(handleInternalError(ex, ex.getMessageCode()), ResultCode.fromCode(ex.getMessageCode()).status());
     }
 
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler({TokenException.class})
-    public ResponseData<String> handleTokenException(TokenException ex) {
+    public ResponseEntity<ResponseData<String>> handleTokenException(TokenException ex) {
+        log.error(ex.getMessage());
+        log.error(ex.toString());
         var err = ResponseData.<String>builder()
                 .success(false)
                 .code(ex.getMessageCode())
                 .message(ex.getMessage())
                 .error(ex.getCause())
                 .build();
-        log.error(ex.getMessage());
-        log.error(ex.toString());
-        return err;
+        return new ResponseEntity<>(err, ResultCode.fromCode(ex.getMessageCode()).status());
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler({UsernameNotFoundException.class})
-    public ResponseData<String> handleUsernameNotFoundException(UsernameNotFoundException ex) {
+    public ResponseEntity<ResponseData<String>> handleUsernameNotFoundException(UsernameNotFoundException ex) {
         log.error(ex.getMessage());
         log.error(ex.toString());
-        return ResponseUtil.error(ResultCode.MSG_USER_NOT_FOUND.code(), ex.getMessage(), ex.getCause());
+        var resultCode = ResultCode.MSG_USER_NOT_FOUND;
+        return new ResponseEntity<>(ResponseUtil.error(resultCode.code(), ex.getMessage(), ex.getCause()), resultCode.status());
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseData<String> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+    public ResponseEntity<ResponseData<String>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         String message = ex.getMessage();
         if (ex.getCause() != null) {
             message = ex.getCause().getMessage();
         }
         log.error(ex.getMessage());
         log.error(ex.toString());
-        return ResponseUtil.error(ResultCode.DATA_INTEGRITY_VIOLATION.code(), message, ex.getCause());
+        var resultCode = ResultCode.DATA_INTEGRITY_VIOLATION;
+        return new ResponseEntity<>(ResponseUtil.error(resultCode.code(), message, ex.getCause()), resultCode.status());
     }
 
-    @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler({AccessDeniedException.class})
-    public ResponseData<String> handleAccessDeniedException(AccessDeniedException ex) {
+    public ResponseEntity<ResponseData<String>> handleAccessDeniedException(AccessDeniedException ex) {
+        log.error(ex.getMessage());
+        log.error(ex.toString());
         var err = ResponseData.<String>builder()
                 .success(false)
                 .message(ex.getMessage())
                 .code(ex.getMessageCode())
                 .error(ex.getCause())
                 .build();
-        log.error(ex.getMessage());
-        log.error(ex.toString());
-        return err;
+        return new ResponseEntity<>(err, ResultCode.fromCode(ex.getMessageCode()).status());
     }
 
     private ResponseData<String> handleInternalError(RuntimeException ex, int messageCode) {
