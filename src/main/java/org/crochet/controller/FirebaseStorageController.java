@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/firebase-storage")
-@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+@PreAuthorize("hasRole('USER')")
 @SecurityRequirement(name = "BearerAuth")
 public class FirebaseStorageController {
     private final FirebaseStorageService firebaseStorageService;
@@ -33,19 +33,16 @@ public class FirebaseStorageController {
     }
 
     @Operation(summary = "Upload multiple files to Firebase Cloud Storage")
-    @ApiResponse(responseCode = "200", description = "Upload files successfully",
-            content = @Content(mediaType = "application/json"))
+    @ApiResponse(responseCode = "200", description = "Upload files successfully", content = @Content(mediaType = "application/json"))
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(consumes = { "multipart/form-data" })
     public ResponseData<List<FileResponse>> uploadMultipleFiles(@RequestPart("files") MultipartFile[] files) {
         var fileResponses = firebaseStorageService.uploadMultipleFiles(files);
         return ResponseUtil.success(fileResponses);
     }
 
     @Operation(summary = "Delete multiple files from Firebase Cloud Storage")
-    @ApiResponse(responseCode = "200",
-            description = "If all files are deleted, return empty. Otherwise, return files are not deleted.",
-            content = @Content(mediaType = "application/json"))
+    @ApiResponse(responseCode = "200", description = "If all files are deleted, return empty. Otherwise, return files are not deleted.", content = @Content(mediaType = "application/json"))
     @DeleteMapping
     @ResponseStatus(HttpStatus.OK)
     public ResponseData<List<String>> deleteMultipleFiles(@RequestBody List<String> fileNames) {

@@ -38,7 +38,7 @@ public class CategoryController {
 
     @Operation(summary = "Create category with parent")
     @ApiResponse(responseCode = "201", description = "Category created")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasRole('USER')")
     @SecurityRequirement(name = "BearerAuth")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
@@ -48,9 +48,9 @@ public class CategoryController {
     }
 
     @Operation(summary = "Update category with parent")
-    @ApiResponse(responseCode = "200", description = "Category updated",
-            content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponse.class))})
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Category updated", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponse.class)) })
+    @PreAuthorize("hasRole('USER')")
     @SecurityRequirement(name = "BearerAuth")
     @ResponseStatus(HttpStatus.OK)
     @PutMapping
@@ -60,8 +60,8 @@ public class CategoryController {
     }
 
     @Operation(summary = "Get all categories")
-    @ApiResponse(responseCode = "200", description = "Get all categories",
-            content = {@Content(mediaType = "application/json", schema = @Schema(implementation = List.class))})
+    @ApiResponse(responseCode = "200", description = "Get all categories", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = List.class)) })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
     public ResponseData<List<CategoryResponse>> getAllCategories() {
@@ -70,8 +70,8 @@ public class CategoryController {
     }
 
     @Operation(summary = "Get category by id")
-    @ApiResponse(responseCode = "200", description = "Get category by id",
-            content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponse.class))})
+    @ApiResponse(responseCode = "200", description = "Get category by id", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponse.class)) })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{id}")
     public ResponseData<CategoryResponse> getById(@PathVariable("id") String id) {
@@ -80,11 +80,11 @@ public class CategoryController {
     }
 
     @Operation(summary = "Delete category")
-    @ApiResponse(responseCode = "200", description = "Category deleted",
-            content = {@Content(mediaType = "application/json", schema = @Schema(implementation = String.class))})
+    @ApiResponse(responseCode = "200", description = "Category deleted", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)) })
     @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasRole('USER')")
     @SecurityRequirement(name = "BearerAuth")
     public ResponseData<String> delete(@PathVariable("id") String id) {
         categoryService.delete(id);

@@ -26,6 +26,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -37,10 +40,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@EnableMethodSecurity(
-        securedEnabled = true,
-        jsr250Enabled = true
-)
+@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
 public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final CustomOAuth2UserService customOAuth2UserService;
@@ -68,66 +68,57 @@ public class SecurityConfig {
 
     private void configureBasicSecurity(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .csrf(AbstractHttpConfigurer::disable)
-            .formLogin(AbstractHttpConfigurer::disable)
-            .httpBasic(AbstractHttpConfigurer::disable)
-            .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .userDetailsService(customUserDetailsService);
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .userDetailsService(customUserDetailsService);
     }
 
     private void configureHeaders(HttpSecurity http) throws Exception {
         http.headers(headers -> headers
-            .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
-            .xssProtection(HeadersConfigurer.XXssConfig::disable)
-            .contentSecurityPolicy(csp ->
-                csp.policyDirectives("default-src 'self'; frame-ancestors 'none';"))
-            .referrerPolicy(referrer ->
-                referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-            .permissionsPolicyHeader(permissions ->
-                permissions.policy("camera=(), microphone=(), geolocation=(), payment=()"))
-        );
+                .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+                .xssProtection(HeadersConfigurer.XXssConfig::disable)
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'none';"))
+                .referrerPolicy(referrer -> referrer
+                        .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .permissionsPolicyHeader(
+                        permissions -> permissions.policy("camera=(), microphone=(), geolocation=(), payment=()")));
     }
 
     private void configureExceptionHandling(HttpSecurity http) throws Exception {
         http.exceptionHandling(exceptions -> exceptions
-            .authenticationEntryPoint(new RestAuthenticationEntryPoint())
-            .accessDeniedHandler(new RestAccessDeniedHandler())
-        );
+                .authenticationEntryPoint(new RestAuthenticationEntryPoint())
+                .accessDeniedHandler(new RestAccessDeniedHandler()));
     }
 
     private void configureAuthorization(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authReq -> authReq
-            .anyRequest().permitAll()
-        );
+                .anyRequest().permitAll());
     }
 
     private void configureOAuth2(HttpSecurity http) throws Exception {
         http.oauth2Login(oauth -> oauth
-            .authorizationEndpoint(auth -> auth
-                .baseUri("/oauth2/authorize")
-                .authorizationRequestRepository(oAuth2CookieRepository))
-            .redirectionEndpoint(redirect ->
-                redirect.baseUri("/login/oauth2/code/*"))
-            .userInfoEndpoint(userInfo ->
-                userInfo.userService(customOAuth2UserService))
-            .successHandler(oAuth2AuthenticationSuccessHandler)
-            .failureHandler(oAuth2AuthenticationFailureHandler)
-        );
+                .authorizationEndpoint(auth -> auth
+                        .baseUri("/oauth2/authorize")
+                        .authorizationRequestRepository(oAuth2CookieRepository))
+                .redirectionEndpoint(redirect -> redirect.baseUri("/login/oauth2/code/*"))
+                .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                .successHandler(oAuth2AuthenticationSuccessHandler)
+                .failureHandler(oAuth2AuthenticationFailureHandler));
     }
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-            authorizeHttpRequestProperties().getAllowedOrigins()
-        ));
+                authorizeHttpRequestProperties().getAllowedOrigins()));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(AppConstant.MAX_AGE_SECS);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -136,5 +127,19 @@ public class SecurityConfig {
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        String hierarchy = "ROLE_ADMIN > ROLE_VIP_USER \n ROLE_VIP_USER > ROLE_USER";
+        RoleHierarchyImpl roleHierarchy = RoleHierarchyImpl.fromHierarchy(hierarchy);
+        return roleHierarchy;
+    }
+
+    @Bean
+    public DefaultMethodSecurityExpressionHandler methodSecurityExpressionHandler(RoleHierarchy roleHierarchy) {
+        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+        expressionHandler.setRoleHierarchy(roleHierarchy);
+        return expressionHandler;
     }
 }
