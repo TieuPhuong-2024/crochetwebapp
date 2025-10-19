@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.crochet.constant.AppConstant;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,9 +23,10 @@ public class BlogPostResponse {
     @JsonProperty("is_home")
     private Boolean isHome;
     private List<FileResponse> files;
-    @JsonFormat(pattern = AppConstant.DATE_PATTERN)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdDate;
     private String fileContent;
+    private String createdBy;
     private String userId;
     private String username;
     private String userAvatar;
@@ -36,12 +36,14 @@ public class BlogPostResponse {
                             String title,
                             String content,
                             String fileContent,
-                            LocalDateTime createdDate) {
+                            LocalDateTime createdDate,
+                            String createdBy) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.fileContent = fileContent;
         this.createdDate = createdDate;
+        this.createdBy = createdBy;
     }
 
     public BlogPostResponse(String id,
@@ -49,10 +51,11 @@ public class BlogPostResponse {
                             String content,
                             String fileContent,
                             LocalDateTime createdDate,
+                            String createdBy,
                             String userId,
                             String username,
                             String userAvatar) {
-        this(id, title, content, fileContent, createdDate);
+        this(id, title, content, fileContent, createdDate, createdBy);
         this.userId = userId;
         this.username = username;
         this.userAvatar = userAvatar;

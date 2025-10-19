@@ -5,7 +5,6 @@ import org.crochet.enums.ResultCode;
 import org.crochet.event.CommentCreatedEvent;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.CommentMapper;
-import org.crochet.model.BlogPost;
 import org.crochet.model.Comment;
 import org.crochet.model.FreePattern;
 import org.crochet.model.Product;
@@ -13,7 +12,6 @@ import org.crochet.model.User;
 import org.crochet.payload.request.CommentRequest;
 import org.crochet.payload.response.CommentResponse;
 import org.crochet.payload.response.PaginationResponse;
-import org.crochet.repository.BlogPostRepository;
 import org.crochet.repository.CommentRepository;
 import org.crochet.repository.FreePatternRepository;
 import org.crochet.repository.ProductRepository;
@@ -36,20 +34,17 @@ import java.util.List;
 @Service
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepo;
-    private final BlogPostRepository blogPostRepo;
     private final ProductRepository productRepo;
     private final FreePatternRepository freePatternRepo;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public CommentServiceImpl(CommentRepository commentRepo,
-                              BlogPostRepository blogPostRepo,
                               ProductRepository productRepo,
                               FreePatternRepository freePatternRepo,
                               UserRepository userRepository,
                               ApplicationEventPublisher eventPublisher) {
         this.commentRepo = commentRepo;
-        this.blogPostRepo = blogPostRepo;
         this.productRepo = productRepo;
         this.freePatternRepo = freePatternRepo;
         this.userRepository = userRepository;
@@ -57,7 +52,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     /**
-     * Tạo hoặc cập nhật một comment
+     * Tạo hoặc cập nhật một comment (chỉ cho products và free patterns)
      *
      * @param request chứa thông tin của comment
      * @return CommentResponse chứa thông tin của comment đã tạo/cập nhật
@@ -90,23 +85,12 @@ public class CommentServiceImpl implements CommentService {
             }
         }
 
-        // Kiểm tra và lấy đối tượng tương ứng (blog post, product hoặc free pattern)
-        BlogPost blog = null;
+        // Kiểm tra và lấy đối tượng tương ứng (product hoặc free pattern)
         Product product = null;
         FreePattern freePattern = null;
 
         // Đếm số lượng các ID không null để đảm bảo chỉ có 1 loại được chỉ định
         int idCount = 0;
-        if (ObjectUtils.hasText(request.getBlogPostId())) {
-            blog = blogPostRepo.findById(request.getBlogPostId()).orElseThrow(
-                    () -> new ResourceNotFoundException(
-                            ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                            ResultCode.MSG_BLOG_NOT_FOUND.code()
-                    )
-            );
-            idCount++;
-        }
-
         if (ObjectUtils.hasText(request.getProductId())) {
             product = productRepo.findById(request.getProductId()).orElseThrow(
                     () -> new ResourceNotFoundException(
@@ -129,7 +113,7 @@ public class CommentServiceImpl implements CommentService {
 
         // Đảm bảo chỉ có một loại ID được chỉ định
         if (idCount != 1) {
-            throw new IllegalArgumentException("Phải chỉ định chính xác một trong ba loại ID: blogPostId, productId hoặc freePatternId");
+            throw new IllegalArgumentException("Phải chỉ định chính xác một trong hai loại ID: productId hoặc freePatternId");
         }
 
         // Tạo mới hoặc cập nhật comment
@@ -137,7 +121,6 @@ public class CommentServiceImpl implements CommentService {
         String id = request.getId();
         if (!ObjectUtils.hasText(id)) {
             comment = Comment.builder()
-                    .blogPost(blog)
                     .product(product)
                     .freePattern(freePattern)
                     .user(user)
@@ -181,98 +164,9 @@ public class CommentServiceImpl implements CommentService {
         return response;
     }
 
-    /**
-     * Lấy danh sách root comments cho một bài viết với phân trang
-     *
-     * @param blogPostId ID của bài viết cần lấy comments
-     * @param pageNo     Số trang (bắt đầu từ 0)
-     * @param pageSize   Số lượng comments mỗi trang
-     * @return PaginationResponse chứa danh sách root comments và thông tin phân trang
-     */
-    @Transactional(readOnly = true)
-    @Override
-    public PaginationResponse<CommentResponse> getRootCommentsByBlogPost(String blogPostId, int pageNo, int pageSize) {
-        // Kiểm tra xem bài viết có tồn tại không
-        blogPostRepo.findById(blogPostId).orElseThrow(
-                () -> new ResourceNotFoundException(
-                        ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                        ResultCode.MSG_BLOG_NOT_FOUND.code()
-                )
-        );
 
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Comment> commentPage = commentRepo.findByBlogPostIdAndParentIsNullOrderByCreatedDateDesc(blogPostId, pageable);
-        List<CommentResponse> rootComments = new ArrayList<>();
 
-        for (Comment comment : commentPage.getContent()) {
-            CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
-
-            // Đếm số lượng replies cho comment này
-            long replyCount = commentRepo.countByParentId(comment.getId());
-            response.setReplyCount(replyCount);
-
-            // Thêm thông tin về người dùng được mention
-            if (ObjectUtils.hasText(comment.getMentionedUserId())) {
-                userRepository.findById(comment.getMentionedUserId())
-                        .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
-            }
-
-            rootComments.add(response);
-        }
-
-        return PaginationResponse.<CommentResponse>builder()
-                .contents(rootComments)
-                .pageNo(pageNo)
-                .pageSize(pageSize)
-                .totalElements(commentPage.getTotalElements())
-                .totalPages(commentPage.getTotalPages())
-                .last(commentPage.isLast())
-                .build();
-    }
-
-    /**
-     * Lấy tất cả các comments cho một bài viết (bao gồm cả root và replies)
-     *
-     * @param blogPostId ID của bài viết cần lấy comments
-     * @param pageNo     Số trang (bắt đầu từ 0)
-     * @param pageSize   Số lượng comments mỗi trang
-     * @return PaginationResponse chứa danh sách comments và thông tin phân trang
-     */
-    @Override
-    public PaginationResponse<CommentResponse> getCommentsByBlogPost(String blogPostId, int pageNo, int pageSize) {
-        // Kiểm tra xem bài viết có tồn tại không
-        blogPostRepo.findById(blogPostId).orElseThrow(
-                () -> new ResourceNotFoundException(
-                        ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                        ResultCode.MSG_BLOG_NOT_FOUND.code()
-                )
-        );
-
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Comment> commentPage = commentRepo.findByBlogPostIdOrderByCreatedDateDesc(blogPostId, pageable);
-        List<CommentResponse> comments = new ArrayList<>();
-
-        for (Comment comment : commentPage.getContent()) {
-            CommentResponse response = CommentMapper.INSTANCE.toResponse(comment);
-
-            // Thêm thông tin về người dùng được mention
-            if (ObjectUtils.hasText(comment.getMentionedUserId())) {
-                userRepository.findById(comment.getMentionedUserId())
-                        .ifPresent(mentionedUser -> response.setMentionedUsername(mentionedUser.getName()));
-            }
-
-            comments.add(response);
-        }
-
-        return PaginationResponse.<CommentResponse>builder()
-                .contents(comments)
-                .pageNo(pageNo)
-                .pageSize(pageSize)
-                .totalElements(commentPage.getTotalElements())
-                .totalPages(commentPage.getTotalPages())
-                .last(commentPage.isLast())
-                .build();
-    }
+    
 
     /**
      * Lấy danh sách root comments cho một product với phân trang
@@ -529,27 +423,7 @@ public class CommentServiceImpl implements CommentService {
         commentRepo.delete(comment);
     }
 
-    /**
-     * Đếm số lượng root comments cho một bài viết
-     *
-     * @param blogPostId ID của bài viết
-     * @return Số lượng root comments
-     */
-    @Override
-    public long countRootCommentsByBlogPost(String blogPostId) {
-        return commentRepo.countByBlogPostIdAndParentIsNull(blogPostId);
-    }
 
-    /**
-     * Đếm số lượng comments cho một bài viết
-     *
-     * @param blogPostId ID của bài viết
-     * @return Số lượng comments
-     */
-    @Override
-    public long countCommentsByBlogPost(String blogPostId) {
-        return commentRepo.countByBlogPostId(blogPostId);
-    }
 
     /**
      * Đếm số lượng root comments cho một product

@@ -49,31 +49,7 @@ public class CommentController {
         return ResponseUtil.success(response);
     }
     
-    @Operation(summary = "Lấy danh sách root comments cho một bài viết")
-    @ApiResponse(responseCode = "200", description = "Root comments retrieved successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = PaginationResponse.class)))
-    @GetMapping("/blog/{blogId}/root")
-    public ResponseData<PaginationResponse<CommentResponse>> getRootCommentsByBlogPost(
-            @PathVariable("blogId") String blogId,
-            @RequestParam(value = "pageNo", defaultValue = "0") int pageNo,
-            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
-        var response = commentService.getRootCommentsByBlogPost(blogId, pageNo, pageSize);
-        return ResponseUtil.success(response);
-    }
     
-    @Operation(summary = "Lấy danh sách tất cả comments cho một bài viết")
-    @ApiResponse(responseCode = "200", description = "Comments retrieved successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = PaginationResponse.class)))
-    @GetMapping("/blog/{blogId}")
-    public ResponseData<PaginationResponse<CommentResponse>> getCommentsByBlogPost(
-            @PathVariable("blogId") String blogId,
-            @RequestParam(value = "pageNo", defaultValue = "0") int pageNo,
-            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
-        var response = commentService.getCommentsByBlogPost(blogId, pageNo, pageSize);
-        return ResponseUtil.success(response);
-    }
     
     @Operation(summary = "Lấy danh sách root comments cho một sản phẩm")
     @ApiResponse(responseCode = "200", description = "Root comments retrieved successfully",
@@ -149,21 +125,7 @@ public class CommentController {
         return ResponseUtil.success();
     }
 
-    @Operation(summary = "Count root comments cho một blog post")
-    @ApiResponse(responseCode = "200", description = "Count root comments successfully")
-    @GetMapping("/blog/{blogId}/root/count")
-    public ResponseData<Long> countRootCommentsByBlogPost(@PathVariable("blogId") String blogId) {
-        long count = commentService.countRootCommentsByBlogPost(blogId);
-        return ResponseUtil.success(count);
-    }
-
-    @Operation(summary = "Count tất cả comments cho một blog post")
-    @ApiResponse(responseCode = "200", description = "Count all comments successfully")
-    @GetMapping("/blog/{blogId}/count")
-    public ResponseData<Long> countCommentsByBlogPost(@PathVariable("blogId") String blogId) {
-        long count = commentService.countCommentsByBlogPost(blogId);
-        return ResponseUtil.success(count);
-    }
+    
 
     @Operation(summary = "Count root comments cho một sản phẩm")
     @ApiResponse(responseCode = "200", description = "Count root comments successfully")

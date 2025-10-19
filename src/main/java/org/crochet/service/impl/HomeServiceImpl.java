@@ -3,8 +3,8 @@ package org.crochet.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.constant.AppConstant;
 import org.crochet.payload.response.HomeResponse;
+import org.crochet.client.BlogServiceClient;
 import org.crochet.service.BannerService;
-import org.crochet.service.BlogPostService;
 import org.crochet.service.FreePatternService;
 import org.crochet.service.HomeService;
 import org.crochet.service.PatternService;
@@ -24,20 +24,20 @@ public class HomeServiceImpl implements HomeService {
     private final PatternService patternService;
     private final FreePatternService freePatternService;
     private final BannerService bannerService;
-    private final BlogPostService blogService;
+    private final BlogServiceClient blogServiceClient;
     private final Executor crochetTaskExecutor;
 
     public HomeServiceImpl(ProductService productService,
                            PatternService patternService,
                            FreePatternService freePatternService,
                            BannerService bannerService,
-                           BlogPostService blogService,
+                           BlogServiceClient blogServiceClient,
                            @Qualifier(AppConstant.CROCHET_TASK_EXECUTOR) Executor crochetTaskExecutor) {
         this.productService = productService;
         this.patternService = patternService;
         this.freePatternService = freePatternService;
         this.bannerService = bannerService;
-        this.blogService = blogService;
+        this.blogServiceClient = blogServiceClient;
         this.crochetTaskExecutor = crochetTaskExecutor;
     }
 
@@ -69,7 +69,7 @@ public class HomeServiceImpl implements HomeService {
                     log.error("Failed to fetch banners", ex);
                     return Collections.emptyList();
                 });
-        var blogFuture = CompletableFuture.supplyAsync(blogService::getLimitedBlogPosts, crochetTaskExecutor)
+        var blogFuture = CompletableFuture.supplyAsync(blogServiceClient::getLimitedBlogPosts, crochetTaskExecutor)
                 .exceptionally(ex -> {
                     log.error("Failed to fetch blogs", ex);
                     return Collections.emptyList();

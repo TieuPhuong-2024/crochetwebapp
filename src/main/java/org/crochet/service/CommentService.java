@@ -9,18 +9,7 @@ import java.util.List;
 public interface CommentService {
     CommentResponse createOrUpdate(CommentRequest request);
     
-    // Blog Post Comments
-    // Lấy danh sách root comments cho một bài viết (không bao gồm replies)
-    PaginationResponse<CommentResponse> getRootCommentsByBlogPost(String blogPostId, int pageNo, int pageSize);
-    
-    // Lấy tất cả comments cho một bài viết (cả root và replies)
-    PaginationResponse<CommentResponse> getCommentsByBlogPost(String blogPostId, int pageNo, int pageSize);
-    
-    // Đếm số lượng root comments cho một bài viết
-    long countRootCommentsByBlogPost(String blogPostId);
-    
-    // Đếm số lượng tất cả comments cho một bài viết
-    long countCommentsByBlogPost(String blogPostId);
+
     
     // Product Comments
     // Lấy danh sách root comments cho một product (không bao gồm replies)

@@ -31,16 +31,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
             LIMIT 5
             """)
     List<CommentResponse> getRecentCommentsByUserId(@Param("userId") String userId);
-    
-    /**
-     * Retrieves all root comments (comments without a parent) for a specific blog post with pagination support.
-     *
-     * @param blogPostId The ID of the blog post
-     * @param pageable Pagination information
-     * @return A page of root comments for the specified blog post
-     */
-    Page<Comment> findByBlogPostIdAndParentIsNullOrderByCreatedDateDesc(String blogPostId, Pageable pageable);
-    
+
     /**
      * Retrieves all replies for a specific parent comment, ordered by creation date (ascending).
      *
@@ -48,16 +39,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
      * @return A list of reply comments
      */
     List<Comment> findByParentIdOrderByCreatedDateAsc(String parentId);
-    
-    /**
-     * Retrieves all comments (both root comments and replies) for a specific blog post with pagination support.
-     *
-     * @param blogPostId The ID of the blog post
-     * @param pageable Pagination information
-     * @return A page of all comments for the specified blog post
-     */
-    Page<Comment> findByBlogPostIdOrderByCreatedDateDesc(String blogPostId, Pageable pageable);
-    
+
     /**
      * Counts the number of replies for a specific parent comment.
      *
@@ -65,31 +47,6 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
      * @return The number of replies
      */
     long countByParentId(String parentId);
-    
-    /**
-     * Counts the number of root comments (comments without a parent) for a specific blog post.
-     *
-     * @param blogPostId The ID of the blog post
-     * @return The number of root comments
-     */
-    long countByBlogPostIdAndParentIsNull(String blogPostId);
-    
-    /**
-     * Counts the total number of comments (both root comments and replies) for a specific blog post.
-     *
-     * @param blogPostId The ID of the blog post
-     * @return The total number of comments
-     */
-    long countByBlogPostId(String blogPostId);
-
-    /**
-     * Counts the number of comments for multiple blog posts.
-     *
-     * @param blogPostIds A list of blog post IDs
-     * @return A list of Object arrays containing blog post ID and comment count pairs
-     */
-    @Query("SELECT c.blogPost.id, COUNT(c) FROM Comment c WHERE c.blogPost.id IN :blogPostIds GROUP BY c.blogPost.id")
-    List<Object[]> countByBlogPostIds(List<String> blogPostIds);
     
     /**
      * Product comments

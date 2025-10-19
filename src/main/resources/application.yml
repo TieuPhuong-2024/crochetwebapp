@@ -80,3 +80,12 @@ resilience4j:
         waitDuration: 1s
         retryExceptions:
           - org.springframework.mail.MailException
+
+# Internal API configuration
+internal:
+  api:
+    key: ${INTERNAL_API_KEY:internal-api-key}
+
+# Blog service configuration
+blog-service:
+  url: ${BLOG_SERVICE_URL:http://localhost:8083}

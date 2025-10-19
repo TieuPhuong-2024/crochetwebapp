@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.crochet.constant.AppConstant;
 import org.crochet.properties.AuthorizeHttpRequestProperties;
 import org.crochet.security.CustomUserDetailsService;
+import org.crochet.security.InternalApiKeyFilter;
 import org.crochet.security.RestAccessDeniedHandler;
 import org.crochet.security.RestAuthenticationEntryPoint;
 import org.crochet.security.TokenAuthenticationFilter;
@@ -48,6 +49,7 @@ public class SecurityConfig {
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final OAuth2CookieRepository oAuth2CookieRepository;
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
+    private final InternalApiKeyFilter internalApiKeyFilter;
 
     @Bean
     @ConfigurationProperties(prefix = "authorize.http-request")
@@ -72,6 +74,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
+                .addFilterBefore(internalApiKeyFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .userDetailsService(customUserDetailsService);
     }
@@ -95,7 +98,8 @@ public class SecurityConfig {
 
     private void configureAuthorization(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authReq -> authReq
-                .anyRequest().permitAll());
+                .requestMatchers("/api/v1/internal/**").permitAll() // Allow internal APIs
+                .anyRequest().permitAll()); // Keep existing behavior for now
     }
 
     private void configureOAuth2(HttpSecurity http) throws Exception {
