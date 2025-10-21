@@ -36,9 +36,7 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
                 u.email,
                 u.role,
                 u.imageUrl,
-                u.emailVerified,
-                u.createdAt,
-                u.lastModifiedAt
+                u.emailVerified
             )
             from User u
             where u.id = ?1

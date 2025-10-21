@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.crochet.enums.RoleType;
 
-import java.time.Instant;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -23,6 +21,4 @@ public class UserResponse {
     private RoleType role;
     private String imageUrl;
     private Boolean emailVerified;
-    private Instant createdAt;
-    private Instant lastModifiedAt;
 }

@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: ${ENV:dev}
+    active: ${ENV:local}
 
   threads:
     virtual:

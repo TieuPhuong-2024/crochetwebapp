@@ -8,8 +8,10 @@ spring:
         highlight_sql: true
     generate-ddl: true
     database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create-drop
   datasource:
-    url: jdbc:mysql://localhost:3306/testdb
+    url: jdbc:mysql://localhost:3306/crochet_db
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver

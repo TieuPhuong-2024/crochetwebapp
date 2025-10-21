@@ -1,10 +1,50 @@
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: main-service:latest
+  mysql:
+    image: mysql:8.0
+    container_name: crochet_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: crochet_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
     ports:
-      - "8080:8080"
-    env_file:
-      - .env.dev
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+      interval: 30s
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - crochet_network
+
+  # web:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   image: main-service:latest
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #   env_file:
+  #     - .env.local
+  #   networks:
+  #     - crochet_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  crochet_network:
+    driver: bridge
