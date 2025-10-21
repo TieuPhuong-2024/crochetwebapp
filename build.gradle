@@ -5,10 +5,7 @@ plugins {
     id 'org.liquibase.gradle' version '2.2.1'
 }
 
-apply from: 'version.gradle'
-
 group = 'org'
-version = loadVersion().getVersion()
 description = 'crochet'
 
 java {

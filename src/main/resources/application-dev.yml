@@ -1,7 +1,4 @@
 spring:
-  config:
-    activate:
-      on-profile: dev
   jpa:
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQL8Dialect

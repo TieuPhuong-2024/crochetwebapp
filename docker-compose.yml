@@ -3,14 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      secrets:
-        - secrets
-    image: tieuphuongcrochet:latest
+    image: main-service:latest
     ports:
       - "8080:8080"
     env_file:
       - .env.dev
-
-secrets:
-  secrets:
-    file: ./secrets.txt
