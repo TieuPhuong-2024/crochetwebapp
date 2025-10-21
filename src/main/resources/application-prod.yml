@@ -1,11 +1,99 @@
 spring:
+  # JPA/Hibernate Configuration
   jpa:
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: false
+        show_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+          batch_versioned_data: true
+        connection:
+          provider_disables_autocommit: true
+          autocommit: false
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+        generate_statistics: false
+        session:
+          events:
+            log:
+              LOG_QUERIES_SLOWER_THAN_MS: 5000
+
+  # Enhanced Datasource Configuration with HikariCP
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 30000
+      validation-timeout: 5000
+      leak-detection-threshold: 60000
+      pool-name: CrochetHikariPool
+      connection-test-query: SELECT 1
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+
+  # Liquibase Configuration
   liquibase:
     enabled: false
+
+  # Cache Configuration
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterAccess=600s
+
+  # Jackson Configuration for JSON
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: NON_NULL
+
+  # Management and Monitoring
+  jmx:
+    enabled: true
+
+  # Logging Configuration
+  logging:
+    level:
+      org.springframework.web: WARN
+      org.hibernate.SQL: WARN
+      org.hibernate.type.descriptor.sql.BasicBinder: WARN
+      org.springframework.security: WARN
+      org.springframework.cache: WARN
+      com.zaxxer.hikari: WARN
+      org.crochet: INFO
+    pattern:
+      console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+      file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
