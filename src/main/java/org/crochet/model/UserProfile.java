@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDate;
+import java.time.Instant;
 
 @Entity
 @Table(name = "user_profile")
@@ -30,7 +30,7 @@ public class UserProfile extends BaseEntity {
     private String phone;
 
     @Column(name = "birth_date")
-    private LocalDate birthDate;
+    private Instant birthDate;
 
     @Column(name = "gender", length = 10)
     private String gender;

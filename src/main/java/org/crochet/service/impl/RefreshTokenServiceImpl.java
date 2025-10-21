@@ -12,7 +12,7 @@ import org.crochet.service.RefreshTokenService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,7 +50,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         var user = userRepository.findById(username)
                 .orElseThrow(() -> new ResourceNotFoundException(ResultCode.MSG_USER_NOT_FOUND_WITH_EMAIL.message(),
                         ResultCode.MSG_USER_NOT_FOUND_WITH_EMAIL.code()));
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         var expiryDate = now.plus(appProps.getAuth().getRefreshTokenExpirationMs(), ChronoUnit.MILLIS);
         var refreshToken = RefreshToken.builder()
                 .token(UUID.randomUUID().toString())
@@ -78,7 +78,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      */
     @Override
     public RefreshToken verifyExpiration(RefreshToken token) {
-        if (token.getExpiresAt().isBefore(LocalDateTime.now()) || token.isRevoked()) {
+        if (token.getExpiresAt().isBefore(Instant.now()) || token.isRevoked()) {
             refreshTokenRepo.delete(token);
             throw new TokenException(token.getToken() + ResultCode.MSG_REFRESH_TOKEN_EXPIRED.message(),
                     ResultCode.MSG_REFRESH_TOKEN_EXPIRED.code());
@@ -125,7 +125,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         var refreshTokens = refreshTokenRepo.findAll()
                 .stream()
                 .filter(RefreshToken::isRevoked)
-                .filter(token -> token.getExpiresAt().isBefore(LocalDateTime.now()))
+                .filter(token -> token.getExpiresAt().isBefore(Instant.now()))
                 .toList();
         refreshTokenRepo.deleteAll(refreshTokens);
     }

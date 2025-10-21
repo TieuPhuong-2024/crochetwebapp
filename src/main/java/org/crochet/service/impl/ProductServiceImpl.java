@@ -149,7 +149,7 @@ public class ProductServiceImpl implements ProductService {
         ).getValue();
         var orderBy = settingsMap.getOrDefault(
                 "homepage.product.orderBy",
-                new Settings("homepage.product.orderBy", "createdDate")
+                new Settings("homepage.product.orderBy", "createdAt")
         ).getValue();
         var limit = settingsMap.getOrDefault(
                 "homepage.product.limit",

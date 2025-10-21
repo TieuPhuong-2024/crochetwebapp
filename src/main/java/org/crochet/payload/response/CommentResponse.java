@@ -1,13 +1,11 @@
 package org.crochet.payload.response;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.crochet.constant.AppConstant;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @AllArgsConstructor
@@ -17,8 +15,7 @@ import java.util.List;
 public class CommentResponse {
     private String id;
     private String content;
-    @JsonFormat(pattern = AppConstant.DATE_PATTERN)
-    private LocalDateTime createdDate;
+    private Instant createdAt;
     private String userId;
     private String username;
     private String userAvatar;
@@ -33,9 +30,9 @@ public class CommentResponse {
     private String mentionedUsername;
     
     // Constructor sử dụng trong câu query hiện tại
-    public CommentResponse(String id, String content, LocalDateTime createdDate) {
+    public CommentResponse(String id, String content, Instant createdAt) {
         this.id = id;
         this.content = content;
-        this.createdDate = createdDate;
+        this.createdAt = createdAt;
     }
 }

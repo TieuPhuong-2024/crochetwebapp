@@ -134,7 +134,7 @@ public class PatternServiceImpl implements PatternService {
         ).getValue();
         var orderBy = settingsMap.getOrDefault(
                 "homepage.pattern.orderBy",
-                new Settings("homepage.pattern.orderBy", "createdDate")
+                new Settings("homepage.pattern.orderBy", "createdAt")
         ).getValue();
         var limit = settingsMap.getOrDefault(
                 "homepage.pattern.limit",

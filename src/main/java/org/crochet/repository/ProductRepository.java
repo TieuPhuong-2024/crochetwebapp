@@ -96,7 +96,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
             FROM
               Product p
             ORDER BY
-              p.createdDate DESC
+              p.createdAt DESC
             """)
     List<String> getProductIds(Pageable pageable);
 

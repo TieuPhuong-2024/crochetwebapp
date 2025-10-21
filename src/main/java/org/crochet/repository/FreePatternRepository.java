@@ -112,7 +112,7 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
     })
     Page<FreePatternResponse> getFrepWithPageable(Pageable pageable);
 
-    @Query("select f.id from FreePattern f order by f.createdDate desc")
+    @Query("select f.id from FreePattern f order by f.createdAt desc")
     List<String> getFreePatternIds(Pageable pageable);
 
     @Query("""
@@ -183,7 +183,7 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
             WHERE
               c.id = :colId
               AND c.user.id = :userId
-            ORDER BY colFrep.createdDate DESC
+            ORDER BY colFrep.createdAt DESC
             """)
     @QueryHints(value = {
             @QueryHint(name = HINT_FETCH_SIZE, value = "50"),

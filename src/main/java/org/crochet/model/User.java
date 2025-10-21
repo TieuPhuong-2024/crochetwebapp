@@ -1,11 +1,14 @@
 package org.crochet.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -38,7 +41,12 @@ import java.util.Set;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends BaseEntity implements UserDetails, OAuth2User {
+public class User implements UserDetails, OAuth2User {
+    @Id
+    @Tsid
+    @Column(name = "id", nullable = false, unique = true, length = 50)
+    private String id;
+    
     @Column(name = "name", nullable = false)
     private String name;
 

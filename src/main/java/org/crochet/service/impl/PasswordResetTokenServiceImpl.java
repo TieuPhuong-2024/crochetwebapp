@@ -8,7 +8,8 @@ import org.crochet.repository.PasswordResetTokenRepository;
 import org.crochet.service.PasswordResetTokenService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
@@ -34,8 +35,8 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService 
     public PasswordResetToken createOrUpdatePasswordResetToken(User user) {
         var passwordResetToken = passwordResetTokenRepository.findByUser(user)
                 .orElse(null);
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expirationTime = now.plusMinutes(15);
+        Instant now = Instant.now();
+        Instant expirationTime = now.plus(15, ChronoUnit.MINUTES);
         if (passwordResetToken == null) {
             // Create a new token
             String token = UUID.randomUUID().toString();

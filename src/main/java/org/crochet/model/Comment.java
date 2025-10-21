@@ -25,12 +25,12 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Comment extends BaseEntity {
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "id")
     @JsonBackReference
     private Product product;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "free_pattern_id", referencedColumnName = "id")
     @JsonBackReference
@@ -43,18 +43,18 @@ public class Comment extends BaseEntity {
 
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
-    
+
     // Comment cha (null nếu là root comment)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", referencedColumnName = "id")
     @JsonBackReference
     private Comment parent;
-    
+
     // Danh sách comment con
     @OneToMany(mappedBy = "parent")
     @JsonManagedReference
     private Set<Comment> children;
-    
+
     // ID của người dùng được nhắc đến (mention)
     @Column(name = "mentioned_user_id")
     private String mentionedUserId;

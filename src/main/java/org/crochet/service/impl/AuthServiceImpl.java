@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * AuthServiceImpl class
@@ -177,9 +177,9 @@ public class AuthServiceImpl implements AuthService {
     public void confirmToken(String token) {
         var confirmationToken = confirmTokenService.getToken(token);
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
-        LocalDateTime confirmedAt = confirmationToken.getConfirmedAt();
+        Instant now = Instant.now();
+        Instant expiredAt = confirmationToken.getExpiresAt();
+        Instant confirmedAt = confirmationToken.getConfirmedAt();
 
         if (confirmedAt != null) {
             throw new EmailVerificationException(
@@ -196,7 +196,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Update confirmedAt
-        confirmTokenService.updateConfirmedAt(token, LocalDateTime.now());
+        confirmTokenService.updateConfirmedAt(token, Instant.now());
 
         // Update emailVerified to true
         userService.verifyEmail(confirmationToken.getUser().getEmail());
@@ -334,8 +334,8 @@ public class AuthServiceImpl implements AuthService {
         // Get PasswordResetToken
         PasswordResetToken passwordResetToken = passwordResetTokenService.getPasswordResetToken(token);
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiredAt = passwordResetToken.getExpiresAt();
+        Instant now = Instant.now();
+        Instant expiredAt = passwordResetToken.getExpiresAt();
 
         if (expiredAt.isBefore(now)) {
             throw new TokenException(

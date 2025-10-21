@@ -89,3 +89,6 @@ internal:
 # Blog service configuration
 blog-service:
   url: ${BLOG_SERVICE_URL:http://localhost:8083}
+  
+server:
+  port: 8081

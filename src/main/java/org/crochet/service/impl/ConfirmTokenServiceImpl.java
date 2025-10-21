@@ -9,7 +9,8 @@ import org.crochet.service.ConfirmTokenService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
@@ -36,8 +37,8 @@ public class ConfirmTokenServiceImpl implements ConfirmTokenService {
         ConfirmationToken confirmationToken = confirmationTokenRepository
                 .findByUser(user)
                 .orElse(null);
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expirationTime = now.plusMinutes(15);
+        Instant now = Instant.now();
+        Instant expirationTime = now.plus(15, ChronoUnit.MINUTES);
         if (confirmationToken == null) {
             // Create a new token
             String token = UUID.randomUUID().toString();
@@ -60,7 +61,7 @@ public class ConfirmTokenServiceImpl implements ConfirmTokenService {
      * @param dateTime the date time
      */
     @Override
-    public void updateConfirmedAt(String token, LocalDateTime dateTime) {
+    public void updateConfirmedAt(String token, Instant dateTime) {
         confirmationTokenRepository.updateConfirmedAt(token, dateTime);
     }
 
@@ -74,11 +75,9 @@ public class ConfirmTokenServiceImpl implements ConfirmTokenService {
     public ConfirmationToken getToken(String token) {
         return confirmationTokenRepository
                 .findByToken(token)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                ResultCode.MSG_CONFIRM_TOKEN_NOT_FOUND.message(),
-                                ResultCode.MSG_CONFIRM_TOKEN_NOT_FOUND.code()
-                        ));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ResultCode.MSG_CONFIRM_TOKEN_NOT_FOUND.message(),
+                        ResultCode.MSG_CONFIRM_TOKEN_NOT_FOUND.code()));
     }
 
     /**
@@ -89,7 +88,7 @@ public class ConfirmTokenServiceImpl implements ConfirmTokenService {
     public void deleteExpiredOrConfirmedTokens() {
         var tokens = confirmationTokenRepository.findAll()
                 .stream()
-                .filter(token -> token.getExpiresAt().isBefore(LocalDateTime.now()) || token.getConfirmedAt() != null)
+                .filter(token -> token.getExpiresAt().isBefore(Instant.now()) || token.getConfirmedAt() != null)
                 .toList();
         confirmationTokenRepository.deleteAll(tokens);
     }

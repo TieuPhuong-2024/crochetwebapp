@@ -19,8 +19,8 @@ public interface CollectionRepo extends JpaRepository<Collection, String> {
                 FROM Collection c
                 LEFT JOIN ColFrep cf ON cf.collection.id = c.id
                 WHERE c.user.id = :userId
-                GROUP BY c.id, c.name, c.avatar, c.user.id, c.createdDate
-                ORDER BY c.createdDate DESC
+                GROUP BY c.id, c.name, c.avatar, c.user.id, c.createdAt
+                ORDER BY c.createdAt DESC
               """)
     List<CollectionResponse> getAllByUserId(@Param("userId") String userId);
 

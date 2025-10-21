@@ -293,7 +293,7 @@ public class FreePatternServiceImpl implements FreePatternService {
         ).getValue();
         var orderBy = settingsMap.getOrDefault(
                 "homepage.fp.orderBy",
-                new Settings("homepage.fp.orderBy", "createdDate")
+                new Settings("homepage.fp.orderBy", "createdAt")
         ).getValue();
         var limit = settingsMap.getOrDefault(
                 "homepage.fp.limit",

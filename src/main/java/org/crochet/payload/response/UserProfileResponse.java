@@ -1,17 +1,15 @@
 package org.crochet.payload.response;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.crochet.constant.AppConstant;
 import org.crochet.enums.AuthProvider;
 import org.crochet.enums.RoleType;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.List;
 
 @Getter
@@ -31,8 +29,7 @@ public class UserProfileResponse {
     
     // Profile info
     private String phone;
-    @JsonFormat(pattern = AppConstant.DATE_NOT_TIME_PATTERN)
-    private LocalDate birthDate;
+    private Instant birthDate;
     private String gender;
     private String backgroundImageUrl;
     

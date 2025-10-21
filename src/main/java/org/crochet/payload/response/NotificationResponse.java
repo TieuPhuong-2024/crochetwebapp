@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.crochet.model.Notification.NotificationType;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -18,7 +18,7 @@ public class NotificationResponse {
     private String message;
     private String link;
     private boolean read;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     private NotificationType notificationType;
     private String senderName;
     private String senderImageUrl;

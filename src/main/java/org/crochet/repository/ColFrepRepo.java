@@ -21,7 +21,7 @@ public interface ColFrepRepo extends JpaRepository<ColFrep, String> {
             SELECT cf.freePattern
             FROM ColFrep cf
             WHERE cf.collection.id = :collectionId
-            ORDER BY cf.createdDate DESC
+            ORDER BY cf.createdAt DESC
             """)
     List<FreePattern> findFreePatternsByCollectionId(@Param("collectionId") String collectionId);
 

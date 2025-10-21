@@ -20,7 +20,7 @@ public class ImageUtils {
         }
 
         List<T> sortedFiles = files.stream()
-                .sorted(Comparator.comparing(FileResponse::getLastModified,
+                .sorted(Comparator.comparing(FileResponse::getLastModifiedAt,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
 

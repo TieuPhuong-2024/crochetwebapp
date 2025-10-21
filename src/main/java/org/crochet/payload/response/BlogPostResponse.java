@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -24,7 +24,7 @@ public class BlogPostResponse {
     private Boolean isHome;
     private List<FileResponse> files;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdDate;
+    private Instant createdAt;
     private String fileContent;
     private String createdBy;
     private String userId;
@@ -33,29 +33,29 @@ public class BlogPostResponse {
     private Long commentCount;
 
     public BlogPostResponse(String id,
-                            String title,
-                            String content,
-                            String fileContent,
-                            LocalDateTime createdDate,
-                            String createdBy) {
+                             String title,
+                             String content,
+                             String fileContent,
+                             Instant createdAt,
+                             String createdBy) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.fileContent = fileContent;
-        this.createdDate = createdDate;
+        this.createdAt = createdAt;
         this.createdBy = createdBy;
     }
 
     public BlogPostResponse(String id,
-                            String title,
-                            String content,
-                            String fileContent,
-                            LocalDateTime createdDate,
-                            String createdBy,
-                            String userId,
-                            String username,
-                            String userAvatar) {
-        this(id, title, content, fileContent, createdDate, createdBy);
+                             String title,
+                             String content,
+                             String fileContent,
+                             Instant createdAt,
+                             String createdBy,
+                             String userId,
+                             String username,
+                             String userAvatar) {
+        this(id, title, content, fileContent, createdAt, createdBy);
         this.userId = userId;
         this.username = username;
         this.userAvatar = userAvatar;

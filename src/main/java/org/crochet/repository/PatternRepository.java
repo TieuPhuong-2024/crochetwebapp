@@ -85,7 +85,7 @@ public interface PatternRepository extends JpaRepository<Pattern, String>, JpaSp
             FROM
               Pattern p
             ORDER BY
-              p.createdDate DESC
+              p.createdAt DESC
             """)
     List<String> getPatternIds(Pageable pageable);
 }

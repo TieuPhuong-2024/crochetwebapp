@@ -70,7 +70,7 @@ public class Product extends BaseEntity {
             @AttributeOverride(name = "fileName", column = @Column(name = "file_name")),
             @AttributeOverride(name = "fileContent", column = @Column(name = "file_content", columnDefinition = "TEXT")),
             @AttributeOverride(name = "order", column = @Column(name = "display_order")),
-            @AttributeOverride(name = "lastModified", column = @Column(name = "last_modified", columnDefinition = "datetime default current_timestamp"))
+            @AttributeOverride(name = "lastModifiedAt", column = @Column(name = "last_modified_at", columnDefinition = "datetime default current_timestamp"))
     })
     private Set<File> images;
 }

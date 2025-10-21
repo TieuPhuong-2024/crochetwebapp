@@ -6,7 +6,7 @@ import org.crochet.service.TokenBlacklistService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 public class TokenBlacklistServiceImpl implements TokenBlacklistService {
@@ -31,7 +31,7 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
     public void addTokenToBlacklist(String token) {
         TokenBlacklist tokenBlacklist = new TokenBlacklist();
         tokenBlacklist.setToken(token);
-        tokenBlacklist.setBlacklistedAt(LocalDateTime.now());
+        tokenBlacklist.setBlacklistedAt(Instant.now());
         tokenBlacklistRepo.save(tokenBlacklist);
     }
 

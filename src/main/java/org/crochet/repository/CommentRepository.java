@@ -24,10 +24,10 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
      * @return A list of CommentResponse objects containing comment details
      */
     @Query("""
-            SELECT new org.crochet.payload.response.CommentResponse(c.id, c.content, c.createdDate)
+            SELECT new org.crochet.payload.response.CommentResponse(c.id, c.content, c.createdAt)
             FROM Comment c
             WHERE c.user.id = :userId
-            ORDER BY c.createdDate DESC
+            ORDER BY c.createdAt DESC
             LIMIT 5
             """)
     List<CommentResponse> getRecentCommentsByUserId(@Param("userId") String userId);
@@ -38,7 +38,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
      * @param parentId The ID of the parent comment
      * @return A list of reply comments
      */
-    List<Comment> findByParentIdOrderByCreatedDateAsc(String parentId);
+    List<Comment> findByParentIdOrderByCreatedAtAsc(String parentId);
 
     /**
      * Counts the number of replies for a specific parent comment.
@@ -56,7 +56,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
      * @param pageable Pagination information
      * @return A page of root comments for the specified product
      */
-    Page<Comment> findByProductIdAndParentIsNullOrderByCreatedDateDesc(String productId, Pageable pageable);
+    Page<Comment> findByProductIdAndParentIsNullOrderByCreatedAtDesc(String productId, Pageable pageable);
     
     /**
      * Retrieves all comments (both root comments and replies) for a specific product with pagination support.
@@ -65,7 +65,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
      * @param pageable Pagination information
      * @return A page of all comments for the specified product
      */
-    Page<Comment> findByProductIdOrderByCreatedDateDesc(String productId, Pageable pageable);
+    Page<Comment> findByProductIdOrderByCreatedAtDesc(String productId, Pageable pageable);
     
     /**
      * Counts the number of root comments (comments without a parent) for a specific product.
@@ -91,7 +91,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
      * @param pageable Pagination information
      * @return A page of root comments for the specified free pattern
      */
-    Page<Comment> findByFreePatternIdAndParentIsNullOrderByCreatedDateDesc(String freePatternId, Pageable pageable);
+    Page<Comment> findByFreePatternIdAndParentIsNullOrderByCreatedAtDesc(String freePatternId, Pageable pageable);
     
     /**
      * Retrieves all comments (both root comments and replies) for a specific free pattern with pagination support.
@@ -100,7 +100,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
      * @param pageable Pagination information
      * @return A page of all comments for the specified free pattern
      */
-    Page<Comment> findByFreePatternIdOrderByCreatedDateDesc(String freePatternId, Pageable pageable);
+    Page<Comment> findByFreePatternIdOrderByCreatedAtDesc(String freePatternId, Pageable pageable);
     
     /**
      * Counts the number of root comments (comments without a parent) for a specific free pattern.

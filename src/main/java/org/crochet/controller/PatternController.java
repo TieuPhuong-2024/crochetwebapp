@@ -67,7 +67,7 @@ public class PatternController {
             @Parameter(description = "Page size (default: 48)")
             @RequestParam(value = "pageSize", defaultValue = AppConstant.DEFAULT_PAGE_SIZE,
                     required = false) int pageSize,
-            @Parameter(description = "Sort by field (default: createdDate)")
+            @Parameter(description = "Sort by field (default: createdAt)")
             @RequestParam(value = "sortBy", defaultValue = AppConstant.DEFAULT_SORT_BY, required = false) String sortBy,
             @Parameter(description = "Sort direction (default: DESC)")
             @RequestParam(value = "sortDir", defaultValue = AppConstant.DEFAULT_SORT_DIRECTION,
