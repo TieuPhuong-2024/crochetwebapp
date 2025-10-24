@@ -1,5 +1,9 @@
 package org.crochet.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.crochet.enums.ResultCode;
@@ -30,12 +34,18 @@ import java.util.List;
 public class SettingController {
     private final SettingService settingService;
 
+    @Operation(summary = "Get all settings")
+    @ApiResponse(responseCode = "200", description = "Settings retrieved successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class)))
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
     public List<SettingResponse> getSetting() {
         return settingService.getAll();
     }
 
+    @Operation(summary = "Create setting")
+    @ApiResponse(responseCode = "200", description = "Setting created successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
     @ResponseStatus(HttpStatus.OK)
     @PostMapping
     public ResponseData<String> create(@RequestBody SettingRequest request) {
@@ -43,6 +53,9 @@ public class SettingController {
         return ResponseUtil.success(ResultCode.MSG_CREATE_OR_UPDATE_SUCCESS.message());
     }
 
+    @Operation(summary = "Update setting")
+    @ApiResponse(responseCode = "200", description = "Setting updated successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
     @ResponseStatus(HttpStatus.OK)
     @PutMapping
     public ResponseData<String> update(@RequestBody SettingRequest request) {

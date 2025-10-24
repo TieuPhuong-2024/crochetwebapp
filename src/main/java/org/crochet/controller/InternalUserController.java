@@ -33,7 +33,7 @@ public class InternalUserController {
     @GetMapping("/{userId}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseData<org.crochet.payload.response.UserResponse> getUserInfo(
-            @Parameter(description = "User ID") @PathVariable String userId) {
+            @Parameter(description = "User ID") @PathVariable("userId") String userId) {
 
         try {
             var userResponse = userService.getDetail(userId);
@@ -50,7 +50,7 @@ public class InternalUserController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseData<List<org.crochet.payload.response.UserResponse>> getBatchUserInfo(
             @Parameter(description = "Comma-separated list of user IDs")
-            @RequestParam String userIds) {
+            @RequestParam("userIds") String userIds) {
 
         try {
             if (userIds == null || userIds.trim().isEmpty()) {

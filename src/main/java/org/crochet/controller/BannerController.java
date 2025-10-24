@@ -1,5 +1,9 @@
 package org.crochet.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.crochet.payload.request.BannerRequest;
 import org.crochet.payload.response.BannerResponse;
@@ -26,6 +30,9 @@ public class BannerController {
         this.bannerService = bannerService;
     }
 
+    @Operation(summary = "Batch insert or update banners")
+    @ApiResponse(responseCode = "201", description = "Banners created or updated successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class)))
     @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "BearerAuth")
     @ResponseStatus(HttpStatus.CREATED)
@@ -35,6 +42,9 @@ public class BannerController {
         return ResponseUtil.success(res, HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Get all banners")
+    @ApiResponse(responseCode = "200", description = "Banners retrieved successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class)))
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
     public ResponseData<List<BannerResponse>> getAll() {

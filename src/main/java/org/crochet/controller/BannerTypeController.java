@@ -1,5 +1,9 @@
 package org.crochet.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.crochet.enums.ResultCode;
 import org.crochet.payload.request.BannerTypeRequest;
@@ -31,6 +35,8 @@ public class BannerTypeController {
         this.bannerTypeService = bannerTypeService;
     }
 
+    @Operation(summary = "Create or update banner type")
+    @ApiResponse(responseCode = "201", description = "Banner type created or updated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = BannerTypeResponse.class)))
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ResponseData<BannerTypeResponse> createOrUpdate(@RequestBody BannerTypeRequest request) {
@@ -38,6 +44,8 @@ public class BannerTypeController {
         return ResponseUtil.success(res);
     }
 
+    @Operation(summary = "Delete banner type by ID")
+    @ApiResponse(responseCode = "200", description = "Banner type deleted successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
     @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/{id}")
     public ResponseData<String> delete(@PathVariable("id") String id) {
@@ -45,6 +53,8 @@ public class BannerTypeController {
         return ResponseUtil.success(ResultCode.MSG_DELETE_SUCCESS.message());
     }
 
+    @Operation(summary = "Get all banner types")
+    @ApiResponse(responseCode = "200", description = "Banner types retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class)))
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
     public ResponseData<List<BannerTypeResponse>> getAll() {
@@ -52,6 +62,9 @@ public class BannerTypeController {
         return ResponseUtil.success(res);
     }
 
+    @Operation(summary = "Get banner type by ID")
+    @ApiResponse(responseCode = "200", description = "Banner type retrieved successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BannerTypeResponse.class)))
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{id}")
     public ResponseData<BannerTypeResponse> getById(@PathVariable("id") String id) {

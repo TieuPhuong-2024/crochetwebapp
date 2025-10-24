@@ -1,5 +1,9 @@
 package org.crochet.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.crochet.model.User;
@@ -30,6 +34,8 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
+    @Operation(summary = "Create notification")
+    @ApiResponse(responseCode = "201", description = "Notification created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = NotificationResponse.class)))
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -38,6 +44,8 @@ public class NotificationController {
         return ResponseUtil.success(response);
     }
 
+    @Operation(summary = "Get current user notifications")
+    @ApiResponse(responseCode = "200", description = "Current user notifications retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaginationResponse.class)))
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/me")
     public ResponseData<PaginationResponse<NotificationResponse>> getCurrentUserNotifications(
@@ -48,6 +56,8 @@ public class NotificationController {
         return ResponseUtil.success(response);
     }
 
+    @Operation(summary = "Get user notifications by user ID")
+    @ApiResponse(responseCode = "200", description = "User notifications retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaginationResponse.class)))
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/user/{receiverId}")
     @PreAuthorize("hasRole('ADMIN') or #receiverId == authentication.principal.username")
@@ -59,6 +69,8 @@ public class NotificationController {
         return ResponseUtil.success(response);
     }
 
+    @Operation(summary = "Get unread notification count")
+    @ApiResponse(responseCode = "200", description = "Unread notification count retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Long.class)))
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/unread/count")
     public ResponseData<Long> getUnreadNotificationCount(@CurrentUser User receiver) {
@@ -66,6 +78,8 @@ public class NotificationController {
         return ResponseUtil.success(countUnreadNotifications);
     }
 
+    @Operation(summary = "Mark notification as read")
+    @ApiResponse(responseCode = "200", description = "Notification marked as read successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = NotificationResponse.class)))
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/{id}/read")
     public ResponseData<NotificationResponse> markNotificationAsRead(@PathVariable String id) {
@@ -73,6 +87,8 @@ public class NotificationController {
         return ResponseUtil.success(response);
     }
 
+    @Operation(summary = "Mark all notifications as read")
+    @ApiResponse(responseCode = "200", description = "All notifications marked as read successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/read-all")
     public ResponseData<Void> markAllNotificationsAsRead(@CurrentUser User receiver) {
@@ -80,6 +96,8 @@ public class NotificationController {
         return ResponseUtil.success();
     }
 
+    @Operation(summary = "Delete notification by ID")
+    @ApiResponse(responseCode = "200", description = "Notification deleted successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
     @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/{id}")
     public ResponseData<Void> deleteNotification(@PathVariable String id) {
@@ -87,10 +105,12 @@ public class NotificationController {
         return ResponseUtil.success();
     }
 
+    @Operation(summary = "Delete all current user notifications")
+    @ApiResponse(responseCode = "200", description = "All notifications deleted successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
     @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/all")
     public ResponseData<Void> deleteAllCurrentUserNotifications(@CurrentUser User receiver) {
         notificationService.deleteAllUserNotifications(receiver.getUsername());
         return ResponseUtil.success();
     }
-} 
+}
