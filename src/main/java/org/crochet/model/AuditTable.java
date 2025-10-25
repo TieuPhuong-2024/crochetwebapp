@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -39,7 +40,7 @@ public abstract class AuditTable {
     private String lastModifiedBy;
 
     @LastModifiedDate
-    @CreationTimestamp
+    @UpdateTimestamp
     @Column(name = "last_modified_at")
     private Instant lastModifiedAt;
 }
