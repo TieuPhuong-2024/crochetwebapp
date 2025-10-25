@@ -61,7 +61,7 @@ public class User implements UserDetails, OAuth2User {
     private boolean emailVerified;
 
     @JsonIgnore
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
     private String password;
 
     @Enumerated(EnumType.STRING)
