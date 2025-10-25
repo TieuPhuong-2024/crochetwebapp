@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -15,7 +15,7 @@ public class UserProfileRequest {
     private String name;
     private String imageUrl;
     private String phone;
-    private Instant birthDate;
+    private LocalDate birthDate;
     private String gender;
     private String backgroundImageUrl;
 }

@@ -9,7 +9,7 @@ import lombok.Setter;
 import org.crochet.enums.AuthProvider;
 import org.crochet.enums.RoleType;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -29,7 +29,7 @@ public class UserProfileResponse {
     
     // Profile info
     private String phone;
-    private Instant birthDate;
+    private LocalDate birthDate;
     private String gender;
     private String backgroundImageUrl;
     

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -21,7 +22,7 @@ public class BlogPostResponse {
     @JsonProperty("is_home")
     private Boolean isHome;
     private List<FileResponse> files;
-    private String createdAt;
+    private Instant createdAt;
     private String fileContent;
     private String createdBy;
     private String userId;
