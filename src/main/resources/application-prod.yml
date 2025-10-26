@@ -61,10 +61,6 @@ spring:
         elideSetAutoCommits: true
         maintainTimeStats: false
 
-  # Liquibase Configuration
-  liquibase:
-    enabled: false
-
   # Cache Configuration
   cache:
     type: caffeine
