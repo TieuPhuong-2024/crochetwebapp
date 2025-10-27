@@ -29,7 +29,7 @@ FROM builder AS jlinker
 WORKDIR /app
 
 RUN jlink \
-    --add-modules java.base,java.sql,java.naming,java.desktop,java.management,java.security.jgss,java.instrument,java.compiler,java.scripting,jdk.unsupported \
+    --add-modules java.base,java.sql,java.naming,java.desktop,java.management,java.security.jgss,java.instrument,java.compiler,java.scripting,jdk.unsupported,java.security.sasl,java.xml.crypto,jdk.crypto.cryptoki \
     --strip-debug \
     --no-man-pages \
     --no-header-files \

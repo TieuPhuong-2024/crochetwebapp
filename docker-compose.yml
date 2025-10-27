@@ -26,20 +26,20 @@ services:
     networks:
       - crochet_network
 
-  # web:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   image: main-service:latest
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
-  #   env_file:
-  #     - .env.local
-  #   networks:
-  #     - crochet_network
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: phanvanluom97bd/crochet:latest
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - .env.local
+    networks:
+      - crochet_network
 
 volumes:
   mysql_data:

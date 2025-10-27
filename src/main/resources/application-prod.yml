@@ -4,7 +4,6 @@ spring:
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
-      ddl-auto: validate
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
@@ -19,14 +18,6 @@ spring:
           order_inserts: true
           order_updates: true
           batch_versioned_data: true
-        connection:
-          provider_disables_autocommit: true
-          autocommit: false
-        cache:
-          use_second_level_cache: true
-          use_query_cache: true
-          region:
-            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
         generate_statistics: false
         session:
           events:
