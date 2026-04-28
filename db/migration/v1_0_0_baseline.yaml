@@ -1,0 +1,1713 @@
+databaseChangeLog:
+- changeSet:
+    id: 1777287067894-1
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: title
+            type: VARCHAR(255)
+        - column:
+            name: content
+            type: TEXT
+        - column:
+            name: url
+            type: VARCHAR(255)
+        - column:
+            name: active
+            type: BIT(1)
+        - column:
+            name: file_name
+            type: VARCHAR(255)
+        - column:
+            name: file_content
+            type: VARCHAR(255)
+        - column:
+            name: text_color
+            type: VARCHAR(255)
+        - column:
+            name: banner_type_id
+            type: VARCHAR(50)
+        tableName: banner
+- changeSet:
+    id: 1777287067894-2
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        tableName: banner_type
+- changeSet:
+    id: 1777287067894-3
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        tableName: blog_category
+- changeSet:
+    id: 1777287067894-4
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: title
+            type: VARCHAR(255)
+        - column:
+            name: content
+            type: TEXT
+        - column:
+            name: home
+            type: BIT(1)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: blog_category_id
+            type: VARCHAR(50)
+        tableName: blog_post
+- changeSet:
+    id: 1777287067894-5
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: blog_post_id
+            type: VARCHAR(50)
+        - column:
+            name: file_name
+            type: VARCHAR(255)
+        - column:
+            name: file_content
+            type: VARCHAR(255)
+        - column:
+            name: display_order
+            type: INT
+        - column:
+            name: last_modified
+            type: datetime(0)
+        tableName: blog_post_file
+- changeSet:
+    id: 1777287067894-6
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: parent_id
+            type: VARCHAR(50)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        tableName: category
+- changeSet:
+    id: 1777287067894-7
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: avatar
+            type: VARCHAR(255)
+        - column:
+            name: user_id
+            type: VARCHAR(50)
+        tableName: collection
+- changeSet:
+    id: 1777287067894-8
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: collection_id
+            type: VARCHAR(50)
+        - column:
+            name: free_pattern_id
+            type: VARCHAR(50)
+        tableName: collection_free_pattern
+- changeSet:
+    id: 1777287067894-9
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: post_id
+            type: VARCHAR(50)
+        - column:
+            name: user_id
+            type: VARCHAR(50)
+        - column:
+            name: content
+            type: TEXT
+        - column:
+            name: mentioned_user_id
+            type: VARCHAR(50)
+        - column:
+            name: product_id
+            type: VARCHAR(50)
+        - column:
+            name: free_pattern_id
+            type: VARCHAR(50)
+        - column:
+            name: parent_id
+            type: VARCHAR(50)
+        tableName: comment
+- changeSet:
+    id: 1777287067894-10
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: token
+            type: VARCHAR(255)
+        - column:
+            name: expires_at
+            type: datetime(0)
+        - column:
+            name: confirmed_at
+            type: datetime(0)
+        - column:
+            name: user_id
+            type: VARCHAR(50)
+        tableName: confirmation_token
+- changeSet:
+    id: 1777287067894-11
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: id
+            type: VARCHAR(255)
+        - column:
+            name: author
+            type: VARCHAR(255)
+        - column:
+            name: filename
+            type: VARCHAR(255)
+        - column:
+            name: dateexecuted
+            type: datetime(0)
+        - column:
+            name: orderexecuted
+            type: INT
+        - column:
+            name: exectype
+            type: VARCHAR(10)
+        - column:
+            name: md5sum
+            type: VARCHAR(35)
+        - column:
+            name: description
+            type: VARCHAR(255)
+        - column:
+            name: comments
+            type: VARCHAR(255)
+        - column:
+            name: tag
+            type: VARCHAR(255)
+        - column:
+            name: liquibase
+            type: VARCHAR(20)
+        - column:
+            name: contexts
+            type: VARCHAR(255)
+        - column:
+            name: labels
+            type: VARCHAR(255)
+        - column:
+            name: deployment_id
+            type: VARCHAR(10)
+        tableName: databasechangelog
+- changeSet:
+    id: 1777287067894-12
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: id
+            type: INT
+        - column:
+            name: locked
+            type: BIT(1)
+        - column:
+            name: lockgranted
+            type: datetime(0)
+        - column:
+            name: lockedby
+            type: VARCHAR(255)
+        tableName: databasechangeloglock
+- changeSet:
+    id: 1777287067894-13
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: description
+            type: TEXT
+        - column:
+            name: author
+            type: VARCHAR(255)
+        - column:
+            name: is_home
+            type: BIT(1)
+        - column:
+            name: link
+            type: VARCHAR(255)
+        - column:
+            name: content
+            type: TEXT
+        - column:
+            defaultValue: NONE
+            name: status
+            type: VARCHAR(25)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: category_id
+            type: VARCHAR(50)
+        tableName: free_pattern
+- changeSet:
+    id: 1777287067894-14
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: free_pattern_id
+            type: VARCHAR(50)
+        - column:
+            name: file_name
+            type: VARCHAR(255)
+        - column:
+            name: file_content
+            type: VARCHAR(255)
+        - column:
+            name: display_order
+            type: INT
+        - column:
+            name: last_modified
+            type: datetime(0)
+        tableName: free_pattern_file
+- changeSet:
+    id: 1777287067894-15
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: file_name
+            type: VARCHAR(255)
+        - column:
+            name: file_content
+            type: VARCHAR(255)
+        - column:
+            name: display_order
+            type: INT
+        - column:
+            name: last_modified
+            type: datetime(0)
+        - column:
+            name: free_pattern_id
+            type: VARCHAR(50)
+        tableName: free_pattern_image
+- changeSet:
+    id: 1777287067894-16
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: user_id
+            type: VARCHAR(50)
+        - column:
+            name: created_at
+            type: datetime(0)
+        - column:
+            name: is_read
+            type: BIT(1)
+        - column:
+            name: link
+            type: VARCHAR(255)
+        - column:
+            name: message
+            type: VARCHAR(255)
+        - column:
+            name: notification_type
+            type: ENUM('COMMENT', 'NEW_BLOG', 'NEW_PATTERN', 'NEW_PRODUCT', 'SYSTEM')
+        - column:
+            name: title
+            type: VARCHAR(255)
+        - column:
+            name: receiver_id
+            type: VARCHAR(50)
+        - column:
+            name: sender_id
+            type: VARCHAR(50)
+        tableName: notifications
+- changeSet:
+    id: 1777287067894-17
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: token
+            type: VARCHAR(255)
+        - column:
+            name: expires_at
+            type: datetime(0)
+        - column:
+            name: user_id
+            type: VARCHAR(50)
+        tableName: password_reset_token
+- changeSet:
+    id: 1777287067894-18
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: description
+            type: TEXT
+        - column:
+            name: price
+            type: DOUBLE
+        - column:
+            name: currency_code
+            type: VARCHAR(20)
+        - column:
+            name: category_id
+            type: VARCHAR(50)
+        - column:
+            name: is_home
+            type: BIT(1)
+        - column:
+            name: link
+            type: VARCHAR(255)
+        - column:
+            name: content
+            type: TEXT
+        tableName: pattern
+- changeSet:
+    id: 1777287067894-19
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: pattern_id
+            type: VARCHAR(50)
+        - column:
+            name: file_name
+            type: VARCHAR(255)
+        - column:
+            name: file_content
+            type: VARCHAR(255)
+        - column:
+            name: display_order
+            type: INT
+        - column:
+            name: last_modified
+            type: datetime(0)
+        tableName: pattern_file
+- changeSet:
+    id: 1777287067894-20
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: pattern_id
+            type: VARCHAR(50)
+        - column:
+            name: file_name
+            type: VARCHAR(255)
+        - column:
+            name: file_content
+            type: VARCHAR(255)
+        - column:
+            name: display_order
+            type: INT
+        - column:
+            name: last_modified
+            type: datetime(0)
+        tableName: pattern_image
+- changeSet:
+    id: 1777287067894-21
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: description
+            type: TEXT
+        - column:
+            name: price
+            type: DOUBLE
+        - column:
+            name: currency_code
+            type: VARCHAR(20)
+        - column:
+            name: is_home
+            type: BIT(1)
+        - column:
+            name: link
+            type: VARCHAR(255)
+        - column:
+            name: content
+            type: TEXT
+        - column:
+            name: category_id
+            type: VARCHAR(50)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        tableName: product
+- changeSet:
+    id: 1777287067894-22
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: product_id
+            type: VARCHAR(255)
+        - column:
+            name: file_name
+            type: VARCHAR(255)
+        - column:
+            name: file_content
+            type: VARCHAR(255)
+        - column:
+            name: display_order
+            type: INT
+        - column:
+            name: last_modified
+            type: datetime(0)
+        tableName: product_image
+- changeSet:
+    id: 1777287067894-23
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: token
+            type: VARCHAR(255)
+        - column:
+            name: expires_at
+            type: datetime(0)
+        - column:
+            name: revoked
+            type: BIT(1)
+        - column:
+            name: user_id
+            type: VARCHAR(50)
+        tableName: refresh_token
+- changeSet:
+    id: 1777287067894-24
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: setting_key
+            type: VARCHAR(255)
+        - column:
+            name: value
+            type: VARCHAR(255)
+        tableName: settings
+- changeSet:
+    id: 1777287067894-25
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: token
+            type: VARCHAR(255)
+        - column:
+            name: blacklisted_at
+            type: datetime(0)
+        tableName: token_blacklist
+- changeSet:
+    id: 1777287067894-26
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: phone
+            type: VARCHAR(20)
+        - column:
+            name: birth_date
+            type: TEXT
+        - column:
+            name: gender
+            type: VARCHAR(10)
+        - column:
+            name: background_image_url
+            type: VARCHAR(255)
+        - column:
+            name: user_id
+            type: VARCHAR(50)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        tableName: user_profile
+- changeSet:
+    id: 1777287067894-27
+    author: luomp (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            name: created_by
+            type: VARCHAR(50)
+        - column:
+            name: created_date
+            type: datetime(0)
+        - column:
+            name: last_modified_by
+            type: VARCHAR(50)
+        - column:
+            name: last_modified_date
+            type: datetime(0)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: email
+            type: VARCHAR(255)
+        - column:
+            name: image_url
+            type: VARCHAR(255)
+        - column:
+            name: email_verified
+            type: BIT(1)
+        - column:
+            name: password
+            type: VARCHAR(255)
+        - column:
+            name: provider
+            type: VARCHAR(25)
+        - column:
+            name: provider_id
+            type: VARCHAR(255)
+        - column:
+            name: verification_code
+            type: VARCHAR(255)
+        - column:
+            name: roles
+            type: VARCHAR(10)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: VARCHAR(50)
+        tableName: users
+- changeSet:
+    id: 1777287067894-28
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: banner_type_id
+        indexName: fk_banner_banner_type_id
+        tableName: banner
+- changeSet:
+    id: 1777287067894-29
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: blog_category_id
+        indexName: fk_blog_post_blog_category_id
+        tableName: blog_post
+- changeSet:
+    id: 1777287067894-30
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: blog_post_id
+        indexName: fk_blog_post_file_blog_post_id
+        tableName: blog_post_file
+- changeSet:
+    id: 1777287067894-31
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: parent_id
+        indexName: fk_category_category_id
+        tableName: category
+- changeSet:
+    id: 1777287067894-32
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: post_id
+        indexName: fk_comment_blog_post_id
+        tableName: comment
+- changeSet:
+    id: 1777287067894-33
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: free_pattern_id
+        indexName: fk_comment_free_pattern_id
+        tableName: comment
+- changeSet:
+    id: 1777287067894-34
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: parent_id
+        indexName: fk_comment_parent_id
+        tableName: comment
+- changeSet:
+    id: 1777287067894-35
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: product_id
+        indexName: fk_comment_product_id
+        tableName: comment
+- changeSet:
+    id: 1777287067894-36
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: user_id
+        indexName: fk_comment_users_id
+        tableName: comment
+- changeSet:
+    id: 1777287067894-37
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: user_id
+        indexName: fk_confirmation_token_users_id
+        tableName: confirmation_token
+- changeSet:
+    id: 1777287067894-38
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: category_id
+        indexName: fk_free_pattern_category_id
+        tableName: free_pattern
+- changeSet:
+    id: 1777287067894-39
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: free_pattern_id
+        indexName: fk_free_pattern_file_free_pattern_id
+        tableName: free_pattern_file
+- changeSet:
+    id: 1777287067894-40
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: receiver_id
+        indexName: fk_notifications_receiver_id
+        tableName: notifications
+- changeSet:
+    id: 1777287067894-41
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: sender_id
+        indexName: fk_notifications_sender_id
+        tableName: notifications
+- changeSet:
+    id: 1777287067894-42
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: user_id
+        indexName: fk_notifications_user_id
+        tableName: notifications
+- changeSet:
+    id: 1777287067894-43
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: user_id
+        indexName: fk_password_reset_token_users_id
+        tableName: password_reset_token
+- changeSet:
+    id: 1777287067894-44
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: category_id
+        indexName: fk_pattern_category_id
+        tableName: pattern
+- changeSet:
+    id: 1777287067894-45
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: pattern_id
+        indexName: fk_pattern_file_pattern_id
+        tableName: pattern_file
+- changeSet:
+    id: 1777287067894-46
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: pattern_id
+        indexName: fk_pattern_image_pattern_id
+        tableName: pattern_image
+- changeSet:
+    id: 1777287067894-47
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: category_id
+        indexName: fk_product_category_id
+        tableName: product
+- changeSet:
+    id: 1777287067894-48
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: product_id
+        indexName: fk_product_image_product_id
+        tableName: product_image
+- changeSet:
+    id: 1777287067894-49
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: user_id
+        indexName: fk_refresh_token_user_id
+        tableName: refresh_token
+- changeSet:
+    id: 1777287067894-50
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: user_id
+        indexName: fk_user_profile_user_id
+        tableName: user_profile
+- changeSet:
+    id: 1777287067894-51
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: free_pattern_id
+        - column:
+            name: display_order
+        indexName: free_image_idx_free_id_display_order
+        tableName: free_pattern_image
+- changeSet:
+    id: 1777287067894-52
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: created_date
+        indexName: idx_collection_created_date
+        tableName: collection
+- changeSet:
+    id: 1777287067894-53
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: collection_id
+        - column:
+            name: created_date
+        indexName: idx_collection_free_pattern_composite
+        tableName: collection_free_pattern
+- changeSet:
+    id: 1777287067894-54
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: free_pattern_id
+        - column:
+            name: collection_id
+        indexName: idx_collection_free_pattern_pattern_user
+        tableName: collection_free_pattern
+- changeSet:
+    id: 1777287067894-55
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: collection_id
+        - column:
+            name: free_pattern_id
+        - column:
+            name: created_date
+        indexName: idx_collection_free_pattern_user_composite
+        tableName: collection_free_pattern
+- changeSet:
+    id: 1777287067894-56
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: user_id
+        - column:
+            name: name
+        indexName: idx_collection_user_name
+        tableName: collection
+- changeSet:
+    id: 1777287067894-57
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            descending: true
+            name: created_date
+        - column:
+            name: id
+        indexName: idx_fp_created_date_id
+        tableName: free_pattern
+- changeSet:
+    id: 1777287067894-58
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: id
+        - column:
+            name: name
+        - column:
+            name: status
+        - column:
+            name: author
+        indexName: idx_free_pattern_id_name_status_author
+        tableName: free_pattern
+- changeSet:
+    id: 1777287067894-59
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            name: free_pattern_id
+        indexName: idx_free_pattern_image_free_pattern_id
+        tableName: free_pattern_image
+- changeSet:
+    id: 1777287067894-60
+    author: luomp (generated)
+    changes:
+    - createIndex:
+        associatedWith: ''
+        columns:
+        - column:
+            descending: true
+            name: created_date
+        - column:
+            name: id
+        indexName: idx_product_created_date_id
+        tableName: product
+- changeSet:
+    id: 1777287067894-61
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: banner_type_id
+        baseTableName: banner
+        constraintName: fk_banner_banner_type_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: banner_type
+        validate: true
+- changeSet:
+    id: 1777287067894-62
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: blog_category_id
+        baseTableName: blog_post
+        constraintName: fk_blog_post_blog_category_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: blog_category
+        validate: true
+- changeSet:
+    id: 1777287067894-63
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: blog_post_id
+        baseTableName: blog_post_file
+        constraintName: fk_blog_post_file_blog_post_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: blog_post
+        validate: true
+- changeSet:
+    id: 1777287067894-64
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: parent_id
+        baseTableName: category
+        constraintName: fk_category_category_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: category
+        validate: true
+- changeSet:
+    id: 1777287067894-65
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: collection_id
+        baseTableName: collection_free_pattern
+        constraintName: fk_collection_free_pattern_collection_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: collection
+        validate: true
+- changeSet:
+    id: 1777287067894-66
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: free_pattern_id
+        baseTableName: collection_free_pattern
+        constraintName: fk_collection_free_pattern_free_pattern_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: free_pattern
+        validate: true
+- changeSet:
+    id: 1777287067894-67
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: collection
+        constraintName: fk_collection_users_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1777287067894-68
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: post_id
+        baseTableName: comment
+        constraintName: fk_comment_blog_post_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: blog_post
+        validate: true
+- changeSet:
+    id: 1777287067894-69
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: free_pattern_id
+        baseTableName: comment
+        constraintName: fk_comment_free_pattern_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: free_pattern
+        validate: true
+- changeSet:
+    id: 1777287067894-70
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: parent_id
+        baseTableName: comment
+        constraintName: fk_comment_parent_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: comment
+        validate: true
+- changeSet:
+    id: 1777287067894-71
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: product_id
+        baseTableName: comment
+        constraintName: fk_comment_product_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: product
+        validate: true
+- changeSet:
+    id: 1777287067894-72
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: comment
+        constraintName: fk_comment_users_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1777287067894-73
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: confirmation_token
+        constraintName: fk_confirmation_token_users_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1777287067894-74
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: category_id
+        baseTableName: free_pattern
+        constraintName: fk_free_pattern_category_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: category
+        validate: true
+- changeSet:
+    id: 1777287067894-75
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: free_pattern_id
+        baseTableName: free_pattern_file
+        constraintName: fk_free_pattern_file_free_pattern_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: free_pattern
+        validate: true
+- changeSet:
+    id: 1777287067894-76
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: free_pattern_id
+        baseTableName: free_pattern_image
+        constraintName: fk_free_pattern_image_free_pattern_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: free_pattern
+        validate: true
+- changeSet:
+    id: 1777287067894-77
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: receiver_id
+        baseTableName: notifications
+        constraintName: fk_notifications_receiver_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1777287067894-78
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: sender_id
+        baseTableName: notifications
+        constraintName: fk_notifications_sender_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1777287067894-79
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: notifications
+        constraintName: fk_notifications_user_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1777287067894-80
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: password_reset_token
+        constraintName: fk_password_reset_token_users_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1777287067894-81
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: category_id
+        baseTableName: pattern
+        constraintName: fk_pattern_category_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: category
+        validate: true
+- changeSet:
+    id: 1777287067894-82
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: pattern_id
+        baseTableName: pattern_file
+        constraintName: fk_pattern_file_pattern_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: pattern
+        validate: true
+- changeSet:
+    id: 1777287067894-83
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: pattern_id
+        baseTableName: pattern_image
+        constraintName: fk_pattern_image_pattern_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: pattern
+        validate: true
+- changeSet:
+    id: 1777287067894-84
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: category_id
+        baseTableName: product
+        constraintName: fk_product_category_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: category
+        validate: true
+- changeSet:
+    id: 1777287067894-85
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: product_id
+        baseTableName: product_image
+        constraintName: fk_product_image_product_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: product
+        validate: true
+- changeSet:
+    id: 1777287067894-86
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: refresh_token
+        constraintName: fk_refresh_token_user_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1777287067894-87
+    author: luomp (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: user_profile
+        constraintName: fk_user_profile_user_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+
