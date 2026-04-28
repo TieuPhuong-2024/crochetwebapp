@@ -166,3 +166,4 @@ gradle-app.setting
 .env
 .env.*
 /secrets.txt
+liquibase.properties
