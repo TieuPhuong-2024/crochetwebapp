@@ -1,7 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: src/main/resources/db/migration/20250115-add-collection-performance-indexes.yaml
-  - include:
-      file: src/main/resources/db/migration/20250115-optimize-collection-free-pattern.yaml
-  - include:
-      file: src/main/resources/db/migration/20250115-optimize-free-pattern-count-query.yaml

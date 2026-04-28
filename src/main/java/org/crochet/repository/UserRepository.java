@@ -11,7 +11,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
     Optional<User> findByEmail(String email);
 
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.id = :userId")
-    boolean existsById(@Param("userId") @NonNull String userId);
+    boolean existsById(@Param("userId") String userId);
 
     @Query("""
             select new org.crochet.payload.response.UserResponse(
