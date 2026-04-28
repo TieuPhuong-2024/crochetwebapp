@@ -6,10 +6,12 @@ import org.crochet.service.payment.PaymentProvider;
 import org.crochet.service.payment.PaymentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.math.BigDecimal;
 
 import java.util.Map;
 
@@ -19,6 +21,12 @@ import java.util.Map;
 public class PaymentController {
 
     private final PaymentService paymentService;
+
+    @GetMapping("/prices")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, BigDecimal>> getPrices() {
+        return ResponseEntity.ok(paymentService.getPrices());
+    }
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('USER')")

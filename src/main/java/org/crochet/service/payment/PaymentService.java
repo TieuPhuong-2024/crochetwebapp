@@ -62,6 +62,13 @@ public class PaymentService {
             return new BigDecimal(defaultValue);
         }
     }
+    
+    public Map<String, BigDecimal> getPrices() {
+        return Map.of(
+            "MONTHLY", getPrice(PlanType.MONTHLY),
+            "YEARLY", getPrice(PlanType.YEARLY)
+        );
+    }
 
     @Transactional
     public PaymentProvider.PaymentOrderResponse createPayment(String paymentMethod, PlanType planType, String returnUrl,
