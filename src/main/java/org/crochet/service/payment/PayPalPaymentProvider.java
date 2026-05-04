@@ -11,6 +11,7 @@ import com.paypal.sdk.models.CreateOrderInput;
 import com.paypal.sdk.models.LinkDescription;
 import com.paypal.sdk.models.Order;
 import com.paypal.sdk.models.OrderApplicationContext;
+import com.paypal.sdk.models.OrderApplicationContextLandingPage;
 import com.paypal.sdk.models.OrderApplicationContextUserAction;
 import com.paypal.sdk.models.OrderRequest;
 import com.paypal.sdk.models.PurchaseUnit;
@@ -36,6 +37,7 @@ public class PayPalPaymentProvider implements PaymentProvider {
         OrderApplicationContext applicationContext = new OrderApplicationContext.Builder()
                 .returnUrl(returnUrl)
                 .cancelUrl(cancelUrl)
+                .landingPage(OrderApplicationContextLandingPage.BILLING)
                 .userAction(OrderApplicationContextUserAction.PAY_NOW)
                 .build();
 
