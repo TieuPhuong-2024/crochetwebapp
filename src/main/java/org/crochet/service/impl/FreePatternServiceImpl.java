@@ -21,6 +21,8 @@ import org.crochet.repository.CommentRepository;
 import org.crochet.repository.FreePatternRepoCustom;
 import org.crochet.repository.FreePatternRepository;
 import org.crochet.repository.FreePatternSpecifications;
+import org.crochet.repository.LikeRepository;
+import org.crochet.enums.TargetType;
 import org.crochet.service.CategoryService;
 import org.crochet.service.FreePatternService;
 import org.crochet.service.PermissionService;
@@ -57,6 +59,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final UserService userService;
     private final CommentRepository commentRepository;
     private final ColFrepRepo colFrepRepo;
+    private final LikeRepository likeRepository;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -168,13 +171,22 @@ public class FreePatternServiceImpl implements FreePatternService {
                                     result -> (Boolean) result[1]  // CASE WHEN EXISTS...
                             ));
                     content.forEach(pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), TargetType.FREE_PATTERN, patternIds);
+                    content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
                     // Nếu có lỗi, set tất cả patterns là false
-                    content.forEach(pattern -> pattern.setInCollection(false));
+                    content.forEach(pattern -> {
+                        pattern.setInCollection(false);
+                        pattern.setIsLiked(false);
+                    });
                 }
             } else {
                 // Nếu user chưa login, set tất cả patterns là false
-                content.forEach(pattern -> pattern.setInCollection(false));
+                content.forEach(pattern -> {
+                    pattern.setInCollection(false);
+                    pattern.setIsLiked(false);
+                });
             }
         }
 
@@ -250,13 +262,22 @@ public class FreePatternServiceImpl implements FreePatternService {
                                     result -> (Boolean) result[1]  // CASE WHEN EXISTS...
                             ));
                     content.forEach(pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), TargetType.FREE_PATTERN, patternIds);
+                    content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
                     // Nếu có lỗi, set tất cả patterns là false
-                    content.forEach(pattern -> pattern.setInCollection(false));
+                    content.forEach(pattern -> {
+                        pattern.setInCollection(false);
+                        pattern.setIsLiked(false);
+                    });
                 }
             } else {
                 // Nếu user chưa login, set tất cả patterns là false
-                content.forEach(pattern -> pattern.setInCollection(false));
+                content.forEach(pattern -> {
+                    pattern.setInCollection(false);
+                    pattern.setIsLiked(false);
+                });
             }
         }
 
@@ -321,13 +342,22 @@ public class FreePatternServiceImpl implements FreePatternService {
                                     result -> (Boolean) result[1]  // CASE WHEN EXISTS...
                             ));
                     patterns.forEach(pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), TargetType.FREE_PATTERN, patternIds);
+                    patterns.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
                     // Nếu có lỗi, set tất cả patterns là false
-                    patterns.forEach(pattern -> pattern.setInCollection(false));
+                    patterns.forEach(pattern -> {
+                        pattern.setInCollection(false);
+                        pattern.setIsLiked(false);
+                    });
                 }
             } else {
                 // Nếu user chưa login, set tất cả patterns là false
-                patterns.forEach(pattern -> pattern.setInCollection(false));
+                patterns.forEach(pattern -> {
+                    pattern.setInCollection(false);
+                    pattern.setIsLiked(false);
+                });
             }
         }
 
@@ -369,6 +399,14 @@ public class FreePatternServiceImpl implements FreePatternService {
         var category = CategoryMapper.INSTANCE.toResponse(frep.getCategory());
         var commentCount = commentRepository.countByFreePatternId(id);
 
+        var isLiked = false;
+        var inCollection = false;
+        var currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser != null) {
+            isLiked = likeRepository.existsByUserIdAndTargetIdAndTargetType(currentUser.getId(), id, TargetType.FREE_PATTERN);
+            inCollection = colFrepRepo.existsByFreePatternAndUserOptimized(id, currentUser.getId());
+        }
+
         return FreePatternResponse.builder()
                 .id(frep.getId())
                 .name(frep.getName())
@@ -385,6 +423,10 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .files(files)
                 .category(category)
                 .commentCount(commentCount)
+                .viewCount(frep.getViewCount() != null ? frep.getViewCount() : 0L)
+                .likeCount(frep.getLikeCount() != null ? frep.getLikeCount() : 0L)
+                .isLiked(isLiked)
+                .inCollection(inCollection)
                 .build();
     }
 
@@ -449,7 +491,22 @@ public class FreePatternServiceImpl implements FreePatternService {
 
         // Thêm collection status cho từng pattern (patterns trong collection nên luôn có inCollection = true)
         if (!frepResponse.getContent().isEmpty()) {
-            frepResponse.getContent().forEach(pattern -> pattern.setInCollection(true));
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                var patternIds = frepResponse.getContent().stream()
+                        .map(FreePatternResponse::getId)
+                        .collect(Collectors.toSet());
+                List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), TargetType.FREE_PATTERN, patternIds);
+                frepResponse.getContent().forEach(pattern -> {
+                    pattern.setInCollection(true);
+                    pattern.setIsLiked(likedIds.contains(pattern.getId()));
+                });
+            } else {
+                frepResponse.getContent().forEach(pattern -> {
+                    pattern.setInCollection(true);
+                    pattern.setIsLiked(false);
+                });
+            }
         }
 
         return PaginationMapper.toPagination(frepResponse);
@@ -491,6 +548,8 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .images(images)
                 .files(files)
                 .category(category)
+                .viewCount(freePattern.getViewCount() != null ? freePattern.getViewCount() : 0L)
+                .likeCount(freePattern.getLikeCount() != null ? freePattern.getLikeCount() : 0L)
                 .build();
     }
 

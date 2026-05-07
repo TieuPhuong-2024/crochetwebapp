@@ -47,7 +47,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -69,7 +71,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -97,7 +101,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -126,7 +132,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -150,7 +158,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -172,7 +182,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
