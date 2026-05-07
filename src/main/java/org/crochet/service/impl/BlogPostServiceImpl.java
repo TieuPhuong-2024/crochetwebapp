@@ -44,17 +44,20 @@ public class BlogPostServiceImpl implements BlogPostService {
     private final SettingsUtil settingsUtil;
     private final PermissionService permissionService;
     private final CommentRepository commentRepository;
+    private final org.crochet.repository.LikeRepository likeRepository;
 
     public BlogPostServiceImpl(BlogPostRepository blogPostRepo,
                                BlogCategoryService blogCategoryService,
                                SettingsUtil settingsUtil,
                                PermissionService permissionService,
-                               CommentRepository commentRepository) {
+                               CommentRepository commentRepository,
+                               org.crochet.repository.LikeRepository likeRepository) {
         this.blogPostRepo = blogPostRepo;
         this.blogCategoryService = blogCategoryService;
         this.settingsUtil = settingsUtil;
         this.permissionService = permissionService;
         this.commentRepository = commentRepository;
+        this.likeRepository = likeRepository;
     }
 
     /**
@@ -130,6 +133,24 @@ public class BlogPostServiceImpl implements BlogPostService {
             post.setCommentCount(commentCount);
         }
         
+        var content = paginationResponse.getContents();
+        if (!content.isEmpty()) {
+            var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    var blogIdsSet = content.stream()
+                            .map(BlogPostResponse::getId)
+                            .collect(java.util.stream.Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), org.crochet.enums.TargetType.BLOG, blogIdsSet);
+                    content.forEach(blog -> blog.setIsLiked(likedIds.contains(blog.getId())));
+                } catch (Exception e) {
+                    content.forEach(blog -> blog.setIsLiked(false));
+                }
+            } else {
+                content.forEach(blog -> blog.setIsLiked(false));
+            }
+        }
+        
         return paginationResponse;
     }
 
@@ -169,6 +190,16 @@ public class BlogPostServiceImpl implements BlogPostService {
         long commentCount = commentRepository.countByBlogPostId(id);
         response.setCommentCount(commentCount);
         
+        response.setViewCount(blogPost.getViewCount() != null ? blogPost.getViewCount() : 0L);
+        response.setLikeCount(blogPost.getLikeCount() != null ? blogPost.getLikeCount() : 0L);
+        
+        var isLiked = false;
+        var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+        if (currentUser != null) {
+            isLiked = likeRepository.existsByUserIdAndTargetIdAndTargetType(currentUser.getId(), id, org.crochet.enums.TargetType.BLOG);
+        }
+        response.setIsLiked(isLiked);
+        
         return response;
     }
 
@@ -204,6 +235,23 @@ public class BlogPostServiceImpl implements BlogPostService {
         for (BlogPostResponse post : posts) {
             long commentCount = commentRepository.countByBlogPostId(post.getId());
             post.setCommentCount(commentCount);
+        }
+        
+        if (!posts.isEmpty()) {
+            var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    var blogIdsSet = posts.stream()
+                            .map(BlogPostResponse::getId)
+                            .collect(java.util.stream.Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), org.crochet.enums.TargetType.BLOG, blogIdsSet);
+                    posts.forEach(blog -> blog.setIsLiked(likedIds.contains(blog.getId())));
+                } catch (Exception e) {
+                    posts.forEach(blog -> blog.setIsLiked(false));
+                }
+            } else {
+                posts.forEach(blog -> blog.setIsLiked(false));
+            }
         }
         
         return posts;

@@ -31,17 +31,27 @@ public class ProductResponse {
     private CategoryResponse category;
     private String fileContent;
 
+    private long likeCount;
+    private long viewCount;
+    
+    @JsonProperty("is_liked")
+    private Boolean isLiked;
+
     public ProductResponse(String id,
                            String name,
                            String description,
                            double price,
                            CurrencyCode currencyCode,
-                           String fileContent) {
+                           String fileContent,
+                           long viewCount,
+                           long likeCount) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.currencyCode = currencyCode;
         this.fileContent = fileContent;
+        this.viewCount = viewCount;
+        this.likeCount = likeCount;
     }
 }

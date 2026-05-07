@@ -45,6 +45,7 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryService categoryService;
     private final SettingsUtil settingsUtil;
     private final CommentRepository commentRepository;
+    private final org.crochet.repository.LikeRepository likeRepository;
 
     /**
      * Creates a new product or updates an existing one based on the provided
@@ -115,6 +116,25 @@ public class ProductServiceImpl implements ProductService {
         } else {
             menuPage = productRepo.findProductWithPageable(pageable);
         }
+        
+        var content = menuPage.getContent();
+        if (!content.isEmpty()) {
+            var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    var productIds = content.stream()
+                            .map(ProductResponse::getId)
+                            .collect(java.util.stream.Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), org.crochet.enums.TargetType.PRODUCT, productIds);
+                    content.forEach(product -> product.setIsLiked(likedIds.contains(product.getId())));
+                } catch (Exception e) {
+                    content.forEach(product -> product.setIsLiked(false));
+                }
+            } else {
+                content.forEach(product -> product.setIsLiked(false));
+            }
+        }
+        
         return PaginationMapper.toPagination(menuPage);
     }
 
@@ -157,7 +177,26 @@ public class ProductServiceImpl implements ProductService {
         ).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
-        return productRepo.findLimitedNumProduct(pageable);
+        List<ProductResponse> products = productRepo.findLimitedNumProduct(pageable);
+        
+        if (!products.isEmpty()) {
+            var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    var productIds = products.stream()
+                            .map(ProductResponse::getId)
+                            .collect(java.util.stream.Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), org.crochet.enums.TargetType.PRODUCT, productIds);
+                    products.forEach(product -> product.setIsLiked(likedIds.contains(product.getId())));
+                } catch (Exception e) {
+                    products.forEach(product -> product.setIsLiked(false));
+                }
+            } else {
+                products.forEach(product -> product.setIsLiked(false));
+            }
+        }
+        
+        return products;
     }
 
     /**
@@ -177,6 +216,16 @@ public class ProductServiceImpl implements ProductService {
         // Thêm số lượng comments
         long commentCount = commentRepository.countByProductId(id);
         response.setCommentCount(commentCount);
+        
+        response.setViewCount(product.getViewCount() != null ? product.getViewCount() : 0L);
+        response.setLikeCount(product.getLikeCount() != null ? product.getLikeCount() : 0L);
+        
+        var isLiked = false;
+        var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+        if (currentUser != null) {
+            isLiked = likeRepository.existsByUserIdAndTargetIdAndTargetType(currentUser.getId(), id, org.crochet.enums.TargetType.PRODUCT);
+        }
+        response.setIsLiked(isLiked);
         
         return response;
     }

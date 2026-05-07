@@ -26,7 +26,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
                 p.createdDate,
                 u.id,
                 u.name,
-                u.imageUrl
+                u.imageUrl,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               BlogPost p
@@ -58,7 +60,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
                 p.createdDate,
                 u.id,
                 u.name,
-                u.imageUrl
+                u.imageUrl,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               BlogPost p
@@ -79,7 +83,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
                 p.createdDate,
                 u.id,
                 u.name,
-                u.imageUrl
+                u.imageUrl,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               BlogPost p

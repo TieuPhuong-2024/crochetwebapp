@@ -25,7 +25,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
                 p.description,
                 p.price,
                 p.currencyCode,
-                i.fileContent
+                i.fileContent,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               Product p
@@ -60,7 +62,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
                 p.description,
                 p.price,
                 p.currencyCode,
-                i.fileContent
+                i.fileContent,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               Product p
@@ -80,7 +84,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
                 p.description,
                 p.price,
                 p.currencyCode,
-                i.fileContent
+                i.fileContent,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               Product p
