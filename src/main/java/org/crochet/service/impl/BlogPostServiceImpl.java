@@ -3,6 +3,7 @@ package org.crochet.service.impl;
 import com.turkraft.springfilter.converter.FilterSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
+import org.crochet.enums.TargetType;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.BlogPostMapper;
 import org.crochet.mapper.FileMapper;
@@ -14,12 +15,14 @@ import org.crochet.payload.request.BlogPostRequest;
 import org.crochet.payload.response.BlogPostResponse;
 import org.crochet.payload.response.PaginationResponse;
 import org.crochet.repository.BlogPostRepository;
+import org.crochet.repository.LikeRepository;
 import org.crochet.repository.CommentRepository;
 import org.crochet.service.BlogCategoryService;
 import org.crochet.service.BlogPostService;
 import org.crochet.service.PermissionService;
 import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
+import org.crochet.util.SecurityUtils;
 import org.crochet.util.SettingsUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * BlogPostServiceImpl class
@@ -44,14 +48,14 @@ public class BlogPostServiceImpl implements BlogPostService {
     private final SettingsUtil settingsUtil;
     private final PermissionService permissionService;
     private final CommentRepository commentRepository;
-    private final org.crochet.repository.LikeRepository likeRepository;
+    private final LikeRepository likeRepository;
 
     public BlogPostServiceImpl(BlogPostRepository blogPostRepo,
-                               BlogCategoryService blogCategoryService,
-                               SettingsUtil settingsUtil,
-                               PermissionService permissionService,
-                               CommentRepository commentRepository,
-                               org.crochet.repository.LikeRepository likeRepository) {
+            BlogCategoryService blogCategoryService,
+            SettingsUtil settingsUtil,
+            PermissionService permissionService,
+            CommentRepository commentRepository,
+            LikeRepository likeRepository) {
         this.blogPostRepo = blogPostRepo;
         this.blogCategoryService = blogCategoryService;
         this.settingsUtil = settingsUtil;
@@ -91,7 +95,7 @@ public class BlogPostServiceImpl implements BlogPostService {
         } else {
             blogPost = getById(request.getId());
             permissionService.checkUserPermission(blogPost, "update");
-            blogPost = BlogPostMapper.INSTANCE.partialUpdate(request, blogPost);
+            BlogPostMapper.INSTANCE.partialUpdate(request, blogPost);
         }
         blogPostRepo.save(blogPost);
     }
@@ -105,13 +109,14 @@ public class BlogPostServiceImpl implements BlogPostService {
      * @param sortDir The sorting direction, either "ASC" (ascending) or "DESC"
      *                (descending).
      * @param spec    The specification used to filter the blog posts.
-     * @return A {@link org.crochet.payload.response.PaginationResponse} containing the paginated list of
-     * blog posts.
+     * @return A {@link org.crochet.payload.response.PaginationResponse} containing
+     *         the paginated list of
+     *         blog posts.
      */
     @SuppressWarnings("ConstantValue")
     @Override
     public PaginationResponse<BlogPostResponse> getBlogs(int offset, int limit, String sortBy, String sortDir,
-                                                         Specification<BlogPost> spec) {
+            Specification<BlogPost> spec) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         var filter = ((FilterSpecification<BlogPost>) spec).getFilter();
@@ -125,23 +130,24 @@ public class BlogPostServiceImpl implements BlogPostService {
         } else {
             page = blogPostRepo.findPostWithPageable(pageable);
         }
-        
+
         // Thêm số lượng comments cho mỗi bài viết
         var paginationResponse = PaginationMapper.toPagination(page);
         for (BlogPostResponse post : paginationResponse.getContents()) {
             long commentCount = commentRepository.countByBlogPostId(post.getId());
             post.setCommentCount(commentCount);
         }
-        
+
         var content = paginationResponse.getContents();
         if (!content.isEmpty()) {
-            var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+            var currentUser = SecurityUtils.getCurrentUser();
             if (currentUser != null) {
                 try {
                     var blogIdsSet = content.stream()
                             .map(BlogPostResponse::getId)
-                            .collect(java.util.stream.Collectors.toSet());
-                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), org.crochet.enums.TargetType.BLOG, blogIdsSet);
+                            .collect(Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.BLOG, blogIdsSet);
                     content.forEach(blog -> blog.setIsLiked(likedIds.contains(blog.getId())));
                 } catch (Exception e) {
                     content.forEach(blog -> blog.setIsLiked(false));
@@ -150,7 +156,7 @@ public class BlogPostServiceImpl implements BlogPostService {
                 content.forEach(blog -> blog.setIsLiked(false));
             }
         }
-        
+
         return paginationResponse;
     }
 
@@ -173,7 +179,7 @@ public class BlogPostServiceImpl implements BlogPostService {
      *
      * @param id The unique identifier of the blog post.
      * @return A {@link BlogPostResponse} containing detailed information about the
-     * blog post.
+     *         blog post.
      * @throws ResourceNotFoundException If the specified blog post ID does not
      *                                   correspond to an existing blog post.
      */
@@ -182,24 +188,24 @@ public class BlogPostServiceImpl implements BlogPostService {
         var blogPost = blogPostRepo.getDetail(id).orElseThrow(
                 () -> new ResourceNotFoundException(
                         ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                        ResultCode.MSG_BLOG_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_BLOG_NOT_FOUND.code()));
         BlogPostResponse response = BlogPostMapper.INSTANCE.toResponse(blogPost);
-        
+
         // Thêm số lượng comments
         long commentCount = commentRepository.countByBlogPostId(id);
         response.setCommentCount(commentCount);
-        
+
         response.setViewCount(blogPost.getViewCount() != null ? blogPost.getViewCount() : 0L);
         response.setLikeCount(blogPost.getLikeCount() != null ? blogPost.getLikeCount() : 0L);
-        
+
         var isLiked = false;
-        var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+        var currentUser = SecurityUtils.getCurrentUser();
         if (currentUser != null) {
-            isLiked = likeRepository.existsByUserIdAndTargetIdAndTargetType(currentUser.getId(), id, org.crochet.enums.TargetType.BLOG);
+            isLiked = likeRepository.existsByUserIdAndTargetIdAndTargetType(currentUser.getId(), id,
+                    TargetType.BLOG);
         }
         response.setIsLiked(isLiked);
-        
+
         return response;
     }
 
@@ -217,34 +223,32 @@ public class BlogPostServiceImpl implements BlogPostService {
         }
         String direction = settingsMap.getOrDefault(
                 "homepage.blog.direction",
-                new Settings("homepage.blog.direction", "desc")
-        ).getValue();
+                new Settings("homepage.blog.direction", "desc")).getValue();
         String orderBy = settingsMap.getOrDefault(
                 "homepage.blog.orderBy",
-                new Settings("homepage.blog.orderBy", "createdDate")
-        ).getValue();
+                new Settings("homepage.blog.orderBy", "createdDate")).getValue();
         String limit = settingsMap.getOrDefault(
                 "homepage.blog.limit",
-                new Settings("homepage.blog.limit", "12")
-        ).getValue();
+                new Settings("homepage.blog.limit", "12")).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         List<BlogPostResponse> posts = blogPostRepo.findLimitedNumPosts(pageable);
-        
+
         // Thêm số lượng comments cho mỗi bài viết
         for (BlogPostResponse post : posts) {
             long commentCount = commentRepository.countByBlogPostId(post.getId());
             post.setCommentCount(commentCount);
         }
-        
+
         if (!posts.isEmpty()) {
-            var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+            var currentUser = SecurityUtils.getCurrentUser();
             if (currentUser != null) {
                 try {
                     var blogIdsSet = posts.stream()
                             .map(BlogPostResponse::getId)
-                            .collect(java.util.stream.Collectors.toSet());
-                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), org.crochet.enums.TargetType.BLOG, blogIdsSet);
+                            .collect(Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.BLOG, blogIdsSet);
                     posts.forEach(blog -> blog.setIsLiked(likedIds.contains(blog.getId())));
                 } catch (Exception e) {
                     posts.forEach(blog -> blog.setIsLiked(false));
@@ -253,7 +257,7 @@ public class BlogPostServiceImpl implements BlogPostService {
                 posts.forEach(blog -> blog.setIsLiked(false));
             }
         }
-        
+
         return posts;
     }
 
@@ -285,7 +289,6 @@ public class BlogPostServiceImpl implements BlogPostService {
         return blogPostRepo.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(
                         ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                        ResultCode.MSG_BLOG_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_BLOG_NOT_FOUND.code()));
     }
 }

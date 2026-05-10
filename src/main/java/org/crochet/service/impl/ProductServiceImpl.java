@@ -30,9 +30,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.crochet.enums.TargetType;
+import org.crochet.repository.LikeRepository;
+import org.crochet.util.SecurityUtils;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * ProductServiceImpl class
@@ -45,7 +49,7 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryService categoryService;
     private final SettingsUtil settingsUtil;
     private final CommentRepository commentRepository;
-    private final org.crochet.repository.LikeRepository likeRepository;
+    private final LikeRepository likeRepository;
 
     /**
      * Creates a new product or updates an existing one based on the provided
@@ -77,7 +81,7 @@ public class ProductServiceImpl implements ProductService {
                     .build();
         } else {
             product = findById(request.getId());
-            product = ProductMapper.INSTANCE.update(request, product);
+            ProductMapper.INSTANCE.update(request, product);
         }
         productRepo.save(product);
     }
@@ -89,16 +93,17 @@ public class ProductServiceImpl implements ProductService {
      * @param limit      The number of products to include in each page.
      * @param sortBy     The attribute by which the products should be sorted.
      * @param sortDir    The sorting direction, either "ASC" (ascending) or "DESC"
-     *                (descending).
+     *                   (descending).
      * @param categoryId Category id
      * @param spec       Specification
-     * @return A {@link org.crochet.payload.response.PaginationResponse} containing the paginated list of
-     * products.
+     * @return A {@link org.crochet.payload.response.PaginationResponse} containing
+     *         the paginated list of
+     *         products.
      */
     @SuppressWarnings("ConstantValue")
     @Override
     public PaginationResponse<ProductResponse> getProducts(int offset, int limit, String sortBy, String sortDir,
-                                                           String categoryId, Specification<Product> spec) {
+            String categoryId, Specification<Product> spec) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         Page<ProductResponse> menuPage;
@@ -116,16 +121,17 @@ public class ProductServiceImpl implements ProductService {
         } else {
             menuPage = productRepo.findProductWithPageable(pageable);
         }
-        
+
         var content = menuPage.getContent();
         if (!content.isEmpty()) {
-            var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+            var currentUser = SecurityUtils.getCurrentUser();
             if (currentUser != null) {
                 try {
                     var productIds = content.stream()
                             .map(ProductResponse::getId)
-                            .collect(java.util.stream.Collectors.toSet());
-                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), org.crochet.enums.TargetType.PRODUCT, productIds);
+                            .collect(Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.PRODUCT, productIds);
                     content.forEach(product -> product.setIsLiked(likedIds.contains(product.getId())));
                 } catch (Exception e) {
                     content.forEach(product -> product.setIsLiked(false));
@@ -134,7 +140,7 @@ public class ProductServiceImpl implements ProductService {
                 content.forEach(product -> product.setIsLiked(false));
             }
         }
-        
+
         return PaginationMapper.toPagination(menuPage);
     }
 
@@ -165,28 +171,26 @@ public class ProductServiceImpl implements ProductService {
         }
         var direction = settingsMap.getOrDefault(
                 "homepage.product.direction",
-                new Settings("homepage.product.direction", "desc")
-        ).getValue();
+                new Settings("homepage.product.direction", "desc")).getValue();
         var orderBy = settingsMap.getOrDefault(
                 "homepage.product.orderBy",
-                new Settings("homepage.product.orderBy", "createdDate")
-        ).getValue();
+                new Settings("homepage.product.orderBy", "createdDate")).getValue();
         var limit = settingsMap.getOrDefault(
                 "homepage.product.limit",
-                new Settings("homepage.product.limit", "12")
-        ).getValue();
+                new Settings("homepage.product.limit", "12")).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         List<ProductResponse> products = productRepo.findLimitedNumProduct(pageable);
-        
+
         if (!products.isEmpty()) {
-            var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+            var currentUser = SecurityUtils.getCurrentUser();
             if (currentUser != null) {
                 try {
                     var productIds = products.stream()
                             .map(ProductResponse::getId)
-                            .collect(java.util.stream.Collectors.toSet());
-                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), org.crochet.enums.TargetType.PRODUCT, productIds);
+                            .collect(Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.PRODUCT, productIds);
                     products.forEach(product -> product.setIsLiked(likedIds.contains(product.getId())));
                 } catch (Exception e) {
                     products.forEach(product -> product.setIsLiked(false));
@@ -195,7 +199,7 @@ public class ProductServiceImpl implements ProductService {
                 products.forEach(product -> product.setIsLiked(false));
             }
         }
-        
+
         return products;
     }
 
@@ -205,28 +209,29 @@ public class ProductServiceImpl implements ProductService {
      *
      * @param id The unique identifier of the product.
      * @return A {@link ProductResponse} containing detailed information about the
-     * product.
+     *         product.
      */
     @Override
     @Transactional(readOnly = true)
     public ProductResponse getDetail(String id) {
         var product = findById(id);
         ProductResponse response = ProductMapper.INSTANCE.toResponse(product);
-        
+
         // Thêm số lượng comments
         long commentCount = commentRepository.countByProductId(id);
         response.setCommentCount(commentCount);
-        
+
         response.setViewCount(product.getViewCount() != null ? product.getViewCount() : 0L);
         response.setLikeCount(product.getLikeCount() != null ? product.getLikeCount() : 0L);
-        
+
         var isLiked = false;
-        var currentUser = org.crochet.util.SecurityUtils.getCurrentUser();
+        var currentUser = SecurityUtils.getCurrentUser();
         if (currentUser != null) {
-            isLiked = likeRepository.existsByUserIdAndTargetIdAndTargetType(currentUser.getId(), id, org.crochet.enums.TargetType.PRODUCT);
+            isLiked = likeRepository.existsByUserIdAndTargetIdAndTargetType(currentUser.getId(), id,
+                    TargetType.PRODUCT);
         }
         response.setIsLiked(isLiked);
-        
+
         return response;
     }
 
@@ -235,8 +240,7 @@ public class ProductServiceImpl implements ProductService {
         return productRepo.findProductById(id).orElseThrow(
                 () -> new ResourceNotFoundException(
                         ResultCode.MSG_PRODUCT_NOT_FOUND.message(),
-                        ResultCode.MSG_PRODUCT_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_PRODUCT_NOT_FOUND.code()));
     }
 
     /**

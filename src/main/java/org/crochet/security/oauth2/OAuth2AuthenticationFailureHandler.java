@@ -18,21 +18,17 @@ import java.io.IOException;
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    private final OAuth2CookieRepository OAuth2CookieRepository;
+    private final OAuth2CookieRepository oauth2CookieRepository;
 
-    /**
-     * Constructor of OAuth2AuthenticationFailureHandler class
-     *
-     * @param OAuth2CookieRepository HttpCookieOAuth2AuthorizationRequestRepository
-     */
-    public OAuth2AuthenticationFailureHandler(OAuth2CookieRepository OAuth2CookieRepository) {
-        this.OAuth2CookieRepository = OAuth2CookieRepository;
+    public OAuth2AuthenticationFailureHandler(OAuth2CookieRepository oauth2CookieRepository) {
+        this.oauth2CookieRepository = oauth2CookieRepository;
     }
 
     /**
      * Handle authentication failure
      *
-     * @param request   the request during which the authentication attempt occurred.
+     * @param request   the request during which the authentication attempt
+     *                  occurred.
      * @param response  the response.
      * @param exception the exception which was thrown to reject the authentication
      *                  request.
@@ -41,8 +37,8 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
      */
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                                        AuthenticationException exception) throws IOException, ServletException {
-        String targetUrl = CookieUtils.getCookie(request, org.crochet.security.oauth2.OAuth2CookieRepository.REDIRECT_URI_PARAM_COOKIE_NAME)
+            AuthenticationException exception) throws IOException, ServletException {
+        String targetUrl = CookieUtils.getCookie(request, OAuth2CookieRepository.REDIRECT_URI_PARAM_COOKIE_NAME)
                 .map(Cookie::getValue)
                 .orElse(("/"));
 
@@ -50,7 +46,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
                 .queryParam("error", exception.getLocalizedMessage())
                 .build().toUriString();
 
-        OAuth2CookieRepository.removeAuthorizationRequestCookies(request, response);
+        oauth2CookieRepository.removeAuthorizationRequestCookies(request, response);
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
