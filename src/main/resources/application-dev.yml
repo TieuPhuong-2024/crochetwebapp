@@ -43,7 +43,13 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
       leak-detection-threshold: 60000
-      connection-test-query: SELECT 1
+      poolName: CrochetHikariPool
+      autoCommit: false
+      cachePrepStmts: true
+      prepStmtCacheSize: 250
+      prepStmtCacheSqlLimit: 2048
+      useServerPrepStmts: true
+      connectionTestQuery: ""
 
   liquibase:
     enabled: false
