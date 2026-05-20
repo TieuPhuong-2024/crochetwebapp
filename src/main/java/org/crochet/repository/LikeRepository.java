@@ -3,6 +3,7 @@ package org.crochet.repository;
 import org.crochet.enums.TargetType;
 import org.crochet.model.Like;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,4 +24,10 @@ public interface LikeRepository extends JpaRepository<Like, String> {
     List<String> findLikedTargetIds(@Param("userId") String userId,
             @Param("targetType") TargetType targetType,
             @Param("targetIds") Collection<String> targetIds);
+
+    @Modifying
+    @Query("DELETE FROM Like l WHERE l.user.id = :userId AND l.targetId = :targetId AND l.targetType = :targetType")
+    void deleteByUserIdAndTargetIdAndTargetType(@Param("userId") String userId,
+                                                  @Param("targetId") String targetId,
+                                                  @Param("targetType") TargetType targetType);
 }

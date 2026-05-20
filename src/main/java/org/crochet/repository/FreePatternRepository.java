@@ -250,4 +250,16 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
     })
     long countByCategoryId(@Param("categoryId") String categoryId);
 
+    @Modifying
+    @Query("UPDATE FreePattern fp SET fp.viewCount = fp.viewCount + 1 WHERE fp.id = :id")
+    int incrementViewCount(@Param("id") String id);
+
+    @Modifying
+    @Query("UPDATE FreePattern fp SET fp.likeCount = fp.likeCount + 1 WHERE fp.id = :id")
+    int incrementLikeCount(@Param("id") String id);
+
+    @Modifying
+    @Query("UPDATE FreePattern fp SET fp.likeCount = CASE WHEN fp.likeCount > 0 THEN fp.likeCount - 1 ELSE 0 END WHERE fp.id = :id")
+    int decrementLikeCount(@Param("id") String id);
+
 }
