@@ -1,8 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.3'
+    id 'org.springframework.boot' version '4.0.6'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'org.liquibase.gradle' version '2.2.1'
 }
 
 apply from: 'version.gradle'
@@ -13,7 +12,7 @@ description = 'crochet'
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(21)
+    languageVersion = JavaLanguageVersion.of(26)
   }
 }
 
@@ -29,7 +28,7 @@ repositories {
 }
 
 ext {
-    set('springCloudVersion', "2024.0.0-RC1")
+    set('springCloudVersion', "2025.1.1")
 }
 
 dependencies {
@@ -38,10 +37,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation 'org.springframework.security:spring-security-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation "org.springframework.boot:spring-boot-starter-aop"
+    implementation 'org.springframework.boot:spring-boot-starter-aspectj'
     implementation "org.springframework.boot:spring-boot-starter-cache"
     implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
@@ -55,8 +54,8 @@ dependencies {
     implementation 'com.h2database:h2:2.2.224'
     implementation 'org.postgresql:postgresql:42.7.4'
 
-    compileOnly 'org.projectlombok:lombok:1.18.36'
-    annotationProcessor 'org.projectlombok:lombok:1.18.36'
+    compileOnly 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
 
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
@@ -67,43 +66,27 @@ dependencies {
 
     implementation 'com.google.firebase:firebase-admin:9.4.1'
 
-    implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.9.2'
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-71:3.15.2'
 
     // https://mvnrepository.com/artifact/com.turkraft.springfilter/jpa
     implementation 'com.turkraft.springfilter:jpa:3.1.9'
+
+    // PayPal Server SDK
+    implementation 'com.paypal.sdk:paypal-server-sdk:2.2.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test:6.3.0'
     testImplementation 'org.mockito:mockito-core:5.11.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
 
-    testCompileOnly 'org.projectlombok:lombok:1.18.32'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
-
-    liquibaseRuntime 'org.liquibase:liquibase-core:4.30.0'
-    liquibaseRuntime 'org.liquibase:liquibase-groovy-dsl:3.0.3'
-    liquibaseRuntime 'info.picocli:picocli:4.7.6'
-    liquibaseRuntime 'com.mysql:mysql-connector-j:8.4.0'
-    liquibaseRuntime 'org.postgresql:postgresql:42.7.4'
+    testCompileOnly 'org.projectlombok:lombok:1.18.46'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.46'
 }
 
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
-}
-
-liquibase {
-    activities {
-        main {
-            changelogFile 'src/main/resources/db/changelog/db.changelog-master.yaml'
-            url 'jdbc:' + System.getenv('DB') + '://' + System.getenv('DB_HOST') + ':' + System.getenv('DB_PORT') + '/' + System.getenv('DB_NAME')
-            username System.getenv('DB_USERNAME')
-            password System.getenv('DB_PASSWORD')
-            logLevel 'INFO'
-        }
-    }
-    runList = 'main'
 }
 
 jar {

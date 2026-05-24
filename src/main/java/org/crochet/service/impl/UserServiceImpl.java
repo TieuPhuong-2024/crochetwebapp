@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
      * @param passwordEncoder The password encoder.
      */
     public UserServiceImpl(UserRepository userRepository,
-                           PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -55,8 +55,7 @@ public class UserServiceImpl implements UserService {
         if (isValidEmail(signUpRequest.getEmail())) {
             throw new BadRequestException(
                     ResultCode.MSG_EMAIL_ALREADY_IN_USE.message(),
-                    ResultCode.MSG_EMAIL_ALREADY_IN_USE.code()
-            );
+                    ResultCode.MSG_EMAIL_ALREADY_IN_USE.code());
         }
 
         // Creating user's account
@@ -80,17 +79,18 @@ public class UserServiceImpl implements UserService {
      * @param sortBy  The field by which to sort the records.
      * @param sortDir The direction of the sort. Can be 'ASC' for ascending or
      *                'DESC' for descending.
-     * @param spec     The specification object containing the filter criteria.
+     * @param spec    The specification object containing the filter criteria.
      * @return A UserPaginationResponse object containing the retrieved records and
-     * pagination details.
+     *         pagination details.
      */
     @SuppressWarnings("ConstantValue")
     @Override
-    public PaginationResponse<UserResponse> getAll(int offset, int limit, String sortBy, String sortDir, Specification<User> spec) {
+    public PaginationResponse<UserResponse> getAll(int offset, int limit, String sortBy, String sortDir,
+            Specification<User> spec) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         var filter = ((FilterSpecification<User>) spec).getFilter();
-        Specification<User> userSpec = Specification.where(null);
+        Specification<User> userSpec = Specification.unrestricted();
         if (filter != null && ObjectUtils.isNotEmpty(filter.getChildren())) {
             userSpec = userSpec.and(spec);
         }
@@ -110,8 +110,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(request.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_USER_NOT_FOUND_WITH_ID.message(),
-                        ResultCode.MSG_USER_NOT_FOUND_WITH_ID.code()
-                ));
+                        ResultCode.MSG_USER_NOT_FOUND_WITH_ID.code()));
         if (request.getName() != null) {
             user.setName(request.getName());
         }
@@ -154,8 +153,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_USER_NOT_FOUND_WITH_EMAIL.message(),
-                        ResultCode.MSG_USER_NOT_FOUND_WITH_EMAIL.code()
-                ));
+                        ResultCode.MSG_USER_NOT_FOUND_WITH_EMAIL.code()));
     }
 
     @Override
@@ -163,8 +161,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_USER_NOT_FOUND.message(),
-                        ResultCode.MSG_USER_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_USER_NOT_FOUND.code()));
     }
 
     /**
@@ -178,8 +175,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.getDetail(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_USER_NOT_FOUND_WITH_ID.message(),
-                        ResultCode.MSG_USER_NOT_FOUND_WITH_ID.code()
-                ));
+                        ResultCode.MSG_USER_NOT_FOUND_WITH_ID.code()));
     }
 
     /**
@@ -221,8 +217,7 @@ public class UserServiceImpl implements UserService {
         if (!isMatch) {
             throw new BadRequestException(
                     ResultCode.MSG_INCORRECT_PASSWORD.message(),
-                    ResultCode.MSG_INCORRECT_PASSWORD.code()
-            );
+                    ResultCode.MSG_INCORRECT_PASSWORD.code());
         }
         return user;
     }

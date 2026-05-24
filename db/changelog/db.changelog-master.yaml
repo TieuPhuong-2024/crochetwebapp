@@ -1,4 +1,7 @@
 databaseChangeLog:
-  - includeAll:
-      path: ../migration/
+  - include:
+      file: ../migration/20260428-add-subscription-tables.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: ../migration/20260428-update-user-roles-length.yaml
       relativeToChangelogFile: true

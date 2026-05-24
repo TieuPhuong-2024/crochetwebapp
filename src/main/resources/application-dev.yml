@@ -4,7 +4,7 @@ spring:
       on-profile: dev
   jpa:
     open-in-view: false
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.dialect.MySQLDialect
     properties:
       hibernate:
         # Cấu hình dev hiện tại
