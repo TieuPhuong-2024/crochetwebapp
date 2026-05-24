@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: update-user-roles-length
+      author: ai
+      changes:
+        - modifyDataType:
+            tableName: users
+            columnName: roles
+            newDataType: VARCHAR(50)
+        - addDefaultValue:
+            tableName: users
+            columnName: roles
+            columnDataType: VARCHAR(50)
+            defaultValue: USER
