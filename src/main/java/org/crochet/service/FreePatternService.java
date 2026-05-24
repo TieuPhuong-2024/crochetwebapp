@@ -50,4 +50,6 @@ public interface FreePatternService {
     FreePattern findById(String id);
 
     boolean existByFreePatternAndUser(String freePatternId, User user);
+
+    boolean existLikeByFreePatternAndUser(String freePatternId, User user);
 }

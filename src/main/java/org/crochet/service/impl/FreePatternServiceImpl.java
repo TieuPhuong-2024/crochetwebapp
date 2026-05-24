@@ -566,4 +566,13 @@ public class FreePatternServiceImpl implements FreePatternService {
         }
         return colFrepRepo.existsByFreePatternAndUserOptimized(freePatternId, user.getId());
     }
+
+    @Override
+    public boolean existLikeByFreePatternAndUser(String freePatternId, User user) {
+        if (user == null) {
+            return false;
+        }
+        return likeRepository.existsByUserIdAndTargetIdAndTargetType(
+                user.getId(), freePatternId, TargetType.FREE_PATTERN);
+    }
 }
