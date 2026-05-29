@@ -52,4 +52,11 @@ public interface FreePatternService {
     boolean existByFreePatternAndUser(String freePatternId, User user);
 
     boolean existLikeByFreePatternAndUser(String freePatternId, User user);
+
+    PaginationResponse<FreePatternResponse>
+    getLikedFreePatterns(String userId,
+                         int offset,
+                         int limit,
+                         String sortBy,
+                         String sortDir);
 }

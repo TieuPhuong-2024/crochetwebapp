@@ -575,4 +575,74 @@ public class FreePatternServiceImpl implements FreePatternService {
         return likeRepository.existsByUserIdAndTargetIdAndTargetType(
                 user.getId(), freePatternId, TargetType.FREE_PATTERN);
     }
+
+    /**
+     * Get liked free patterns by user id
+     *
+     * @param userId  User id
+     * @param offset  Page number
+     * @param limit   Page size
+     * @param sortBy  Sort by
+     * @param sortDir Sort direction
+     * @return PaginationResponse
+     */
+    @Transactional(readOnly = true)
+    @Override
+    public PaginationResponse<FreePatternResponse> getLikedFreePatterns(
+            String userId,
+            int offset,
+            int limit,
+            String sortBy,
+            String sortDir) {
+        Pageable pageable = PageRequest.of(offset, limit, Sort.Direction.fromString(sortDir), sortBy);
+        long totalElements = freePatternRepo.countLikedFreePatterns(userId);
+        List<FreePatternResponse> content = freePatternRepo.getLikedFreePatterns(userId, pageable);
+
+        if (!content.isEmpty()) {
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    var patternIds = content.stream()
+                            .map(FreePatternResponse::getId)
+                            .collect(Collectors.toSet());
+
+                    List<Object[]> collectionResults = colFrepRepo.existFreePatternsInCollection(patternIds,
+                            currentUser.getId());
+                    Map<String, Boolean> collectionStatus = collectionResults.stream()
+                            .collect(Collectors.toMap(
+                                    result -> (String) result[0],
+                                    result -> (Boolean) result[1]
+                            ));
+                    content.forEach(
+                            pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.FREE_PATTERN, patternIds);
+                    content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
+                } catch (Exception e) {
+                    content.forEach(pattern -> {
+                        pattern.setInCollection(false);
+                        pattern.setIsLiked(false);
+                    });
+                }
+            } else {
+                content.forEach(pattern -> {
+                    pattern.setInCollection(false);
+                    pattern.setIsLiked(false);
+                });
+            }
+        }
+
+        int totalPages = (int) Math.ceil((double) totalElements / limit);
+        boolean isLast = offset >= totalPages - 1;
+
+        return PaginationResponse.<FreePatternResponse>builder()
+                .contents(content)
+                .pageNo(offset)
+                .pageSize(limit)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .last(isLast)
+                .build();
+    }
 }
