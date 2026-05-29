@@ -32,7 +32,7 @@ public class InteractionController {
             @PathVariable("type") TargetType type,
             @PathVariable("id") String id) {
         interactionService.increaseViewCount(id, type);
-        return ResponseUtil.success(null, "View count increased");
+        return ResponseUtil.success(HttpStatus.OK, "View count increased");
     }
 
     @Operation(summary = "Toggle like on an item")
