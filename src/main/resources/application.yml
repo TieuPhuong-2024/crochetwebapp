@@ -33,6 +33,10 @@ spring:
     multipart:
       max-file-size: 100MB
 
+  data:
+    redis:
+      url: ${REDIS_URL}
+
 management:
   endpoints:
     web:
