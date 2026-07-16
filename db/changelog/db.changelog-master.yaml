@@ -8,3 +8,6 @@ databaseChangeLog:
   - include:
       file: ../migration/20260506_add_like_view.yaml
       relativeToChangelogFile: true
+  - include:
+      file: ../migration/20260622-add-category-name-en.yaml
+      relativeToChangelogFile: true

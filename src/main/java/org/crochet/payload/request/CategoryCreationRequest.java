@@ -12,4 +12,5 @@ public class CategoryCreationRequest {
     private List<String> parentIds;
     @NotBlank(message = "Name is not blank")
     private String name;
+    private String nameEn;
 }

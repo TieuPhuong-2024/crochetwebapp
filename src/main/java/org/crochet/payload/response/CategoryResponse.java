@@ -12,5 +12,6 @@ import java.util.List;
 public class CategoryResponse {
     private String id;
     private String name;
+    private String nameEn;
     private List<CategoryResponse> children;
 }
