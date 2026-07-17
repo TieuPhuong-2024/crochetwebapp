@@ -24,9 +24,9 @@ spring:
     password: ${APP_PASSWORD}
     properties:
       mail:
-        SMTP:
+        smtp:
           auth: true
-          STARTTLS:
+          starttls:
             enable: true
 
   servlet:
@@ -45,6 +45,7 @@ management:
 
 # Application configuration
 app:
+  frontendUrl: ${FRONTEND_URL:http://localhost:3000}
   auth:
     tokenSecret: ${TOKEN_SECRET}
     tokenExpirationMs: 259200000 # 3 days
