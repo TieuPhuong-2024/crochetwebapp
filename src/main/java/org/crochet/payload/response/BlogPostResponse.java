@@ -32,6 +32,12 @@ public class BlogPostResponse {
     private String userAvatar;
     private Long commentCount;
 
+    private long likeCount;
+    private long viewCount;
+    
+    @JsonProperty("is_liked")
+    private Boolean isLiked;
+
     public BlogPostResponse(String id,
                             String title,
                             String content,
@@ -56,5 +62,20 @@ public class BlogPostResponse {
         this.userId = userId;
         this.username = username;
         this.userAvatar = userAvatar;
+    }
+
+    public BlogPostResponse(String id,
+                            String title,
+                            String content,
+                            String fileContent,
+                            LocalDateTime createdDate,
+                            String userId,
+                            String username,
+                            String userAvatar,
+                            long viewCount,
+                            long likeCount) {
+        this(id, title, content, fileContent, createdDate, userId, username, userAvatar);
+        this.viewCount = viewCount;
+        this.likeCount = likeCount;
     }
 }

@@ -74,7 +74,7 @@ public class PatternServiceImpl implements PatternService {
         } else {
             pattern = findById(request.getId());
             permissionService.checkUserPermission(pattern, "update");
-            pattern = PatternMapper.INSTANCE.partialUpdate(request, pattern);
+            PatternMapper.INSTANCE.partialUpdate(request, pattern);
         }
 
         patternRepo.save(pattern);
@@ -94,7 +94,7 @@ public class PatternServiceImpl implements PatternService {
     @SuppressWarnings("ConstantValue")
     @Override
     public PaginationResponse<PatternResponse> getPatterns(int offset, int limit, String sortBy, String sortDir,
-                                                           String categoryId, Specification<Pattern> spec) {
+            String categoryId, Specification<Pattern> spec) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         Page<PatternResponse> page;
@@ -130,16 +130,13 @@ public class PatternServiceImpl implements PatternService {
         }
         var direction = settingsMap.getOrDefault(
                 "homepage.pattern.direction",
-                new Settings("homepage.pattern.direction", "desc")
-        ).getValue();
+                new Settings("homepage.pattern.direction", "desc")).getValue();
         var orderBy = settingsMap.getOrDefault(
                 "homepage.pattern.orderBy",
-                new Settings("homepage.pattern.orderBy", "createdDate")
-        ).getValue();
+                new Settings("homepage.pattern.orderBy", "createdDate")).getValue();
         var limit = settingsMap.getOrDefault(
                 "homepage.pattern.limit",
-                new Settings("homepage.pattern.limit", "12")
-        ).getValue();
+                new Settings("homepage.pattern.limit", "12")).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
         return patternRepo.findLimitedNumPattern(pageable);
@@ -170,8 +167,7 @@ public class PatternServiceImpl implements PatternService {
         var pattern = patternRepo.findPatternById(id).orElseThrow(
                 () -> new ResourceNotFoundException(
                         ResultCode.MSG_PATTERN_NOT_FOUND.message(),
-                        ResultCode.MSG_PATTERN_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_PATTERN_NOT_FOUND.code()));
         return PatternMapper.INSTANCE.toResponse(pattern);
     }
 
@@ -180,8 +176,7 @@ public class PatternServiceImpl implements PatternService {
         return patternRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_PATTERN_NOT_FOUND.message(),
-                        ResultCode.MSG_PATTERN_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_PATTERN_NOT_FOUND.code()));
     }
 
     /**

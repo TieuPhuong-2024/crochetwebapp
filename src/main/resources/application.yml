@@ -24,14 +24,18 @@ spring:
     password: ${APP_PASSWORD}
     properties:
       mail:
-        smtp:
+        SMTP:
           auth: true
-          starttls:
+          STARTTLS:
             enable: true
 
   servlet:
     multipart:
       max-file-size: 100MB
+
+  data:
+    redis:
+      url: ${REDIS_URL}
 
 management:
   endpoints:
@@ -63,7 +67,7 @@ firebase:
 
 # Resilience4j configuration
 resilience4j:
-  ratelimiter:
+  rate-limiter:
     instances:
       passwordResetRateLimiter:
         limitForPeriod: 1

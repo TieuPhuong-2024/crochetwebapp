@@ -37,13 +37,26 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 20
+      pool-name: CrochetHikariPool
+      maximum-pool-size: 15
       minimum-idle: 5
-      connection-timeout: 30000
+      connection-timeout: 20000
       idle-timeout: 600000
       max-lifetime: 1800000
+      keepalive-time: 300000
+      auto-commit: false
       leak-detection-threshold: 60000
-      connection-test-query: SELECT 1
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
 
   liquibase:
     enabled: false

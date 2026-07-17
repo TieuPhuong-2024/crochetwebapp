@@ -10,4 +10,5 @@ public class CategoryUpdateRequest {
     private String id;
     @NotBlank(message = "Name is not blank")
     private String name;
+    private String nameEn;
 }

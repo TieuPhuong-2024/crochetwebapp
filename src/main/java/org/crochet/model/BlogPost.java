@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.BatchSize;
+import lombok.Builder;
 
 import java.util.Set;
 
@@ -40,6 +41,14 @@ public class BlogPost extends BaseEntity {
 
     @Column(name = "home", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean home;
+
+    @Column(name = "view_count", columnDefinition = "BIGINT DEFAULT 0")
+    @Builder.Default
+    private Long viewCount = 0L;
+
+    @Column(name = "like_count", columnDefinition = "BIGINT DEFAULT 0")
+    @Builder.Default
+    private Long likeCount = 0L;
 
     @OneToMany(mappedBy = "blogPost", cascade = CascadeType.ALL)
     @JsonManagedReference

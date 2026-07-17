@@ -21,6 +21,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.crochet.enums.CurrencyCode;
 import org.hibernate.annotations.BatchSize;
+import lombok.Builder;
 
 import java.util.Set;
 
@@ -60,6 +61,14 @@ public class Product extends BaseEntity {
 
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "view_count", columnDefinition = "BIGINT DEFAULT 0")
+    @Builder.Default
+    private Long viewCount = 0L;
+
+    @Column(name = "like_count", columnDefinition = "BIGINT DEFAULT 0")
+    @Builder.Default
+    private Long likeCount = 0L;
 
     @BatchSize(size = 10)
     @OrderBy("order ASC")
