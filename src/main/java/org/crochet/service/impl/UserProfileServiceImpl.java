@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import org.crochet.payload.request.ChangePasswordRequest;
+import org.crochet.exception.BadRequestException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RequiredArgsConstructor
 @Service
@@ -27,6 +30,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     private final CommentRepository commentRepo;
     private final UserProfileRepo userProfileRepo;
     private final UserRepository userRepo;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Load user profile
@@ -167,5 +171,33 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
 
         return isUpdated;
+    }
+
+    /**
+     * Change user password
+     *
+     * @param request ChangePasswordRequest
+     */
+    @Transactional
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        var user = SecurityUtils.getCurrentUser();
+        if (user == null) {
+            throw new ResourceNotFoundException(ResultCode.MSG_USER_NOT_FOUND.message(),
+                    ResultCode.MSG_USER_NOT_FOUND.code());
+        }
+
+        var dbUser = userRepo.findById(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException(ResultCode.MSG_USER_NOT_FOUND.message(),
+                        ResultCode.MSG_USER_NOT_FOUND.code()));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), dbUser.getPassword())) {
+            throw new BadRequestException(
+                    ResultCode.MSG_INCORRECT_PASSWORD.message(),
+                    ResultCode.MSG_INCORRECT_PASSWORD.code());
+        }
+
+        dbUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepo.save(dbUser);
     }
 }
