@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -26,7 +27,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
                 p.createdDate,
                 u.id,
                 u.name,
-                u.imageUrl
+                u.imageUrl,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               BlogPost p
@@ -58,7 +61,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
                 p.createdDate,
                 u.id,
                 u.name,
-                u.imageUrl
+                u.imageUrl,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               BlogPost p
@@ -79,7 +84,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
                 p.createdDate,
                 u.id,
                 u.name,
-                u.imageUrl
+                u.imageUrl,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               BlogPost p
@@ -97,4 +104,16 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String>, Jpa
               p.createdDate DESC
             """)
     List<String> getBlogIds(Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE BlogPost p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
+    int incrementViewCount(@Param("id") String id);
+
+    @Modifying
+    @Query("UPDATE BlogPost p SET p.likeCount = p.likeCount + 1 WHERE p.id = :id")
+    int incrementLikeCount(@Param("id") String id);
+
+    @Modifying
+    @Query("UPDATE BlogPost p SET p.likeCount = CASE WHEN p.likeCount > 0 THEN p.likeCount - 1 ELSE 0 END WHERE p.id = :id")
+    int decrementLikeCount(@Param("id") String id);
 }

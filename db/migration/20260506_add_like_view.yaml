@@ -1,0 +1,90 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-like-view-counts
+      author: ai
+      changes:
+        - addColumn:
+            tableName: pattern
+            columns:
+              - column:
+                  name: view_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: like_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+        - addColumn:
+            tableName: blog_post
+            columns:
+              - column:
+                  name: view_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: like_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+        - addColumn:
+            tableName: product
+            columns:
+              - column:
+                  name: view_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: like_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+        - addColumn:
+            tableName: free_pattern
+            columns:
+              - column:
+                  name: view_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: like_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+  - changeSet:
+      id: create-likes-table
+      author: ai
+      changes:
+        - createTable:
+            tableName: likes
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(50)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: datetime(0)
+        - addForeignKeyConstraint:
+            baseTableName: likes
+            baseColumnNames: user_id
+            constraintName: fk_likes_user
+            referencedTableName: users
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: likes
+            columnNames: user_id, target_id, target_type
+            constraintName: uc_likes_user_target

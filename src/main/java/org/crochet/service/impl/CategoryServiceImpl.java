@@ -64,6 +64,7 @@ public class CategoryServiceImpl implements CategoryService {
             }
             Category category = new Category();
             category.setName(name);
+            category.setNameEn(request.getNameEn());
             children.add(category);
         } else {
             for (Category parent : parents) {
@@ -78,6 +79,7 @@ public class CategoryServiceImpl implements CategoryService {
                 // Create a new child category under this parent
                 Category category = new Category();
                 category.setName(name);
+                category.setNameEn(request.getNameEn());
                 category.setParent(parent);
                 children.add(category);
             }
@@ -155,6 +157,9 @@ public class CategoryServiceImpl implements CategoryService {
 
         // Update the category's name
         category.setName(newName);
+        if (request.getNameEn() != null) {
+            category.setNameEn(request.getNameEn());
+        }
 
         // Save the updated category
         category = categoryRepo.save(category);
