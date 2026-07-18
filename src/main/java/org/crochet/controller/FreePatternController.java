@@ -33,13 +33,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import org.crochet.service.PdfService;
+
 @RestController
 @RequestMapping("/api/v1/free-pattern")
 public class FreePatternController {
     private final FreePatternService freePatternService;
+    private final PdfService pdfService;
 
-    public FreePatternController(FreePatternService freePatternService) {
+    public FreePatternController(FreePatternService freePatternService, PdfService pdfService) {
         this.freePatternService = freePatternService;
+        this.pdfService = pdfService;
     }
 
     @Operation(summary = "Create a free pattern")
@@ -154,5 +158,75 @@ public class FreePatternController {
     public ResponseData<Boolean> isLiked(@PathVariable("id") String id, @CurrentUser User user) {
         var res = freePatternService.existLikeByFreePatternAndUser(id, user);
         return ResponseUtil.success(res);
+    }
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FreePatternController.class);
+
+    @Operation(summary = "Export free patterns as a ZIP of PDFs")
+    @ApiResponse(responseCode = "200", description = "ZIP file containing PDF patterns",
+            content = @Content(mediaType = "application/zip"))
+    @PostMapping("/export")
+    @PreAuthorize("hasAnyRole('PREMIUM_USER', 'ADMIN')")
+    @SecurityRequirement(name = "BearerAuth")
+    public void exportPatternsToZip(
+            @RequestBody List<String> ids,
+            @CurrentUser User user,
+            jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+        
+        response.setContentType("application/zip");
+        response.setHeader("Content-Disposition", "attachment; filename=\"my-crochet-charts.zip\"");
+
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(response.getOutputStream())) {
+            for (String id : ids) {
+                try {
+                    FreePattern pattern = freePatternService.findById(id);
+                    // Check if current user owns the pattern, or if user is ADMIN
+                    if (user.getRole() != org.crochet.enums.RoleType.ADMIN && 
+                        (pattern.getCreatedBy() == null || !pattern.getCreatedBy().equals(user.getId()))) {
+                        // Skip if user does not own this pattern
+                        continue;
+                    }
+                    
+                    byte[] pdfBytes = pdfService.generatePatternPdf(pattern);
+                    
+                    // Create zip entry
+                    String safeFileName = pattern.getName().replaceAll("[\\\\/:*?\"<>|]", "_") + ".pdf";
+                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(safeFileName);
+                    zos.putNextEntry(entry);
+                    zos.write(pdfBytes);
+                    zos.closeEntry();
+                } catch (Exception e) {
+                    log.error("Failed to export pattern id: " + id, e);
+                }
+            }
+            zos.finish();
+        }
+    }
+
+    @Operation(summary = "Export a single free pattern as PDF")
+    @ApiResponse(responseCode = "200", description = "PDF pattern file",
+            content = @Content(mediaType = "application/pdf"))
+    @GetMapping("/{id}/pdf")
+    @PreAuthorize("hasAnyRole('PREMIUM_USER', 'ADMIN')")
+    @SecurityRequirement(name = "BearerAuth")
+    public void exportSinglePatternToPdf(
+            @PathVariable("id") String id,
+            @CurrentUser User user,
+            jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+        
+        FreePattern pattern = freePatternService.findById(id);
+        if (user.getRole() != org.crochet.enums.RoleType.ADMIN && 
+            (pattern.getCreatedBy() == null || !pattern.getCreatedBy().equals(user.getId()))) {
+            response.sendError(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN, "Access denied");
+            return;
+        }
+
+        byte[] pdfBytes = pdfService.generatePatternPdf(pattern);
+        response.setContentType("application/pdf");
+        String safeFileName = pattern.getName().replaceAll("[\\\\/:*?\"<>|]", "_") + ".pdf";
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + safeFileName + "\"");
+        response.setContentLength(pdfBytes.length);
+        response.getOutputStream().write(pdfBytes);
+        response.getOutputStream().flush();
     }
 }

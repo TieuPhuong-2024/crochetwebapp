@@ -74,6 +74,9 @@ dependencies {
     // PayPal Server SDK
     implementation 'com.paypal.sdk:paypal-server-sdk:2.2.0'
 
+    // PDF generation
+    implementation 'com.github.librepdf:openpdf:2.0.4'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test:6.3.0'
     testImplementation 'org.mockito:mockito-core:5.11.0'
