@@ -1,0 +1,228 @@
+databaseChangeLog:
+  # ============================================================================
+  # Removes redundant / duplicate indexes.
+  #
+  # Evidence (information_schema.statistics on defaultdb):
+  # Several tables carry multiple indexes with an identical column list.
+  # Each duplicate adds an extra B-tree that must be maintained on every
+  # INSERT / UPDATE / DELETE and consumes buffer-pool space, while providing
+  # zero additional read benefit.
+  #
+  # Worst offender: collection_free_pattern had 9 secondary indexes covering
+  # only 2 distinct column shapes.
+  #
+  # Safety: every index dropped here is an exact duplicate of another index
+  # that is kept, so no query plan regresses. Both collection_free_pattern
+  # foreign keys keep their own single-column index, so no FK depends on a
+  # dropped index.
+  # ============================================================================
+
+  # --------------------------------------------------------------------------
+  # collection_free_pattern: 9 secondary indexes -> 3
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-drop-duplicate-indexes-collection-free-pattern
+      author: tieuphuongcrochet
+      comment: "collection_free_pattern: drop 6 duplicate indexes"
+      changes:
+        # All three duplicate fk_collection_free_pattern_collection_id (collection_id)
+        - dropIndex:
+            indexName: idx_collection_free_pattern_collection_id
+            tableName: collection_free_pattern
+        - dropIndex:
+            indexName: idx_collection_free_pattern_collection_id_optimized
+            tableName: collection_free_pattern
+        - dropIndex:
+            indexName: idx_collection_free_pattern_composite
+            tableName: collection_free_pattern
+        # Both duplicate fk_collection_free_pattern_free_pattern_id (free_pattern_id)
+        - dropIndex:
+            indexName: idx_collection_free_pattern_free_pattern_id
+            tableName: collection_free_pattern
+        - dropIndex:
+            indexName: idx_collection_free_pattern_free_pattern_id_optimized
+            tableName: collection_free_pattern
+        # Exact duplicate of idx_collection_free_pattern_pattern_user
+        - dropIndex:
+            indexName: idx_collection_free_pattern_frep_user
+            tableName: collection_free_pattern
+      rollback:
+        - createIndex:
+            indexName: idx_collection_free_pattern_collection_id
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: collection_id
+        - createIndex:
+            indexName: idx_collection_free_pattern_collection_id_optimized
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: collection_id
+        - createIndex:
+            indexName: idx_collection_free_pattern_composite
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: collection_id
+        - createIndex:
+            indexName: idx_collection_free_pattern_free_pattern_id
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: free_pattern_id
+        - createIndex:
+            indexName: idx_collection_free_pattern_free_pattern_id_optimized
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: free_pattern_id
+        - createIndex:
+            indexName: idx_collection_free_pattern_frep_user
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: free_pattern_id
+              - column:
+                  name: collection_id
+
+  # --------------------------------------------------------------------------
+  # collection: idx_collection_user_id duplicates fk_collection_users_id
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-drop-duplicate-indexes-collection
+      author: tieuphuongcrochet
+      comment: "collection: idx_collection_user_id duplicates fk_collection_users_id (user_id)"
+      changes:
+        - dropIndex:
+            indexName: idx_collection_user_id
+            tableName: collection
+      rollback:
+        - createIndex:
+            indexName: idx_collection_user_id
+            tableName: collection
+            columns:
+              - column:
+                  name: user_id
+
+  # --------------------------------------------------------------------------
+  # users: duplicate primary-key index + duplicate UNIQUE(email)
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-drop-duplicate-indexes-users
+      author: tieuphuongcrochet
+      comment: "users: drop idx_users_id_optimized (duplicate of PRIMARY) and duplicate UNIQUE(email)"
+      changes:
+        # idx_users_id_optimized (id) is a byte-for-byte duplicate of PRIMARY(id)
+        - dropIndex:
+            indexName: idx_users_id_optimized
+            tableName: users
+        # Duplicate UNIQUE(email). UK6dotkott2kjsp8vw4d0m25fb7 is kept, so the
+        # email uniqueness declared in User.java is still enforced.
+        - dropIndex:
+            indexName: uc_74165e195b2f7b25de690d14a
+            tableName: users
+      rollback:
+        - createIndex:
+            indexName: idx_users_id_optimized
+            tableName: users
+            columns:
+              - column:
+                  name: id
+        - addUniqueConstraint:
+            columnNames: email
+            constraintName: uc_74165e195b2f7b25de690d14a
+            tableName: users
+
+  # --------------------------------------------------------------------------
+  # likes: duplicate UNIQUE(user_id, target_id, target_type)
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-drop-duplicate-indexes-likes
+      author: tieuphuongcrochet
+      comment: "likes: duplicate UNIQUE(user_id, target_id, target_type)"
+      changes:
+        # uc_likes_user_target is kept, so the @UniqueConstraint declared in
+        # Like.java is still enforced.
+        - dropIndex:
+            indexName: UKdwxnpalcim87gosg2lyybgd3w
+            tableName: likes
+      rollback:
+        - addUniqueConstraint:
+            columnNames: user_id, target_id, target_type
+            constraintName: UKdwxnpalcim87gosg2lyybgd3w
+            tableName: likes
+
+  # --------------------------------------------------------------------------
+  # free_pattern: PK duplicate + redundant leftmost-prefix index
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-drop-duplicate-indexes-free-pattern
+      author: tieuphuongcrochet
+      comment: "free_pattern: drop idx_fp_created_date_id (PK duplicate) and idx_free_pattern_created_by (covered by created_by,status)"
+      changes:
+        # idx_fp_created_date_id was intended as (created_date DESC, id) but the
+        # live database only has (id), which duplicates PRIMARY(id). The real
+        # created_date index is added by 20260929-add-missing-indexes.yaml.
+        - dropIndex:
+            indexName: idx_fp_created_date_id
+            tableName: free_pattern
+        # idx_free_pattern_created_by_status (created_by, status) already serves
+        # any query that filters on created_by alone.
+        - dropIndex:
+            indexName: idx_free_pattern_created_by
+            tableName: free_pattern
+      rollback:
+        - createIndex:
+            indexName: idx_fp_created_date_id
+            tableName: free_pattern
+            columns:
+              - column:
+                  name: id
+        - createIndex:
+            indexName: idx_free_pattern_created_by
+            tableName: free_pattern
+            columns:
+              - column:
+                  name: created_by
+
+  # --------------------------------------------------------------------------
+  # product: PK duplicate
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-drop-duplicate-indexes-product
+      author: tieuphuongcrochet
+      comment: "product: drop idx_product_created_date_id, a duplicate of PRIMARY(id)"
+      changes:
+        # Same drift as free_pattern: intended as (created_date DESC, id), live
+        # database has (id) only. A real created_date index is added by
+        # 20260929-add-missing-indexes.yaml.
+        - dropIndex:
+            indexName: idx_product_created_date_id
+            tableName: product
+      rollback:
+        - createIndex:
+            indexName: idx_product_created_date_id
+            tableName: product
+            columns:
+              - column:
+                  name: id
+
+  # --------------------------------------------------------------------------
+  # free_pattern_image: redundant leftmost-prefix index
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-drop-duplicate-indexes-free-pattern-image
+      author: tieuphuongcrochet
+      comment: "free_pattern_image: drop idx_free_pattern_image_free_pattern_id, covered by (free_pattern_id, display_order)"
+      changes:
+        - dropIndex:
+            indexName: idx_free_pattern_image_free_pattern_id
+            tableName: free_pattern_image
+      rollback:
+        - createIndex:
+            indexName: idx_free_pattern_image_free_pattern_id
+            tableName: free_pattern_image
+            columns:
+              - column:
+                  name: free_pattern_id
