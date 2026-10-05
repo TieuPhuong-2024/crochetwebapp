@@ -166,6 +166,33 @@ public class UserController {
         return ResponseUtil.success(res);
     }
 
+    @Operation(summary = "Get liked free patterns by user",
+            description = "Allows users to fetch paginated free patterns that the user has liked.")
+    @ApiResponse(responseCode = "200",
+            description = "Paginated liked free patterns retrieved successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = PaginationResponse.class)))
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{userId}/liked-free-patterns")
+    @SecurityRequirement(name = "BearerAuth")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseData<PaginationResponse<FreePatternResponse>> getLikedFreePatterns(
+            @Parameter(description = "Page number (default: 0)")
+            @RequestParam(value = "pageNo", defaultValue = AppConstant.DEFAULT_PAGE_NUMBER,
+                    required = false) int pageNo,
+            @Parameter(description = "Page size (default: 48)")
+            @RequestParam(value = "pageSize", defaultValue = AppConstant.DEFAULT_PAGE_SIZE,
+                    required = false) int pageSize,
+            @Parameter(description = "Sort by field (default: createdDate)")
+            @RequestParam(value = "sortBy", defaultValue = AppConstant.DEFAULT_SORT_BY, required = false) String sortBy,
+            @Parameter(description = "Sort direction (default: DESC)")
+            @RequestParam(value = "sortDir", defaultValue = AppConstant.DEFAULT_SORT_DIRECTION,
+                    required = false) String sortDir,
+            @PathVariable("userId") String userId) {
+        var response = freePatternService.getLikedFreePatterns(userId, pageNo, pageSize, sortBy, sortDir);
+        return ResponseUtil.success(response);
+    }
+
     @Operation(summary = "Get free patterns by collection ID",
             description = "Allows users to fetch free patterns associated with a specific collection.")
     @ApiResponse(responseCode = "200",

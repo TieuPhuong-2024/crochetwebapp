@@ -26,10 +26,13 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Category extends BaseEntity {
-    @Column(name = "name", nullable = false)
-    private String name;
+@Column(name = "name", nullable = false)
+private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+@Column(name = "name_en")
+private String nameEn;
+
+@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", referencedColumnName = "id")
     @JsonBackReference
     private Category parent;

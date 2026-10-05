@@ -6,8 +6,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,11 +28,9 @@ public class ConfirmationToken extends BaseEntity {
             updatable = false)
     private String token;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;
 

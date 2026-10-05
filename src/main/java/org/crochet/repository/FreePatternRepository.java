@@ -47,7 +47,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -69,7 +71,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -97,7 +101,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -126,7 +132,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -150,7 +158,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -172,7 +182,9 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
                 i.fileContent,
                 u.name,
                 u.imageUrl,
-                u.id
+                u.id,
+                fp.viewCount,
+                fp.likeCount
               )
             FROM
               FreePattern fp
@@ -237,5 +249,63 @@ public interface FreePatternRepository extends JpaRepository<FreePattern, String
             @QueryHint(name = HINT_READ_ONLY, value = "true")
     })
     long countByCategoryId(@Param("categoryId") String categoryId);
+
+    @Modifying
+    @Query("UPDATE FreePattern fp SET fp.viewCount = fp.viewCount + 1 WHERE fp.id = :id")
+    int incrementViewCount(@Param("id") String id);
+
+    @Modifying
+    @Query("UPDATE FreePattern fp SET fp.likeCount = fp.likeCount + 1 WHERE fp.id = :id")
+    int incrementLikeCount(@Param("id") String id);
+
+    @Modifying
+    @Query("UPDATE FreePattern fp SET fp.likeCount = CASE WHEN fp.likeCount > 0 THEN fp.likeCount - 1 ELSE 0 END WHERE fp.id = :id")
+    int decrementLikeCount(@Param("id") String id);
+
+    @Query("""
+            SELECT
+              new org.crochet.payload.response.FreePatternResponse (
+                fp.id,
+                fp.name,
+                fp.description,
+                fp.author,
+                fp.status,
+                i.fileContent,
+                u.name,
+                u.imageUrl,
+                u.id,
+                fp.viewCount,
+                fp.likeCount
+              )
+            FROM
+              FreePattern fp
+              LEFT JOIN User u ON fp.createdBy = u.id
+              LEFT JOIN fp.images i WITH i.order = 0
+            WHERE
+              fp.id IN (
+                SELECT l.targetId FROM Like l
+                WHERE l.user.id = :userId
+                AND l.targetType = org.crochet.enums.TargetType.FREE_PATTERN
+              )
+            """)
+    @QueryHints(value = {
+            @QueryHint(name = HINT_FETCH_SIZE, value = "50"),
+            @QueryHint(name = HINT_READ_ONLY, value = "true")
+    })
+    List<FreePatternResponse> getLikedFreePatterns(@Param("userId") String userId, Pageable pageable);
+
+    @Query("""
+            SELECT COUNT(fp.id)
+            FROM FreePattern fp
+            WHERE fp.id IN (
+                SELECT l.targetId FROM Like l
+                WHERE l.user.id = :userId
+                AND l.targetType = org.crochet.enums.TargetType.FREE_PATTERN
+            )
+            """)
+    @QueryHints(value = {
+            @QueryHint(name = HINT_READ_ONLY, value = "true")
+    })
+    long countLikedFreePatterns(@Param("userId") String userId);
 
 }

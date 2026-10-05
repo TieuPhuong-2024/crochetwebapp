@@ -19,6 +19,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.crochet.payload.request.ChangePasswordRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RequiredArgsConstructor
 @RestController
@@ -48,5 +52,18 @@ public class UserProfileController {
     public ResponseData<UserProfileResponse> updateUserProfile(@RequestBody UserProfileRequest request) {
         var res = userProfileService.updateUserProfile(request);
         return ResponseUtil.success(res, "Update user profile success");
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Change user password")
+    @ApiResponse(responseCode = "200", description = "Password changed successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ResponseData.class)))
+    @PutMapping("/change-password")
+    @SecurityRequirement(name = "BearerAuth")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseData<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        userProfileService.changePassword(request);
+        return ResponseUtil.success("Password changed successfully");
     }
 }

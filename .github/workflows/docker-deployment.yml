@@ -23,6 +23,8 @@ env:
   SERVICE_ACCOUNT_KEY: ${{ secrets.SERVICE_ACCOUNT_KEY }}
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+  PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
 
 jobs:
   gradle-build:
@@ -75,6 +77,8 @@ jobs:
             TOKEN_SECRET=${{ env.TOKEN_SECRET }}
             APP_PASSWORD=${{ env.APP_PASSWORD }}
             SERVICE_ACCOUNT_KEY=${{ env.SERVICE_ACCOUNT_KEY }}
+            PAYPAL_CLIENT_ID=${{ env.PAYPAL_CLIENT_ID }}
+            PAYPAL_CLIENT_SECRET=${{ env.PAYPAL_CLIENT_SECRET }}
           push: true
           tags: ${{ env.DOCKERHUB_USERNAME }}/crochet:latest
       - name: Verify
