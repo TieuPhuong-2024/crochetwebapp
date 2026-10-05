@@ -31,7 +31,7 @@ public class BannerServiceImpl implements BannerService {
      * @param bannerTypeRepo the banner type repository
      */
     public BannerServiceImpl(BannerRepo bannerRepo,
-                             BannerTypeRepo bannerTypeRepo) {
+            BannerTypeRepo bannerTypeRepo) {
         this.bannerRepo = bannerRepo;
         this.bannerTypeRepo = bannerTypeRepo;
     }
@@ -54,8 +54,7 @@ public class BannerServiceImpl implements BannerService {
                 var bannerType = bannerTypeRepo.findById(request.getBannerTypeId())
                         .orElseThrow(() -> new ResourceNotFoundException(
                                 ResultCode.MSG_BANNER_TYPE_NOT_FOUND.message(),
-                                ResultCode.MSG_BANNER_TYPE_NOT_FOUND.code()
-                        ));
+                                ResultCode.MSG_BANNER_TYPE_NOT_FOUND.code()));
                 banner = Banner.builder()
                         .title(request.getTitle())
                         .content(request.getContent())
@@ -70,9 +69,8 @@ public class BannerServiceImpl implements BannerService {
                 banner = bannerRepo.findById(request.getId())
                         .orElseThrow(() -> new ResourceNotFoundException(
                                 ResultCode.MSG_BANNER_NOT_FOUND.message(),
-                                ResultCode.MSG_BANNER_NOT_FOUND.code()
-                        ));
-                banner = BannerMapper.INSTANCE.partialUpdate(request, banner);
+                                ResultCode.MSG_BANNER_NOT_FOUND.code()));
+                BannerMapper.INSTANCE.partialUpdate(request, banner);
             }
             banners.add(banner);
         }

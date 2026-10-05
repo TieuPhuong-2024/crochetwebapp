@@ -21,6 +21,8 @@ import org.crochet.repository.CommentRepository;
 import org.crochet.repository.FreePatternRepoCustom;
 import org.crochet.repository.FreePatternRepository;
 import org.crochet.repository.FreePatternSpecifications;
+import org.crochet.repository.LikeRepository;
+import org.crochet.enums.TargetType;
 import org.crochet.service.CategoryService;
 import org.crochet.service.FreePatternService;
 import org.crochet.service.PermissionService;
@@ -57,6 +59,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final UserService userService;
     private final CommentRepository commentRepository;
     private final ColFrepRepo colFrepRepo;
+    private final LikeRepository likeRepository;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -91,7 +94,7 @@ public class FreePatternServiceImpl implements FreePatternService {
         } else {
             freePattern = findById(request.getId());
             permissionService.checkUserPermission(freePattern, "update");
-            freePattern = FreePatternMapper.INSTANCE.update(request, freePattern);
+            FreePatternMapper.INSTANCE.update(request, freePattern);
         }
         freePatternRepo.save(freePattern);
     }
@@ -116,8 +119,7 @@ public class FreePatternServiceImpl implements FreePatternService {
             String sortBy,
             String sortDir,
             String categoryId,
-            Specification<FreePattern> spec
-    ) {
+            Specification<FreePattern> spec) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         var filter = ((FilterSpecification<FreePattern>) spec).getFilter();
@@ -161,20 +163,32 @@ public class FreePatternServiceImpl implements FreePatternService {
                             .map(FreePatternResponse::getId)
                             .collect(Collectors.toSet());
 
-                    List<Object[]> collectionResults = colFrepRepo.existFreePatternsInCollection(patternIds, currentUser.getId());
+                    List<Object[]> collectionResults = colFrepRepo.existFreePatternsInCollection(patternIds,
+                            currentUser.getId());
                     Map<String, Boolean> collectionStatus = collectionResults.stream()
                             .collect(Collectors.toMap(
-                                    result -> (String) result[0],  // fp.id
-                                    result -> (Boolean) result[1]  // CASE WHEN EXISTS...
+                                    result -> (String) result[0], // fp.id
+                                    result -> (Boolean) result[1] // CASE WHEN EXISTS...
                             ));
-                    content.forEach(pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+                    content.forEach(
+                            pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.FREE_PATTERN, patternIds);
+                    content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
                     // Nếu có lỗi, set tất cả patterns là false
-                    content.forEach(pattern -> pattern.setInCollection(false));
+                    content.forEach(pattern -> {
+                        pattern.setInCollection(false);
+                        pattern.setIsLiked(false);
+                    });
                 }
             } else {
                 // Nếu user chưa login, set tất cả patterns là false
-                content.forEach(pattern -> pattern.setInCollection(false));
+                content.forEach(pattern -> {
+                    pattern.setInCollection(false);
+                    pattern.setIsLiked(false);
+                });
             }
         }
 
@@ -193,7 +207,8 @@ public class FreePatternServiceImpl implements FreePatternService {
     }
 
     /**
-     * Retrieves a paginated and sorted list of free patterns associated with a specific user,
+     * Retrieves a paginated and sorted list of free patterns associated with a
+     * specific user,
      * optionally filtered by specified criteria.
      *
      * @param offset  the page number to retrieve (zero-based)
@@ -202,7 +217,8 @@ public class FreePatternServiceImpl implements FreePatternService {
      * @param sortDir the direction to sort the results (e.g., "asc" or "desc")
      * @param userId  the ID of the user whose free patterns are to be retrieved
      * @param spec    the specification for filtering the results
-     * @return a {@link PaginationResponse} containing the paginated and filtered list of free patterns
+     * @return a {@link PaginationResponse} containing the paginated and filtered
+     *         list of free patterns
      */
     @SuppressWarnings("ConstantValue")
     @Transactional(readOnly = true)
@@ -213,8 +229,7 @@ public class FreePatternServiceImpl implements FreePatternService {
             String sortBy,
             String sortDir,
             String userId,
-            Specification<FreePattern> spec
-    ) {
+            Specification<FreePattern> spec) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         var filter = ((FilterSpecification<FreePattern>) spec).getFilter();
@@ -243,20 +258,32 @@ public class FreePatternServiceImpl implements FreePatternService {
                             .map(FreePatternResponse::getId)
                             .collect(Collectors.toSet());
 
-                    List<Object[]> collectionResults = colFrepRepo.existFreePatternsInCollection(patternIds, currentUser.getId());
+                    List<Object[]> collectionResults = colFrepRepo.existFreePatternsInCollection(patternIds,
+                            currentUser.getId());
                     Map<String, Boolean> collectionStatus = collectionResults.stream()
                             .collect(Collectors.toMap(
-                                    result -> (String) result[0],  // fp.id
-                                    result -> (Boolean) result[1]  // CASE WHEN EXISTS...
+                                    result -> (String) result[0], // fp.id
+                                    result -> (Boolean) result[1] // CASE WHEN EXISTS...
                             ));
-                    content.forEach(pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+                    content.forEach(
+                            pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.FREE_PATTERN, patternIds);
+                    content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
                     // Nếu có lỗi, set tất cả patterns là false
-                    content.forEach(pattern -> pattern.setInCollection(false));
+                    content.forEach(pattern -> {
+                        pattern.setInCollection(false);
+                        pattern.setIsLiked(false);
+                    });
                 }
             } else {
                 // Nếu user chưa login, set tất cả patterns là false
-                content.forEach(pattern -> pattern.setInCollection(false));
+                content.forEach(pattern -> {
+                    pattern.setInCollection(false);
+                    pattern.setIsLiked(false);
+                });
             }
         }
 
@@ -278,7 +305,7 @@ public class FreePatternServiceImpl implements FreePatternService {
      * Retrieves a limited list of FreePatterns.
      *
      * @return A list of {@link FreePatternResponse} objects containing information
-     * about the FreePatterns.
+     *         about the FreePatterns.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     @Override
@@ -289,16 +316,13 @@ public class FreePatternServiceImpl implements FreePatternService {
         }
         var direction = settingsMap.getOrDefault(
                 "homepage.fp.direction",
-                new Settings("homepage.fp.direction", "desc")
-        ).getValue();
+                new Settings("homepage.fp.direction", "desc")).getValue();
         var orderBy = settingsMap.getOrDefault(
                 "homepage.fp.orderBy",
-                new Settings("homepage.fp.orderBy", "createdDate")
-        ).getValue();
+                new Settings("homepage.fp.orderBy", "createdDate")).getValue();
         var limit = settingsMap.getOrDefault(
                 "homepage.fp.limit",
-                new Settings("homepage.fp.limit", "12")
-        ).getValue();
+                new Settings("homepage.fp.limit", "12")).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
 
@@ -314,20 +338,32 @@ public class FreePatternServiceImpl implements FreePatternService {
                             .map(FreePatternResponse::getId)
                             .collect(Collectors.toSet());
 
-                    List<Object[]> collectionResults = colFrepRepo.existFreePatternsInCollection(patternIds, currentUser.getId());
+                    List<Object[]> collectionResults = colFrepRepo.existFreePatternsInCollection(patternIds,
+                            currentUser.getId());
                     Map<String, Boolean> collectionStatus = collectionResults.stream()
                             .collect(Collectors.toMap(
-                                    result -> (String) result[0],  // fp.id
-                                    result -> (Boolean) result[1]  // CASE WHEN EXISTS...
+                                    result -> (String) result[0], // fp.id
+                                    result -> (Boolean) result[1] // CASE WHEN EXISTS...
                             ));
-                    patterns.forEach(pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+                    patterns.forEach(
+                            pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.FREE_PATTERN, patternIds);
+                    patterns.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
                     // Nếu có lỗi, set tất cả patterns là false
-                    patterns.forEach(pattern -> pattern.setInCollection(false));
+                    patterns.forEach(pattern -> {
+                        pattern.setInCollection(false);
+                        pattern.setIsLiked(false);
+                    });
                 }
             } else {
                 // Nếu user chưa login, set tất cả patterns là false
-                patterns.forEach(pattern -> pattern.setInCollection(false));
+                patterns.forEach(pattern -> {
+                    pattern.setInCollection(false);
+                    pattern.setIsLiked(false);
+                });
             }
         }
 
@@ -353,7 +389,7 @@ public class FreePatternServiceImpl implements FreePatternService {
      *
      * @param id The unique identifier of the FreePattern.
      * @return A {@link FreePatternResponse} containing detailed information about
-     * the FreePattern.
+     *         the FreePattern.
      */
     @Transactional(readOnly = true)
     @Override
@@ -361,13 +397,21 @@ public class FreePatternServiceImpl implements FreePatternService {
         var frep = freePatternRepo.findFrepById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.message(),
-                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()));
         var user = userService.getById(frep.getCreatedBy());
         var images = FileMapper.INSTANCE.toResponses(frep.getImages());
         var files = FileMapper.INSTANCE.toResponses(frep.getFiles());
         var category = CategoryMapper.INSTANCE.toResponse(frep.getCategory());
         var commentCount = commentRepository.countByFreePatternId(id);
+
+        var isLiked = false;
+        var inCollection = false;
+        var currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser != null) {
+            isLiked = likeRepository.existsByUserIdAndTargetIdAndTargetType(currentUser.getId(), id,
+                    TargetType.FREE_PATTERN);
+            inCollection = colFrepRepo.existsByFreePatternAndUserOptimized(id, currentUser.getId());
+        }
 
         return FreePatternResponse.builder()
                 .id(frep.getId())
@@ -385,6 +429,10 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .files(files)
                 .category(category)
                 .commentCount(commentCount)
+                .viewCount(frep.getViewCount() != null ? frep.getViewCount() : 0L)
+                .likeCount(frep.getLikeCount() != null ? frep.getLikeCount() : 0L)
+                .isLiked(isLiked)
+                .inCollection(inCollection)
                 .build();
     }
 
@@ -413,11 +461,11 @@ public class FreePatternServiceImpl implements FreePatternService {
         if (currentUser == null) {
             throw new ResourceNotFoundException(
                     ResultCode.MSG_USER_LOGIN_REQUIRED.message(),
-                    ResultCode.MSG_USER_LOGIN_REQUIRED.code()
-            );
+                    ResultCode.MSG_USER_LOGIN_REQUIRED.code());
         }
 
-        // Delete all free patterns if user is admin. Otherwise, delete only free patterns created by the user
+        // Delete all free patterns if user is admin. Otherwise, delete only free
+        // patterns created by the user
         if (currentUser.getRole() == RoleType.ADMIN) {
             freePatternRepo.deleteAllById(ids);
         } else {
@@ -436,8 +484,7 @@ public class FreePatternServiceImpl implements FreePatternService {
      * @return PaginationResponse
      */
     @Override
-    public PaginationResponse<FreePatternResponse>
-    getFrepsByCollectionId(
+    public PaginationResponse<FreePatternResponse> getFrepsByCollectionId(
             String userId,
             String collectionId,
             int offset,
@@ -447,9 +494,26 @@ public class FreePatternServiceImpl implements FreePatternService {
         Pageable pageable = PageRequest.of(offset, limit, Sort.Direction.fromString(sortDir), sortBy);
         var frepResponse = freePatternRepo.getFrepsByCollection(userId, collectionId, pageable);
 
-        // Thêm collection status cho từng pattern (patterns trong collection nên luôn có inCollection = true)
+        // Thêm collection status cho từng pattern (patterns trong collection nên luôn
+        // có inCollection = true)
         if (!frepResponse.getContent().isEmpty()) {
-            frepResponse.getContent().forEach(pattern -> pattern.setInCollection(true));
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                var patternIds = frepResponse.getContent().stream()
+                        .map(FreePatternResponse::getId)
+                        .collect(Collectors.toSet());
+                List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), TargetType.FREE_PATTERN,
+                        patternIds);
+                frepResponse.getContent().forEach(pattern -> {
+                    pattern.setInCollection(true);
+                    pattern.setIsLiked(likedIds.contains(pattern.getId()));
+                });
+            } else {
+                frepResponse.getContent().forEach(pattern -> {
+                    pattern.setInCollection(true);
+                    pattern.setIsLiked(false);
+                });
+            }
         }
 
         return PaginationMapper.toPagination(frepResponse);
@@ -460,8 +524,7 @@ public class FreePatternServiceImpl implements FreePatternService {
         return freePatternRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.message(),
-                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()));
     }
 
     /**
@@ -491,6 +554,8 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .images(images)
                 .files(files)
                 .category(category)
+                .viewCount(freePattern.getViewCount() != null ? freePattern.getViewCount() : 0L)
+                .likeCount(freePattern.getLikeCount() != null ? freePattern.getLikeCount() : 0L)
                 .build();
     }
 
@@ -500,5 +565,84 @@ public class FreePatternServiceImpl implements FreePatternService {
             return false;
         }
         return colFrepRepo.existsByFreePatternAndUserOptimized(freePatternId, user.getId());
+    }
+
+    @Override
+    public boolean existLikeByFreePatternAndUser(String freePatternId, User user) {
+        if (user == null) {
+            return false;
+        }
+        return likeRepository.existsByUserIdAndTargetIdAndTargetType(
+                user.getId(), freePatternId, TargetType.FREE_PATTERN);
+    }
+
+    /**
+     * Get liked free patterns by user id
+     *
+     * @param userId  User id
+     * @param offset  Page number
+     * @param limit   Page size
+     * @param sortBy  Sort by
+     * @param sortDir Sort direction
+     * @return PaginationResponse
+     */
+    @Transactional(readOnly = true)
+    @Override
+    public PaginationResponse<FreePatternResponse> getLikedFreePatterns(
+            String userId,
+            int offset,
+            int limit,
+            String sortBy,
+            String sortDir) {
+        Pageable pageable = PageRequest.of(offset, limit, Sort.Direction.fromString(sortDir), sortBy);
+        long totalElements = freePatternRepo.countLikedFreePatterns(userId);
+        List<FreePatternResponse> content = freePatternRepo.getLikedFreePatterns(userId, pageable);
+
+        if (!content.isEmpty()) {
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    var patternIds = content.stream()
+                            .map(FreePatternResponse::getId)
+                            .collect(Collectors.toSet());
+
+                    List<Object[]> collectionResults = colFrepRepo.existFreePatternsInCollection(patternIds,
+                            currentUser.getId());
+                    Map<String, Boolean> collectionStatus = collectionResults.stream()
+                            .collect(Collectors.toMap(
+                                    result -> (String) result[0],
+                                    result -> (Boolean) result[1]
+                            ));
+                    content.forEach(
+                            pattern -> pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false)));
+
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.FREE_PATTERN, patternIds);
+                    content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
+                } catch (Exception e) {
+                    content.forEach(pattern -> {
+                        pattern.setInCollection(false);
+                        pattern.setIsLiked(false);
+                    });
+                }
+            } else {
+                content.forEach(pattern -> {
+                    pattern.setInCollection(false);
+                    pattern.setIsLiked(false);
+                });
+            }
+        }
+
+        int totalPages = (int) Math.ceil((double) totalElements / limit);
+        boolean isLast = offset >= totalPages - 1;
+
+        return PaginationResponse.<FreePatternResponse>builder()
+                .contents(content)
+                .pageNo(offset)
+                .pageSize(limit)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .last(isLast)
+                .build();
     }
 }

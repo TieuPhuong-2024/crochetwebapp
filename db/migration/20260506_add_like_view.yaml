@@ -1,0 +1,98 @@
+databaseChangeLog:
+  # Liquibase identifies a changeset by (id + author + file path). These two
+  # changesets were originally applied as db/migration/v1_1_0_add_like_view.yaml
+  # and the file was later renamed to the date-prefixed convention.
+  # logicalFilePath pins the identity to the already-recorded name so Liquibase
+  # recognises them as applied instead of re-running them. Without it, Liquibase
+  # treats them as new and re-executes addColumn/createTable, which fails because
+  # the columns and the likes table already exist.
+  - logicalFilePath: db/migration/v1_1_0_add_like_view.yaml
+  - changeSet:
+      id: add-like-view-counts
+      author: ai
+      changes:
+        - addColumn:
+            tableName: pattern
+            columns:
+              - column:
+                  name: view_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: like_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+        - addColumn:
+            tableName: blog_post
+            columns:
+              - column:
+                  name: view_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: like_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+        - addColumn:
+            tableName: product
+            columns:
+              - column:
+                  name: view_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: like_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+        - addColumn:
+            tableName: free_pattern
+            columns:
+              - column:
+                  name: view_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: like_count
+                  type: BIGINT
+                  defaultValueNumeric: 0
+  - changeSet:
+      id: create-likes-table
+      author: ai
+      changes:
+        - createTable:
+            tableName: likes
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(50)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: datetime(0)
+        - addForeignKeyConstraint:
+            baseTableName: likes
+            baseColumnNames: user_id
+            constraintName: fk_likes_user
+            referencedTableName: users
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: likes
+            columnNames: user_id, target_id, target_type
+            constraintName: uc_likes_user_target

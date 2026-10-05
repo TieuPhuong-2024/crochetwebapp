@@ -37,6 +37,12 @@ public class FreePatternResponse {
     @JsonProperty("in_collection")
     private Boolean inCollection;
 
+    private long likeCount;
+    private long viewCount;
+    
+    @JsonProperty("is_liked")
+    private Boolean isLiked;
+
     public FreePatternResponse(String id,
                                String name,
                                String description,
@@ -45,7 +51,9 @@ public class FreePatternResponse {
                                String fileContent,
                                String username,
                                String userAvatar,
-                               String userId) {
+                               String userId,
+                               long viewCount,
+                               long likeCount) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -55,6 +63,8 @@ public class FreePatternResponse {
         this.userId = userId;
         this.username = username;
         this.userAvatar = userAvatar;
+        this.viewCount = viewCount;
+        this.likeCount = likeCount;
     }
 
     public FreePatternResponse(String id,
@@ -62,12 +72,16 @@ public class FreePatternResponse {
                                String description,
                                String author,
                                ChartStatus status,
-                               String fileContent) {
+                               String fileContent,
+                               long viewCount,
+                               long likeCount) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.author = author;
         this.status = status;
         this.fileContent = fileContent;
+        this.viewCount = viewCount;
+        this.likeCount = likeCount;
     }
 }

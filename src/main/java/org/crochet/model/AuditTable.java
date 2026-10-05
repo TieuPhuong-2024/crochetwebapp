@@ -3,8 +3,6 @@ package org.crochet.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,7 +31,6 @@ public abstract class AuditTable {
 
     @CreatedDate
     @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
 
@@ -43,7 +40,6 @@ public abstract class AuditTable {
 
     @LastModifiedDate
     @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private LocalDateTime lastModifiedDate;
 }

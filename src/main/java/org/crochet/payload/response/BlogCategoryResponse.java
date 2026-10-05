@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 public class BlogCategoryResponse {
     private String id;
     private String name;
+    private String nameEn;
     @JsonFormat(pattern = AppConstant.DATE_PATTERN)
     private LocalDateTime createdDate;
     @JsonFormat(pattern = AppConstant.DATE_PATTERN)

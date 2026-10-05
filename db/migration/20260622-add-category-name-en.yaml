@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260622-add-category-name-en
+      author: tieuphuongcrochet
+      changes:
+        - addColumn:
+            tableName: category
+            columns:
+              - column:
+                  name: name_en
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+        - addColumn:
+            tableName: blog_category
+            columns:
+              - column:
+                  name: name_en
+                  type: varchar(255)
+                  constraints:
+                    nullable: true

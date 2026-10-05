@@ -21,5 +21,5 @@ public interface AbstractMapper<Entity, Response> {
 interface PartialUpdate<Target, Source> {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
-    Target partialUpdate(Source source, @MappingTarget Target target);
+    void partialUpdate(Source source, @MappingTarget Target target);
 }

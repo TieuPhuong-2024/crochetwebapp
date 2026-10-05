@@ -5,18 +5,19 @@ import org.crochet.payload.request.FreePatternRequest;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import java.util.Collection;
 import java.util.List;
 
-@Mapper(
-        unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        uses = {FileMapper.class, CategoryMapper.class}
-)
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = { FileMapper.class, CategoryMapper.class })
 public interface FreePatternMapper {
     FreePatternMapper INSTANCE = Mappers.getMapper(FreePatternMapper.class);
 
@@ -25,39 +26,28 @@ public interface FreePatternMapper {
 
     List<FreePatternResponse> toResponses(Collection<FreePattern> freePatterns);
 
-    default FreePattern update(FreePatternRequest req, FreePattern freePattern) {
-        if (freePattern == null) {
-            return null;
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "images", ignore = true)
+    @Mapping(target = "files", ignore = true)
+    void update(FreePatternRequest req, @MappingTarget FreePattern freePattern);
+
+    @AfterMapping
+    default void afterUpdate(FreePatternRequest req, @MappingTarget FreePattern pattern) {
+        if (req.getImages() != null) {
+            if (ObjectUtils.isEmpty(req.getImages())) {
+                pattern.setImages(null);
+            } else {
+                var sortedImages = ImageUtils.sortFiles(req.getImages());
+                pattern.setImages(FileMapper.INSTANCE.toEntities(sortedImages));
+            }
         }
-        if (req.getName() != null) {
-            freePattern.setName(req.getName());
+        if (req.getFiles() != null) {
+            if (ObjectUtils.isEmpty(req.getFiles())) {
+                pattern.setFiles(null);
+            } else {
+                var sortedFiles = ImageUtils.sortFiles(req.getFiles());
+                pattern.setFiles(FileMapper.INSTANCE.toEntities(sortedFiles));
+            }
         }
-        if (req.getDescription() != null) {
-            freePattern.setDescription(req.getDescription());
-        }
-        if (req.getAuthor() != null) {
-            freePattern.setAuthor(req.getAuthor());
-        }
-        if (req.isHome() != freePattern.isHome()) {
-            freePattern.setHome(req.isHome());
-        }
-        if (req.getLink() != null) {
-            freePattern.setLink(req.getLink());
-        }
-        if (req.getContent() != null) {
-            freePattern.setContent(req.getContent());
-        }
-        if (req.getStatus() != null) {
-            freePattern.setStatus(req.getStatus());
-        }
-        if (ObjectUtils.isNotEmpty(req.getImages())) {
-            var sortedImages = ImageUtils.sortFiles(req.getImages());
-            freePattern.setImages(FileMapper.INSTANCE.toEntities(sortedImages));
-        }
-        if (ObjectUtils.isNotEmpty(req.getFiles())) {
-            var sortedFiles = ImageUtils.sortFiles(req.getFiles());
-            freePattern.setFiles(FileMapper.INSTANCE.toEntities(sortedFiles));
-        }
-        return freePattern;
     }
 }
