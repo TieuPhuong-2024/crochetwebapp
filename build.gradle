@@ -11,9 +11,8 @@ version = loadVersion().getVersion()
 description = 'crochet'
 
 java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(26)
-  }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 configurations {
