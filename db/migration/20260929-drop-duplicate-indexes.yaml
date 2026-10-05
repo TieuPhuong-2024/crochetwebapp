@@ -141,6 +141,13 @@ databaseChangeLog:
       id: 20260929-drop-duplicate-indexes-likes
       author: tieuphuongcrochet
       comment: "likes: duplicate UNIQUE(user_id, target_id, target_type)"
+      validCheckSum:
+        - ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - indexExists:
+            indexName: UKdwxnpalcim87gosg2lyybgd3w
+            tableName: likes
       changes:
         # uc_likes_user_target is kept, so the @UniqueConstraint declared in
         # Like.java is still enforced.
