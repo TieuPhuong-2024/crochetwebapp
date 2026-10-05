@@ -11,3 +11,9 @@ databaseChangeLog:
   - include:
       file: ../migration/20260622-add-category-name-en.yaml
       relativeToChangelogFile: true
+  - include:
+      file: ../migration/20260929-drop-duplicate-indexes.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: ../migration/20260929-add-missing-indexes.yaml
+      relativeToChangelogFile: true

@@ -1,4 +1,12 @@
 databaseChangeLog:
+  # Liquibase identifies a changeset by (id + author + file path). These two
+  # changesets were originally applied as db/migration/v1_1_0_add_like_view.yaml
+  # and the file was later renamed to the date-prefixed convention.
+  # logicalFilePath pins the identity to the already-recorded name so Liquibase
+  # recognises them as applied instead of re-running them. Without it, Liquibase
+  # treats them as new and re-executes addColumn/createTable, which fails because
+  # the columns and the likes table already exist.
+  - logicalFilePath: db/migration/v1_1_0_add_like_view.yaml
   - changeSet:
       id: add-like-view-counts
       author: ai
