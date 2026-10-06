@@ -16,4 +16,12 @@ public class OAuth2AuthenticationProcessingException extends AuthenticationExcep
         this.messageCode = messageCode;
     }
 
+    public OAuth2AuthenticationProcessingException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
+
+    public OAuth2AuthenticationProcessingException(String msg, Throwable cause, int messageCode) {
+        super(msg, cause);
+        this.messageCode = messageCode;
+    }
 }

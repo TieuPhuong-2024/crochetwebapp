@@ -134,6 +134,7 @@ public class ProductServiceImpl implements ProductService {
                             TargetType.PRODUCT, productIds);
                     content.forEach(product -> product.setIsLiked(likedIds.contains(product.getId())));
                 } catch (Exception e) {
+                    log.warn("Failed to retrieve liked status for user {}: {}", currentUser.getId(), e.getMessage());
                     content.forEach(product -> product.setIsLiked(false));
                 }
             } else {

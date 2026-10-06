@@ -1,6 +1,8 @@
 package org.crochet.service.payment;
 
 import lombok.extern.slf4j.Slf4j;
+import org.crochet.exception.BadRequestException;
+import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.enums.PaymentStatus;
 import org.crochet.enums.PlanType;
 import org.crochet.enums.RoleType;
@@ -75,19 +77,19 @@ public class PaymentService {
             String cancelUrl) {
         User currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            throw new RuntimeException("User not authenticated");
+            throw new BadRequestException("User not authenticated");
         }
 
         // Check if user is already PREMIUM
         Optional<Subscription> activeSub = subscriptionRepository.findByUserIdAndStatus(currentUser.getId(),
                 SubscriptionStatus.ACTIVE);
         if (activeSub.isPresent() && activeSub.get().getEndDate().isAfter(LocalDateTime.now())) {
-            throw new RuntimeException("You already have an active premium subscription.");
+            throw new BadRequestException("You already have an active premium subscription.");
         }
 
         PaymentProvider provider = paymentProviders.get(paymentMethod.toUpperCase());
         if (provider == null) {
-            throw new RuntimeException("Payment method not supported");
+            throw new BadRequestException("Payment method not supported");
         }
 
         BigDecimal amount = getPrice(planType);
@@ -112,10 +114,10 @@ public class PaymentService {
     @Transactional
     public boolean capturePayment(String orderId) {
         PaymentTransaction transaction = paymentTransactionRepository.findByProviderOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("Payment transaction not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment transaction not found"));
 
         if (transaction.getStatus() != PaymentStatus.PENDING) {
-            throw new RuntimeException("Payment is already processed");
+            throw new BadRequestException("Payment is already processed");
         }
 
         PaymentProvider provider = paymentProviders.get(transaction.getPaymentMethod());
@@ -128,7 +130,7 @@ public class PaymentService {
                         transaction.getAmount());
                 transaction.setStatus(PaymentStatus.FAILED);
                 paymentTransactionRepository.save(transaction);
-                throw new RuntimeException("Payment amount mismatch");
+                throw new BadRequestException("Payment amount mismatch");
             }
 
             // Update transaction
