@@ -40,6 +40,7 @@ public class NotificationController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseData<PaginationResponse<NotificationResponse>> getCurrentUserNotifications(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
@@ -61,6 +62,7 @@ public class NotificationController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/unread/count")
+    @PreAuthorize("isAuthenticated()")
     public ResponseData<Long> getUnreadNotificationCount(@CurrentUser User receiver) {
         var countUnreadNotifications = notificationService.countUnreadNotifications(receiver.getId());
         return ResponseUtil.success(countUnreadNotifications);
@@ -68,6 +70,7 @@ public class NotificationController {
 
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/{id}/read")
+    @PreAuthorize("isAuthenticated()")
     public ResponseData<NotificationResponse> markNotificationAsRead(@PathVariable String id) {
         var response = notificationService.markAsRead(id);
         return ResponseUtil.success(response);
@@ -75,6 +78,7 @@ public class NotificationController {
 
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/read-all")
+    @PreAuthorize("isAuthenticated()")
     public ResponseData<Void> markAllNotificationsAsRead(@CurrentUser User receiver) {
         notificationService.markAllAsRead(receiver.getId());
         return ResponseUtil.success();
@@ -82,6 +86,7 @@ public class NotificationController {
 
     @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/{id}")
+    @PreAuthorize ("isAuthenticated()")
     public ResponseData<Void> deleteNotification(@PathVariable String id) {
         notificationService.deleteNotification(id);
         return ResponseUtil.success();
@@ -89,6 +94,7 @@ public class NotificationController {
 
     @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/all")
+    @PreAuthorize("isAuthenticated()")
     public ResponseData<Void> deleteAllCurrentUserNotifications(@CurrentUser User receiver) {
         notificationService.deleteAllUserNotifications(receiver.getUsername());
         return ResponseUtil.success();
