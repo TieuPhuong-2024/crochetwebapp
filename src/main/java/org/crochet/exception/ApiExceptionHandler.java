@@ -89,6 +89,14 @@ public class ApiExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseData<Object> handleUnauthorizedException(UnauthorizedException ex, HttpServletRequest request) {
+        int code = ex.getMessageCode() != 0 ? ex.getMessageCode() : HttpStatus.UNAUTHORIZED.value();
+        log.warn("Unauthorized access at [{}] - code {}: {}", request.getRequestURI(), code, ex.getMessage());
+        return ResponseUtil.error(code, ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(AuthenticationException.class)
     public ResponseData<Object> handleAuthenticationException(AuthenticationException ex, HttpServletRequest request) {
         log.warn("Authentication failed at [{}]: {}", request.getRequestURI(), ex.getMessage());

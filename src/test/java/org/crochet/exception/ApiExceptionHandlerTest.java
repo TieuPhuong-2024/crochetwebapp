@@ -85,6 +85,17 @@ class ApiExceptionHandlerTest {
     }
 
     @Test
+    void handleUnauthorizedException_returnsUnauthorized() {
+        UnauthorizedException ex = new UnauthorizedException("User not logged in", 40101);
+
+        ResponseData<Object> response = handler.handleUnauthorizedException(ex, request);
+
+        assertFalse(response.isSuccess());
+        assertEquals(40101, response.getCode());
+        assertEquals("User not logged in", response.getMessage());
+    }
+
+    @Test
     void handleUnexpectedException_returnsInternalServerErrorWithoutLeakingDetails() {
         RuntimeException ex = new RuntimeException("Sensitive database credentials leaked in internal message");
 
