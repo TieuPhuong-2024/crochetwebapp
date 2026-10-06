@@ -177,6 +177,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                             TargetType.FREE_PATTERN, patternIds);
                     content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
+                    log.warn("Failed to retrieve collection/liked status for user {}: {}", currentUser.getId(), e.getMessage());
                     // Nếu có lỗi, set tất cả patterns là false
                     content.forEach(pattern -> {
                         pattern.setInCollection(false);
@@ -620,6 +621,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                             TargetType.FREE_PATTERN, patternIds);
                     content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
+                    log.warn("Failed to retrieve collection/liked status for user {}: {}", currentUser.getId(), e.getMessage());
                     content.forEach(pattern -> {
                         pattern.setInCollection(false);
                         pattern.setIsLiked(false);

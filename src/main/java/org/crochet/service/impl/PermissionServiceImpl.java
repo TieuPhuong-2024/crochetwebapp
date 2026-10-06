@@ -2,7 +2,7 @@ package org.crochet.service.impl;
 
 import org.crochet.enums.ResultCode;
 import org.crochet.enums.RoleType;
-import org.crochet.exception.AccessDeniedException;
+import org.crochet.exception.ForbiddenException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.model.BaseEntity;
 import org.crochet.service.PermissionService;
@@ -19,7 +19,7 @@ public class PermissionServiceImpl implements PermissionService {
         validateUserLoggedIn();
 
         if (!isAdmin() && !isOwner(entity)) {
-            throw new AccessDeniedException(
+            throw new ForbiddenException(
                     String.format("Không có quyền %s %s", action, entity.getClass().getSimpleName()),
                     ResultCode.MSG_NO_PERMISSION.code()
             );

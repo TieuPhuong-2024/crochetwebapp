@@ -9,8 +9,15 @@ public class ResourceNotFoundException extends DecoratedRuntimeException {
         super(message);
     }
 
+    public ResourceNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public ResourceNotFoundException(String message, int messageCode) {
         super(message, messageCode);
     }
 
+    public ResourceNotFoundException(String message, Throwable cause, int messageCode) {
+        super(message, cause, messageCode);
+    }
 }
