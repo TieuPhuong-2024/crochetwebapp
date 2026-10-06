@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
 import org.crochet.enums.RoleType;
 import org.crochet.exception.ResourceNotFoundException;
+import org.crochet.exception.UnauthorizedException;
 import org.crochet.mapper.CategoryMapper;
 import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.FreePatternMapper;
@@ -460,7 +461,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     public void deleteAllById(List<String> ids) {
         var currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            throw new ResourceNotFoundException(
+            throw new UnauthorizedException(
                     ResultCode.MSG_USER_LOGIN_REQUIRED.message(),
                     ResultCode.MSG_USER_LOGIN_REQUIRED.code());
         }

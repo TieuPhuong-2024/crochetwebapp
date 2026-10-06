@@ -7,4 +7,6 @@ public interface PermissionService {
     void validateUserLoggedIn();
     boolean isAdmin();
     boolean isOwner(BaseEntity entity);
+    boolean canAccess(BaseEntity entity);
+    boolean canAccess(BaseEntity entity, String action);
 }
