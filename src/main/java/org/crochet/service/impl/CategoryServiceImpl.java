@@ -133,7 +133,7 @@ public class CategoryServiceImpl implements CategoryService {
         // Find the existing category by ID
         Category category = findById(request.getId());
 
-        permissionService.checkUserPermission(category, "update");
+        permissionService.checkUserPermission(category);
 
         // Extract the new name from the request
         String newName = request.getName();
@@ -219,7 +219,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void delete(String id) {
         var category = findById(id);
-        permissionService.checkUserPermission(category, "delete");
+        permissionService.checkUserPermission(category);
         categoryRepo.delete(category);
     }
 }

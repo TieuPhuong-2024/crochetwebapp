@@ -94,7 +94,7 @@ public class BlogPostServiceImpl implements BlogPostService {
                     .build();
         } else {
             blogPost = getById(request.getId());
-            permissionService.checkUserPermission(blogPost, "update");
+            permissionService.checkUserPermission(blogPost);
             BlogPostMapper.INSTANCE.partialUpdate(request, blogPost);
         }
         blogPostRepo.save(blogPost);
@@ -274,7 +274,7 @@ public class BlogPostServiceImpl implements BlogPostService {
     @Override
     public void deletePost(String id) {
         var blogPost = getById(id);
-        permissionService.checkUserPermission(blogPost, "delete");
+        permissionService.checkUserPermission(blogPost);
         blogPostRepo.delete(blogPost);
     }
 
