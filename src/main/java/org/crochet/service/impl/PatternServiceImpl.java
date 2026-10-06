@@ -73,7 +73,7 @@ public class PatternServiceImpl implements PatternService {
                     .build();
         } else {
             pattern = findById(request.getId());
-            permissionService.checkUserPermission(pattern, "update");
+            permissionService.checkUserPermission(pattern);
             PatternMapper.INSTANCE.partialUpdate(request, pattern);
         }
 

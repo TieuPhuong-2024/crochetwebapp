@@ -94,7 +94,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                     .build();
         } else {
             freePattern = findById(request.getId());
-            permissionService.checkUserPermission(freePattern, "update");
+            permissionService.checkUserPermission(freePattern);
             FreePatternMapper.INSTANCE.update(request, freePattern);
         }
         freePatternRepo.save(freePattern);
@@ -447,7 +447,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     @Override
     public void delete(String id) {
         var freePattern = findById(id);
-        permissionService.checkUserPermission(freePattern, "delete");
+        permissionService.checkUserPermission(freePattern);
         freePatternRepo.delete(freePattern);
     }
 

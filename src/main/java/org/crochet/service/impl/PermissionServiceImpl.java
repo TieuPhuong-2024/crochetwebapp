@@ -16,10 +16,10 @@ import static org.crochet.util.SecurityUtils.getCurrentUser;
 public class PermissionServiceImpl implements PermissionService {
 
     @Override
-    public void checkUserPermission(BaseEntity entity, String action) {
+    public void checkUserPermission(BaseEntity entity) {
         validateUserLoggedIn();
 
-        if (!canAccess(entity, action)) {
+        if (!canAccess(entity)) {
             throw new ForbiddenException(
                     ResultCode.MSG_FORBIDDEN.message(),
                     ResultCode.MSG_NO_PERMISSION.code()
@@ -29,11 +29,6 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public boolean canAccess(BaseEntity entity) {
-        return canAccess(entity, null);
-    }
-
-    @Override
-    public boolean canAccess(BaseEntity entity, String action) {
         var user = getCurrentUser();
         if (user == null) {
             return false;
