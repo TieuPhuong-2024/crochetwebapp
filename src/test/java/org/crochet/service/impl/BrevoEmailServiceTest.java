@@ -1,5 +1,6 @@
 package org.crochet.service.impl;
 
+import org.crochet.exception.BadRequestException;
 import org.crochet.properties.BrevoProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,7 +73,7 @@ class BrevoEmailServiceTest {
                         .body("{\"code\":\"invalid_parameter\",\"message\":\"sender is not valid\"}"));
 
         assertThatThrownBy(() -> brevoEmailService.send("buyer@example.com", "Confirm your email", "<p>hello</p>"))
-                .isInstanceOf(org.crochet.exception.IllegalStateException.class);
+                .isInstanceOf(BadRequestException.class);
 
         server.verify();
     }
@@ -83,7 +84,7 @@ class BrevoEmailServiceTest {
                 .andRespond(withServerError());
 
         assertThatThrownBy(() -> brevoEmailService.send("buyer@example.com", "Confirm your email", "<p>hello</p>"))
-                .isInstanceOf(org.crochet.exception.IllegalStateException.class);
+                .isInstanceOf(BadRequestException.class);
 
         server.verify();
     }

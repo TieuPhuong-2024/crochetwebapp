@@ -2,7 +2,7 @@ package org.crochet.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
-import org.crochet.exception.IllegalStateException;
+import org.crochet.exception.BadRequestException;
 import org.crochet.properties.BrevoProperties;
 import org.crochet.service.EmailSender;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,7 +41,7 @@ public class BrevoEmailService implements EmailSender {
      * @param to      user's email
      * @param subject subject
      * @param content html content
-     * @throws IllegalStateException failed to send email
+     * @throws BadRequestException failed to send email
      */
     @Override
     @Async
@@ -56,8 +56,8 @@ public class BrevoEmailService implements EmailSender {
                     .toBodilessEntity();
         } catch (RestClientException e) {
             log.error("{} to={}", ResultCode.MSG_FAILED_SEND_EMAIL.message(), to, e);
-            throw new IllegalStateException(ResultCode.MSG_FAILED_SEND_EMAIL.message(),
-                    ResultCode.MSG_FAILED_SEND_EMAIL.code());
+            throw new BadRequestException(ResultCode.MSG_FAILED_SEND_EMAIL.message(),
+                                        ResultCode.MSG_FAILED_SEND_EMAIL.code());
         }
     }
 
@@ -65,8 +65,8 @@ public class BrevoEmailService implements EmailSender {
         BrevoProperties.Sender sender = brevoProperties.getSender();
         if (sender == null || !StringUtils.hasText(sender.getEmail())) {
             log.error("brevo.sender.email is not set. Set BREVO_SENDER_EMAIL before sending email.");
-            throw new IllegalStateException(ResultCode.MSG_FAILED_SEND_EMAIL.message(),
-                    ResultCode.MSG_FAILED_SEND_EMAIL.code());
+            throw new BadRequestException(ResultCode.MSG_FAILED_SEND_EMAIL.message(),
+                                        ResultCode.MSG_FAILED_SEND_EMAIL.code());
         }
         return new BrevoEmailRequest(
                 new BrevoEmailRequest.Sender(sender.getName(), sender.getEmail()),
