@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
 import org.crochet.exception.EmailException;
 import org.crochet.service.EmailSender;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -14,10 +15,13 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 
 /**
- * EmailService class
+ * EmailService class.
+ * Sends email through Gmail SMTP. Active only when {@code app.email.provider=smtp};
+ * otherwise {@link BrevoEmailService} is used.
  */
 @Service
 @Slf4j
+@ConditionalOnProperty(prefix = "app.email", name = "provider", havingValue = "smtp")
 public class EmailService implements EmailSender {
     private final JavaMailSender javaMailSender;
 
