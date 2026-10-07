@@ -47,6 +47,8 @@ public class SecurityConfig {
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final OAuth2CookieRepository oAuth2CookieRepository;
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final RestAccessDeniedHandler restAccessDeniedHandler;
 
     @Bean
     @ConfigurationProperties(prefix = "authorize.http-request")
@@ -88,8 +90,8 @@ public class SecurityConfig {
 
     private void configureExceptionHandling(HttpSecurity http) throws Exception {
         http.exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(new RestAuthenticationEntryPoint())
-                .accessDeniedHandler(new RestAccessDeniedHandler()));
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                .accessDeniedHandler(restAccessDeniedHandler));
     }
 
     private void configureAuthorization(HttpSecurity http) throws Exception {

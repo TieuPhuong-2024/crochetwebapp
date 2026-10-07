@@ -144,20 +144,20 @@ public class ResponseUtil {
     }
 
     /**
-     * Tạo phản hồi lỗi với thông tin lỗi chi tiết
+     * Tạo phản hồi lỗi với mã trạng thái và thông tin lỗi chi tiết (field errors)
      *
      * @param status  Mã trạng thái HTTP
      * @param message Thông báo lỗi
-     * @param error   Đối tượng lỗi
+     * @param errors  Chi tiết lỗi theo trường
      * @param <T>     Kiểu dữ liệu
      * @return Đối tượng ResponseData
      */
-    public static <T> ResponseData<T> error(HttpStatus status, String message, Throwable error) {
+    public static <T> ResponseData<T> error(HttpStatus status, String message, java.util.Map<String, String> errors) {
         return ResponseData.<T>builder()
                 .success(false)
                 .code(status.value())
                 .message(message)
-                .error(error)
+                .errors(errors)
                 .build();
     }
 
@@ -178,20 +178,20 @@ public class ResponseUtil {
     }
 
     /**
-     * Tạo phản hồi lỗi với mã tùy chỉnh và thông tin lỗi chi tiết
+     * Tạo phản hồi lỗi với mã tùy chỉnh và thông tin lỗi chi tiết (field errors)
      *
      * @param code    Mã lỗi tùy chỉnh
      * @param message Thông báo lỗi
-     * @param error   Đối tượng lỗi
+     * @param errors  Chi tiết lỗi theo trường
      * @param <T>     Kiểu dữ liệu
      * @return Đối tượng ResponseData
      */
-    public static <T> ResponseData<T> error(int code, String message, Throwable error) {
+    public static <T> ResponseData<T> error(int code, String message, java.util.Map<String, String> errors) {
         return ResponseData.<T>builder()
                 .success(false)
                 .code(code)
                 .message(message)
-                .error(error)
+                .errors(errors)
                 .build();
     }
 } 

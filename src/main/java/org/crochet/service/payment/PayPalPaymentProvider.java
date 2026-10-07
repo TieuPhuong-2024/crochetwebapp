@@ -19,6 +19,7 @@ import com.paypal.sdk.models.PurchaseUnitRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.crochet.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -64,12 +65,12 @@ public class PayPalPaymentProvider implements PaymentProvider {
                     .filter(link -> "approve".equals(link.getRel()))
                     .map(LinkDescription::getHref)
                     .findFirst()
-                    .orElseThrow(() -> new RuntimeException("Approve URL not found in PayPal response"));
+                    .orElseThrow(() -> new BadRequestException("Approve URL not found in PayPal response"));
 
             return new PaymentOrderResponse(order.getId(), approveUrl);
         } catch (Exception e) {
             log.error("Error creating PayPal order", e);
-            throw new RuntimeException("Failed to create PayPal order: " + e.getMessage());
+            throw new BadRequestException("Failed to create PayPal order: " + e.getMessage(), e);
         }
     }
 
@@ -94,7 +95,7 @@ public class PayPalPaymentProvider implements PaymentProvider {
             }
         } catch (Exception e) {
             log.error("Error capturing PayPal order {}", orderId, e);
-            throw new RuntimeException("Failed to capture PayPal order: " + e.getMessage());
+            throw new BadRequestException("Failed to capture PayPal order: " + e.getMessage(), e);
         }
     }
 
