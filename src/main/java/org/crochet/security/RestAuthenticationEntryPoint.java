@@ -1,35 +1,42 @@
 package org.crochet.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.crochet.payload.response.ResponseData;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-/**
- * RestAuthenticationEntryPoint class
- */
+@Slf4j
+@Component
+@RequiredArgsConstructor
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private static final Logger logger = LoggerFactory.getLogger(RestAuthenticationEntryPoint.class);
+    private final ObjectMapper objectMapper;
 
-    /**
-     * Commence
-     *
-     * @param httpServletRequest  that resulted in an <code>AuthenticationException</code>
-     * @param httpServletResponse so that the user agent can begin authentication
-     * @param e                   that caused the invocation
-     * @throws IOException I/O exception
-     */
     @Override
-    public void commence(HttpServletRequest httpServletRequest,
-                         HttpServletResponse httpServletResponse,
-                         AuthenticationException e) throws IOException {
-        logger.error("Responding with unauthorized error. Message - {}", e.getMessage());
-        httpServletResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                e.getLocalizedMessage());
+    public void commence(HttpServletRequest request,
+                         HttpServletResponse response,
+                         AuthenticationException authException) throws IOException {
+        log.warn("Unauthorized error at [{}]: {}", request.getRequestURI(), authException.getMessage());
+
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setCharacterEncoding("UTF-8");
+
+        ResponseData<Object> responseData = ResponseData.builder()
+                .success(false)
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .message("Unauthorized: " + authException.getMessage())
+                .build();
+
+        response.getWriter().write(objectMapper.writeValueAsString(responseData));
     }
 }

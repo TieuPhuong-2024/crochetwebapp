@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
 import org.crochet.enums.RoleType;
 import org.crochet.exception.ResourceNotFoundException;
+import org.crochet.exception.UnauthorizedException;
 import org.crochet.mapper.CategoryMapper;
 import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.FreePatternMapper;
@@ -93,7 +94,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                     .build();
         } else {
             freePattern = findById(request.getId());
-            permissionService.checkUserPermission(freePattern, "update");
+            permissionService.checkUserPermission(freePattern);
             FreePatternMapper.INSTANCE.update(request, freePattern);
         }
         freePatternRepo.save(freePattern);
@@ -177,6 +178,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                             TargetType.FREE_PATTERN, patternIds);
                     content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
+                    log.warn("Failed to retrieve collection/liked status for user {}: {}", currentUser.getId(), e.getMessage());
                     // Nếu có lỗi, set tất cả patterns là false
                     content.forEach(pattern -> {
                         pattern.setInCollection(false);
@@ -445,7 +447,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     @Override
     public void delete(String id) {
         var freePattern = findById(id);
-        permissionService.checkUserPermission(freePattern, "delete");
+        permissionService.checkUserPermission(freePattern);
         freePatternRepo.delete(freePattern);
     }
 
@@ -459,7 +461,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     public void deleteAllById(List<String> ids) {
         var currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            throw new ResourceNotFoundException(
+            throw new UnauthorizedException(
                     ResultCode.MSG_USER_LOGIN_REQUIRED.message(),
                     ResultCode.MSG_USER_LOGIN_REQUIRED.code());
         }
@@ -620,6 +622,7 @@ public class FreePatternServiceImpl implements FreePatternService {
                             TargetType.FREE_PATTERN, patternIds);
                     content.forEach(pattern -> pattern.setIsLiked(likedIds.contains(pattern.getId())));
                 } catch (Exception e) {
+                    log.warn("Failed to retrieve collection/liked status for user {}: {}", currentUser.getId(), e.getMessage());
                     content.forEach(pattern -> {
                         pattern.setInCollection(false);
                         pattern.setIsLiked(false);

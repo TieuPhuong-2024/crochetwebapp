@@ -2,7 +2,8 @@ package org.crochet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.crochet.enums.ResultCode;
-import org.crochet.exception.IllegalArgumentException;
+import org.crochet.exception.BadRequestException;
+import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.CategoryMapper;
 import org.crochet.model.Category;
 import org.crochet.payload.request.CategoryCreationRequest;
@@ -38,7 +39,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         // Check if the category already exists as a root (parent) category
         if (categoryRepo.existsByNameAndParentIsNull(name)) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     ResultCode.ERROR_PARENT_CATEGORY_EXISTS.message(),
                     ResultCode.ERROR_PARENT_CATEGORY_EXISTS.code()
             );
@@ -57,7 +58,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (parents.isEmpty()) {
             // If no parents are provided, create a root category
             if (categoryRepo.existsByNameAndParentIsNotNull(name)) {
-                throw new IllegalArgumentException(
+                throw new BadRequestException(
                         ResultCode.ERROR_CHILD_CATEGORY_EXISTS.message(),
                         ResultCode.ERROR_CHILD_CATEGORY_EXISTS.code()
                 );
@@ -87,7 +88,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         // If no children were created, throw an error
         if (children.isEmpty()) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     ResultCode.MSG_DUPLICATE_CATEGORY_NAME_UNDER_PROVIDED_PARENTS.message(),
                     ResultCode.MSG_DUPLICATE_CATEGORY_NAME_UNDER_PROVIDED_PARENTS.code()
             );
@@ -132,7 +133,7 @@ public class CategoryServiceImpl implements CategoryService {
         // Find the existing category by ID
         Category category = findById(request.getId());
 
-        permissionService.checkUserPermission(category, "update");
+        permissionService.checkUserPermission(category);
 
         // Extract the new name from the request
         String newName = request.getName();
@@ -140,7 +141,7 @@ public class CategoryServiceImpl implements CategoryService {
         // Check if the new name already exists as a parent category (excluding current
         // if it is root)
         if (categoryRepo.existsRootByNameAndIdNot(newName, category.getId())) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     ResultCode.ERROR_PARENT_CATEGORY_EXISTS.message(),
                     ResultCode.ERROR_PARENT_CATEGORY_EXISTS.code()
             );
@@ -149,7 +150,7 @@ public class CategoryServiceImpl implements CategoryService {
         // Check if the new name already exists as a sibling category under this parent
         if (category.getParent() != null && categoryRepo.existsSiblingByName(newName,
                 category.getParent().getId(), category.getId())) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     ResultCode.ERROR_CHILD_CATEGORY_EXISTS.message(),
                     ResultCode.ERROR_CHILD_CATEGORY_EXISTS.code()
             );
@@ -203,7 +204,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public Category findById(String id) {
         return categoryRepo.findCategoryById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_CATEGORY_NOT_FOUND.message(),
                         ResultCode.MSG_CATEGORY_NOT_FOUND.code()
                 ));
@@ -218,7 +219,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void delete(String id) {
         var category = findById(id);
-        permissionService.checkUserPermission(category, "delete");
+        permissionService.checkUserPermission(category);
         categoryRepo.delete(category);
     }
 }

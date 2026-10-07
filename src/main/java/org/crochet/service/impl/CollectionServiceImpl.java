@@ -2,8 +2,8 @@ package org.crochet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.crochet.enums.ResultCode;
-import org.crochet.exception.AccessDeniedException;
 import org.crochet.exception.BadRequestException;
+import org.crochet.exception.ForbiddenException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.model.ColFrep;
 import org.crochet.model.Collection;
@@ -54,7 +54,7 @@ public class CollectionServiceImpl implements CollectionService {
                         ResultCode.MSG_COLLECTION_NOT_FOUND.code()));
 
         if (!collection.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException(
+            throw new ForbiddenException(
                     ResultCode.MSG_NO_PERMISSION_MODIFY_COLLECTION.message(),
                     ResultCode.MSG_NO_PERMISSION_MODIFY_COLLECTION.code());
         }

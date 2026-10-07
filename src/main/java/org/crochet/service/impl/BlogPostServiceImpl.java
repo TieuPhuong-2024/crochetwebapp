@@ -94,7 +94,7 @@ public class BlogPostServiceImpl implements BlogPostService {
                     .build();
         } else {
             blogPost = getById(request.getId());
-            permissionService.checkUserPermission(blogPost, "update");
+            permissionService.checkUserPermission(blogPost);
             BlogPostMapper.INSTANCE.partialUpdate(request, blogPost);
         }
         blogPostRepo.save(blogPost);
@@ -150,6 +150,7 @@ public class BlogPostServiceImpl implements BlogPostService {
                             TargetType.BLOG, blogIdsSet);
                     content.forEach(blog -> blog.setIsLiked(likedIds.contains(blog.getId())));
                 } catch (Exception e) {
+                    log.warn("Failed to retrieve liked status for user {}: {}", currentUser.getId(), e.getMessage());
                     content.forEach(blog -> blog.setIsLiked(false));
                 }
             } else {
@@ -251,6 +252,7 @@ public class BlogPostServiceImpl implements BlogPostService {
                             TargetType.BLOG, blogIdsSet);
                     posts.forEach(blog -> blog.setIsLiked(likedIds.contains(blog.getId())));
                 } catch (Exception e) {
+                    log.warn("Failed to retrieve liked status for user {}: {}", currentUser.getId(), e.getMessage());
                     posts.forEach(blog -> blog.setIsLiked(false));
                 }
             } else {
@@ -272,7 +274,7 @@ public class BlogPostServiceImpl implements BlogPostService {
     @Override
     public void deletePost(String id) {
         var blogPost = getById(id);
-        permissionService.checkUserPermission(blogPost, "delete");
+        permissionService.checkUserPermission(blogPost);
         blogPostRepo.delete(blogPost);
     }
 
