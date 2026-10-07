@@ -42,6 +42,9 @@ management:
 # Application configuration
 app:
   frontendUrl: ${FRONTEND_URL:http://localhost:3000}
+  email:
+    # brevo (Brevo REST API v3, default) or smtp (Gmail SMTP, EmailService)
+    provider: ${EMAIL_PROVIDER:brevo}
   auth:
     tokenSecret: ${TOKEN_SECRET}
     tokenExpirationMs: 259200000 # 3 days
@@ -61,6 +64,14 @@ authorize:
 # Firebase configuration
 firebase:
   serviceAccountKey: ${SERVICE_ACCOUNT_KEY}
+
+# Brevo configuration (transaction email, REST API v3)
+brevo:
+  api-key: ${BREVO_API_KEY:}
+  base-url: ${BREVO_BASE_URL:https://api.brevo.com/v3}
+  sender:
+    email: ${BREVO_SENDER_EMAIL:thamphuong.crochet@gmail.com}
+    name: ${BREVO_SENDER_NAME:Little Crochet}
 
 # Resilience4j configuration
 resilience4j:

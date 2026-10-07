@@ -30,7 +30,6 @@ public abstract class AuditTable {
     private String createdBy;
 
     @CreatedDate
-    @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
 
@@ -39,7 +38,6 @@ public abstract class AuditTable {
     private String lastModifiedBy;
 
     @LastModifiedDate
-    @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime lastModifiedDate;
 }
