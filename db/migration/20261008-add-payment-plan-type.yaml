@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-payment-transaction-plan-type
+      author: qoder
+      changes:
+        - addColumn:
+            tableName: payment_transactions
+            columns:
+              - column:
+                  name: plan_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: true
+        - sql:
+            dbms: mysql
+            sql: >-
+              UPDATE payment_transactions pt
+              JOIN subscriptions s ON s.id = pt.subscription_id
+              SET pt.plan_type = s.plan_type
+              WHERE pt.plan_type IS NULL
+        - sql:
+            dbms: mysql
+            sql: >-
+              UPDATE payment_transactions pt
+              JOIN settings s ON s.setting_key = 'PAYMENT_MONTHLY_PRICE'
+              SET pt.plan_type = 'MONTHLY'
+              WHERE pt.plan_type IS NULL
+                AND pt.currency = 'USD'
+                AND pt.amount = CAST(s.value AS DECIMAL(10, 2))
+        - sql:
+            dbms: mysql
+            sql: >-
+              UPDATE payment_transactions pt
+              JOIN settings s ON s.setting_key = 'PAYMENT_YEARLY_PRICE'
+              SET pt.plan_type = 'YEARLY'
+              WHERE pt.plan_type IS NULL
+                AND pt.currency = 'USD'
+                AND pt.amount = CAST(s.value AS DECIMAL(10, 2))
+      rollback:
+        - dropColumn:
+            tableName: payment_transactions
+            columnName: plan_type

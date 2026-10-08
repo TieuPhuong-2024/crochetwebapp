@@ -17,3 +17,6 @@ databaseChangeLog:
   - include:
       file: ../migration/20260929-add-missing-indexes.yaml
       relativeToChangelogFile: true
+  - include:
+      file: ../migration/20261008-add-payment-plan-type.yaml
+      relativeToChangelogFile: true

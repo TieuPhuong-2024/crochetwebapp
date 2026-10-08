@@ -3,6 +3,7 @@ package org.crochet.service.payment;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.exception.BadRequestException;
 import org.crochet.exception.ResourceNotFoundException;
+import org.crochet.enums.CurrencyCode;
 import org.crochet.enums.PaymentStatus;
 import org.crochet.enums.PlanType;
 import org.crochet.enums.RoleType;
@@ -50,26 +51,52 @@ public class PaymentService {
                 .collect(Collectors.toMap(PaymentProvider::getProviderName, Function.identity()));
     }
 
-    private BigDecimal getPrice(PlanType planType) {
-        String key = planType == PlanType.MONTHLY ? "PAYMENT_MONTHLY_PRICE" : "PAYMENT_YEARLY_PRICE";
-        String defaultValue = planType == PlanType.MONTHLY ? "9.99" : "99.99";
+    private BigDecimal getPrice(PlanType planType, CurrencyCode currency) {
+        String baseKey = planType == PlanType.MONTHLY ? "PAYMENT_MONTHLY_PRICE" : "PAYMENT_YEARLY_PRICE";
+        String key = currency == CurrencyCode.USD ? baseKey : baseKey + "_" + currency.getValue();
+        String defaultValue = currency == CurrencyCode.USD
+                ? (planType == PlanType.MONTHLY ? "9.99" : "99.99")
+                : null;
 
         Settings setting = settingsUtil.getSettingsMap().get(key);
         String value = setting != null ? setting.getValue() : defaultValue;
+        if (value == null) {
+            throw new BadRequestException("Subscription price is not configured for " + currency.getValue());
+        }
 
         try {
             return new BigDecimal(value);
         } catch (NumberFormatException e) {
             log.error("Invalid price format in settings for key {}: {}", key, value);
-            return new BigDecimal(defaultValue);
+            if (defaultValue != null) {
+                return new BigDecimal(defaultValue);
+            }
+            throw new BadRequestException("Invalid subscription price for " + currency.getValue());
         }
     }
     
     public Map<String, BigDecimal> getPrices() {
         return Map.of(
-            "MONTHLY", getPrice(PlanType.MONTHLY),
-            "YEARLY", getPrice(PlanType.YEARLY)
+            "MONTHLY", getPrice(PlanType.MONTHLY, CurrencyCode.USD),
+            "YEARLY", getPrice(PlanType.YEARLY, CurrencyCode.USD)
         );
+    }
+
+    private PlanType resolvePlanType(PaymentTransaction transaction) {
+        if (transaction.getPlanType() != null) {
+            return transaction.getPlanType();
+        }
+
+        // Compatibility path for pending transactions created before plan_type existed.
+        BigDecimal monthlyPrice = getPrice(PlanType.MONTHLY, transaction.getCurrency());
+        BigDecimal yearlyPrice = getPrice(PlanType.YEARLY, transaction.getCurrency());
+        if (transaction.getAmount().compareTo(monthlyPrice) == 0) {
+            return PlanType.MONTHLY;
+        }
+        if (transaction.getAmount().compareTo(yearlyPrice) == 0) {
+            return PlanType.YEARLY;
+        }
+        throw new BadRequestException("Cannot determine plan for legacy payment; create a new payment order");
     }
 
     @Transactional
@@ -92,10 +119,11 @@ public class PaymentService {
             throw new BadRequestException("Payment method not supported");
         }
 
-        BigDecimal amount = getPrice(planType);
+        CurrencyCode currency = provider.getCurrency();
+        BigDecimal amount = getPrice(planType, currency);
 
         // Call provider to create order
-        PaymentProvider.PaymentOrderResponse orderResponse = provider.createOrder(amount, "USD", returnUrl, cancelUrl);
+        PaymentProvider.PaymentOrderResponse orderResponse = provider.createOrder(amount, currency, returnUrl, cancelUrl);
 
         // Save pending transaction
         PaymentTransaction transaction = PaymentTransaction.builder()
@@ -103,7 +131,8 @@ public class PaymentService {
                 .paymentMethod(paymentMethod.toUpperCase())
                 .providerOrderId(orderResponse.orderId())
                 .amount(amount)
-                .currency("USD")
+                .currency(currency)
+                .planType(planType)
                 .status(PaymentStatus.PENDING)
                 .build();
         paymentTransactionRepository.save(transaction);
@@ -120,6 +149,7 @@ public class PaymentService {
             throw new BadRequestException("Payment is already processed");
         }
 
+        PlanType planType = resolvePlanType(transaction);
         PaymentProvider provider = paymentProviders.get(transaction.getPaymentMethod());
         PaymentProvider.PaymentCaptureResponse captureResponse = provider.captureOrder(orderId);
 
@@ -140,13 +170,7 @@ public class PaymentService {
 
             // Create/Update subscription
             User user = transaction.getUser();
-            BigDecimal monthlyPrice = getPrice(PlanType.MONTHLY);
-            BigDecimal yearlyPrice = getPrice(PlanType.YEARLY);
-
-            BigDecimal diffMonthly = transaction.getAmount().subtract(monthlyPrice).abs();
-            BigDecimal diffYearly = transaction.getAmount().subtract(yearlyPrice).abs();
-
-            PlanType planType = diffMonthly.compareTo(diffYearly) < 0 ? PlanType.MONTHLY : PlanType.YEARLY;
+            transaction.setPlanType(planType);
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime endDate = planType == PlanType.MONTHLY ? now.plusMonths(1) : now.plusYears(1);
 

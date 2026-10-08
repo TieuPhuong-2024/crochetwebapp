@@ -13,7 +13,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.crochet.enums.CurrencyCode;
 import org.crochet.enums.PaymentStatus;
+import org.crochet.enums.PlanType;
 
 import java.math.BigDecimal;
 
@@ -46,8 +48,13 @@ public class PaymentTransaction extends BaseEntity {
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "currency", nullable = false, length = 10)
-    private String currency; // e.g., USD
+    private CurrencyCode currency;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "plan_type", length = 50)
+    private PlanType planType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)

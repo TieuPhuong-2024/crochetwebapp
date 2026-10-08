@@ -19,6 +19,7 @@ import com.paypal.sdk.models.PurchaseUnitRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.crochet.enums.CurrencyCode;
 import org.crochet.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +35,7 @@ public class PayPalPaymentProvider implements PaymentProvider {
     private final PaypalServerSdkClient payPalHttpClient;
 
     @Override
-    public PaymentOrderResponse createOrder(BigDecimal amount, String currency, String returnUrl, String cancelUrl) {
+    public PaymentOrderResponse createOrder(BigDecimal amount, CurrencyCode currency, String returnUrl, String cancelUrl) {
         OrderApplicationContext applicationContext = new OrderApplicationContext.Builder()
                 .returnUrl(returnUrl)
                 .cancelUrl(cancelUrl)
@@ -44,7 +45,7 @@ public class PayPalPaymentProvider implements PaymentProvider {
 
         List<PurchaseUnitRequest> purchaseUnitRequests = new ArrayList<>();
         PurchaseUnitRequest purchaseUnitRequest = new PurchaseUnitRequest.Builder()
-                .amount(new AmountWithBreakdown.Builder(currency, amount.toString()).build())
+                .amount(new AmountWithBreakdown.Builder(currency.getValue(), amount.toString()).build())
                 .build();
         purchaseUnitRequests.add(purchaseUnitRequest);
 
@@ -102,5 +103,10 @@ public class PayPalPaymentProvider implements PaymentProvider {
     @Override
     public String getProviderName() {
         return "PAYPAL";
+    }
+
+    @Override
+    public CurrencyCode getCurrency() {
+        return CurrencyCode.USD;
     }
 }
