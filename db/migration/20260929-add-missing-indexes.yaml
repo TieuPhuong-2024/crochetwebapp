@@ -1,0 +1,383 @@
+databaseChangeLog:
+  # ============================================================================
+  # Adds indexes for queries that currently cause full table scans or filesorts.
+  #
+  # Evidence (EXPLAIN on defaultdb, MySQL 8.0.45):
+  #   payment_transactions WHERE provider_order_id  -> type=ALL, possible_keys=NULL
+  #   subscriptions WHERE status AND end_date       -> type=ALL, possible_keys=NULL
+  #   free_pattern WHERE is_home                    -> type=ALL (895 rows scanned)
+  #   product ORDER BY created_date DESC            -> type=ALL + Using filesort
+  #   comment WHERE post_id AND parent_id IS NULL   -> Using filesort
+  #   comment WHERE user_id ORDER BY created_date   -> Using filesort
+  #   notifications WHERE receiver_id ORDER BY ...  -> Using filesort
+  #   likes WHERE target_id AND target_type         -> Using index for skip scan
+  #   category WHERE name AND parent_id             -> 27 rows scanned, 10% filtered
+  #
+  # Requested by repository methods listed in each changeSet comment.
+  # ============================================================================
+
+  # --------------------------------------------------------------------------
+  # payment_transactions - PaymentTransactionRepository.findByProviderOrderId
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-payment-provider-order-id
+      author: tieuphuongcrochet
+      comment: "payment_transactions: index provider_order_id (findByProviderOrderId currently full-scans)"
+      changes:
+        # provider_order_id is looked up as Optional (single result), so it is
+        # unique by contract. Verified unique in the live data (6/6 distinct).
+        - createIndex:
+            indexName: uc_payment_provider_order_id
+            tableName: payment_transactions
+            unique: true
+            columns:
+              - column:
+                  name: provider_order_id
+      rollback:
+        - dropIndex:
+            indexName: uc_payment_provider_order_id
+            tableName: payment_transactions
+
+  # --------------------------------------------------------------------------
+  # subscriptions - SubscriptionRepository, SubscriptionSchedule
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-subscriptions
+      author: tieuphuongcrochet
+      comment: "subscriptions: composite indexes for findByUserIdAndStatus and findByStatusAndEndDateBefore"
+      changes:
+        # SubscriptionRepository.findByUserIdAndStatus(userId, status)
+        - createIndex:
+            indexName: idx_subscriptions_user_status
+            tableName: subscriptions
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: status
+        # SubscriptionSchedule.expireSubscriptions() runs hourly with
+        # findByStatusAndEndDateBefore(ACTIVE, now). Without this index every
+        # run scans the whole table inside a write transaction.
+        - createIndex:
+            indexName: idx_subscriptions_status_end_date
+            tableName: subscriptions
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: end_date
+      rollback:
+        - dropIndex:
+            indexName: idx_subscriptions_user_status
+            tableName: subscriptions
+        - dropIndex:
+            indexName: idx_subscriptions_status_end_date
+            tableName: subscriptions
+
+  # --------------------------------------------------------------------------
+  # free_pattern - homepage + default listing sort
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-free-pattern-home-created
+      author: tieuphuongcrochet
+      comment: "free_pattern: (is_home, created_date DESC) for findLimitedNumFreePattern"
+      changes:
+        # FreePatternRepository.findLimitedNumFreePattern filters is_home = TRUE
+        # and is sorted by createdDate DESC (AppConstant.DEFAULT_SORT_BY).
+        # Currently a full scan of 895 rows on every homepage load.
+        - createIndex:
+            indexName: idx_free_pattern_home_created
+            tableName: free_pattern
+            columns:
+              - column:
+                  name: is_home
+              - column:
+                  descending: true
+                  name: created_date
+        # Default listing sort for the paginated free pattern endpoints.
+        - createIndex:
+            indexName: idx_free_pattern_created_date
+            tableName: free_pattern
+            columns:
+              - column:
+                  descending: true
+                  name: created_date
+      rollback:
+        - dropIndex:
+            indexName: idx_free_pattern_home_created
+            tableName: free_pattern
+        - dropIndex:
+            indexName: idx_free_pattern_created_date
+            tableName: free_pattern
+
+  # --------------------------------------------------------------------------
+  # product - homepage + ProductRepository.getProductIds
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-product-home-created
+      author: tieuphuongcrochet
+      comment: "product: (is_home, created_date DESC) and (created_date DESC)"
+      changes:
+        # ProductRepository.findLimitedNumProduct filters is_home = TRUE.
+        - createIndex:
+            indexName: idx_product_home_created
+            tableName: product
+            columns:
+              - column:
+                  name: is_home
+              - column:
+                  descending: true
+                  name: created_date
+        # ProductRepository.getProductIds does ORDER BY createdDate DESC.
+        - createIndex:
+            indexName: idx_product_created_date
+            tableName: product
+            columns:
+              - column:
+                  descending: true
+                  name: created_date
+      rollback:
+        - dropIndex:
+            indexName: idx_product_home_created
+            tableName: product
+        - dropIndex:
+            indexName: idx_product_created_date
+            tableName: product
+
+  # --------------------------------------------------------------------------
+  # blog_post - homepage + BlogPostRepository.getBlogIds
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-blog-post-home-created
+      author: tieuphuongcrochet
+      comment: "blog_post: (home, created_date DESC) and (created_date DESC)"
+      changes:
+        # BlogPostRepository.findLimitedNumPosts filters home = TRUE.
+        - createIndex:
+            indexName: idx_blog_post_home_created
+            tableName: blog_post
+            columns:
+              - column:
+                  name: home
+              - column:
+                  descending: true
+                  name: created_date
+        # BlogPostRepository.getBlogIds does ORDER BY createdDate DESC.
+        - createIndex:
+            indexName: idx_blog_post_created_date
+            tableName: blog_post
+            columns:
+              - column:
+                  descending: true
+                  name: created_date
+      rollback:
+        - dropIndex:
+            indexName: idx_blog_post_home_created
+            tableName: blog_post
+        - dropIndex:
+            indexName: idx_blog_post_created_date
+            tableName: blog_post
+
+  # --------------------------------------------------------------------------
+  # comment - CommentRepository paging + counts + recent comments
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-comment
+      author: tieuphuongcrochet
+      comment: "comment: composite indexes removing filesort for post/product/free-pattern paging and recent comments"
+      changes:
+        # findByBlogPostIdAndParentIsNullOrderByCreatedDateDesc + countByBlogPostIdAndParentIsNull
+        # findByBlogPostIdOrderByCreatedDateDesc + countByBlogPostId
+        - createIndex:
+            indexName: idx_comment_post_parent_created
+            tableName: comment
+            columns:
+              - column:
+                  name: post_id
+              - column:
+                  name: parent_id
+              - column:
+                  descending: true
+                  name: created_date
+        # findByProductIdAndParentIsNullOrderByCreatedDateDesc + countByProductIdAndParentIsNull
+        - createIndex:
+            indexName: idx_comment_product_parent_created
+            tableName: comment
+            columns:
+              - column:
+                  name: product_id
+              - column:
+                  name: parent_id
+              - column:
+                  descending: true
+                  name: created_date
+        # findByFreePatternIdAndParentIsNullOrderByCreatedDateDesc + countByFreePatternIdAndParentIsNull
+        - createIndex:
+            indexName: idx_comment_frep_parent_created
+            tableName: comment
+            columns:
+              - column:
+                  name: free_pattern_id
+              - column:
+                  name: parent_id
+              - column:
+                  descending: true
+                  name: created_date
+        # getRecentCommentsByUserId: ORDER BY created_date DESC LIMIT 5
+        - createIndex:
+            indexName: idx_comment_user_created
+            tableName: comment
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  descending: true
+                  name: created_date
+      rollback:
+        - dropIndex:
+            indexName: idx_comment_post_parent_created
+            tableName: comment
+        - dropIndex:
+            indexName: idx_comment_product_parent_created
+            tableName: comment
+        - dropIndex:
+            indexName: idx_comment_frep_parent_created
+            tableName: comment
+        - dropIndex:
+            indexName: idx_comment_user_created
+            tableName: comment
+
+  # --------------------------------------------------------------------------
+  # notifications - NotificationRepository
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-notifications
+      author: tieuphuongcrochet
+      comment: "notifications: (receiver_id, created_at DESC) and (receiver_id, is_read)"
+      changes:
+        # findByReceiverOrderByCreatedAtDesc - paging the notification list
+        - createIndex:
+            indexName: idx_notifications_receiver_created
+            tableName: notifications
+            columns:
+              - column:
+                  name: receiver_id
+              - column:
+                  descending: true
+                  name: created_at
+        # countUnreadNotifications: receiver + is_read = false
+        - createIndex:
+            indexName: idx_notifications_receiver_read
+            tableName: notifications
+            columns:
+              - column:
+                  name: receiver_id
+              - column:
+                  name: is_read
+      rollback:
+        - dropIndex:
+            indexName: idx_notifications_receiver_created
+            tableName: notifications
+        - dropIndex:
+            indexName: idx_notifications_receiver_read
+            tableName: notifications
+
+  # --------------------------------------------------------------------------
+  # likes - LikeRepository.countByTargetIdAndTargetType
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-likes-target
+      author: tieuphuongcrochet
+      comment: "likes: (target_id, target_type) so per-target like counts stop relying on skip scan"
+      changes:
+        # countByTargetIdAndTargetType. The existing unique index leads with
+        # user_id, so it cannot serve this predicate; MySQL falls back to
+        # "Using index for skip scan" which degrades as the table grows.
+        - createIndex:
+            indexName: idx_likes_target_type
+            tableName: likes
+            columns:
+              - column:
+                  name: target_id
+              - column:
+                  name: target_type
+      rollback:
+        - dropIndex:
+            indexName: idx_likes_target_type
+            tableName: likes
+
+  # --------------------------------------------------------------------------
+  # category - CategoryRepo name lookups
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-category-name-parent
+      author: tieuphuongcrochet
+      comment: "category: (name, parent_id) for existsByNameAndParent* and sibling checks"
+      changes:
+        # existsByNameAndParentIsNull / existsByNameAndParentIsNotNull /
+        # existsRootByNameAndIdNot / existsSiblingByName /
+        # findParentIdsDirectlyHavingChildName all filter on name.
+        # Today the planner uses (parent_id) and filters afterwards
+        # (27 rows examined, 10% filtered).
+        - createIndex:
+            indexName: idx_category_name_parent
+            tableName: category
+            columns:
+              - column:
+                  name: name
+              - column:
+                  name: parent_id
+      rollback:
+        - dropIndex:
+            indexName: idx_category_name_parent
+            tableName: category
+
+  # --------------------------------------------------------------------------
+  # collection - CollectionRepo.getAllByUserId ordering
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-collection-user-created
+      author: tieuphuongcrochet
+      comment: "collection: (user_id, created_date DESC) to remove Using temporary; Using filesort"
+      changes:
+        # CollectionRepo.getAllByUserId: WHERE user_id = ? ORDER BY created_date DESC.
+        # The method is @Cacheable, so this is a lower priority than the others
+        # but still removes a temporary table + filesort on cache misses.
+        - createIndex:
+            indexName: idx_collection_user_created
+            tableName: collection
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  descending: true
+                  name: created_date
+      rollback:
+        - dropIndex:
+            indexName: idx_collection_user_created
+            tableName: collection
+
+  # --------------------------------------------------------------------------
+  # collection_free_pattern - ColFrepRepo ordering and avatar lookup
+  # --------------------------------------------------------------------------
+  - changeSet:
+      id: 20260929-add-index-collection-free-pattern-created
+      author: tieuphuongcrochet
+      comment: "collection_free_pattern: (collection_id, created_date DESC) for ColFrepRepo ordering"
+      changes:
+        # ColFrepRepo.findFreePatternsByCollectionId and
+        # findFirstAvatarUrlByCollectionId both filter collection_id and
+        # ORDER BY created_date DESC. Currently filesort.
+        - createIndex:
+            indexName: idx_collection_free_pattern_collection_created
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: collection_id
+              - column:
+                  descending: true
+                  name: created_date
+      rollback:
+        - dropIndex:
+            indexName: idx_collection_free_pattern_collection_created
+            tableName: collection_free_pattern

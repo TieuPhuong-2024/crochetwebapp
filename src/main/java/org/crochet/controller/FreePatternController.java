@@ -144,4 +144,15 @@ public class FreePatternController {
         var res = freePatternService.existByFreePatternAndUser(id, user);
         return ResponseUtil.success(res);
     }
+
+    @Operation(summary = "Check if a free pattern is liked by current user")
+    @ApiResponse(responseCode = "200", description = "Like status check result",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = Boolean.class)))
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{id}/is-liked")
+    public ResponseData<Boolean> isLiked(@PathVariable("id") String id, @CurrentUser User user) {
+        var res = freePatternService.existLikeByFreePatternAndUser(id, user);
+        return ResponseUtil.success(res);
+    }
 }

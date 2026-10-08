@@ -24,6 +24,9 @@ public class BlogCategory extends BaseEntity {
     @Column(name = "name", nullable = false, unique = true)
     private String name;
 
+    @Column(name = "name_en")
+    private String nameEn;
+
     @OneToMany(mappedBy = "blogCategory")
     @JsonManagedReference
     private Set<BlogPost> blogPosts;

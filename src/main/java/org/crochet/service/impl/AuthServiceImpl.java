@@ -28,6 +28,7 @@ import org.crochet.util.ObjectUtils;
 import org.crochet.util.TokenUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -45,6 +46,9 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenService jwtTokenService;
     private final TokenBlacklistService tokenBlacklistService;
+
+    @Value("${app.frontendUrl}")
+    private String frontendUrl;
 
     /**
      * Constructor
@@ -304,9 +308,7 @@ public class AuthServiceImpl implements AuthService {
         // Build password reset token
         var passwordResetToken = passwordResetTokenService.createOrUpdatePasswordResetToken(user);
 
-        // Build the base URI
-        String baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().toUriString();
-        String link = baseUri + "/api/v1/auth/reset-password?passwordResetToken=" + passwordResetToken.getToken();
+        String link = frontendUrl + "/reset-password?token=" + passwordResetToken.getToken();
 
         // Send password reset link to email
         var passwordResetLink =

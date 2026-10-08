@@ -3,14 +3,11 @@ package org.crochet.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -32,8 +29,6 @@ public abstract class AuditTable {
     private String createdBy;
 
     @CreatedDate
-    @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
 
@@ -42,8 +37,6 @@ public abstract class AuditTable {
     private String lastModifiedBy;
 
     @LastModifiedDate
-    @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private LocalDateTime lastModifiedDate;
 }

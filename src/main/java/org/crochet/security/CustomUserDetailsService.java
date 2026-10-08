@@ -1,7 +1,7 @@
 package org.crochet.security;
 
 import org.crochet.enums.ResultCode;
-import org.crochet.exception.ResourceNotFoundException;
+import org.crochet.exception.EmailVerificationException;
 import org.crochet.model.User;
 import org.crochet.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,12 +37,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Retrieve the user by ID from the UserRepository
         User user = userRepository.findById(username)
-                .orElseThrow(() -> new ResourceNotFoundException(ResultCode.MSG_USER_LOGIN_REQUIRED.message(),
-                        ResultCode.MSG_USER_LOGIN_REQUIRED.code()));
+                .orElseThrow(() -> new UsernameNotFoundException(ResultCode.MSG_USER_NOT_FOUND.message() + ": " + username));
 
         // Check if the user is email verified
         if (!user.isEmailVerified()) {
-            throw new ResourceNotFoundException(ResultCode.MSG_EMAIL_NOT_VERIFIED.message(),
+            throw new EmailVerificationException(ResultCode.MSG_EMAIL_NOT_VERIFIED.message(),
                     ResultCode.MSG_EMAIL_NOT_VERIFIED.code());
         }
 

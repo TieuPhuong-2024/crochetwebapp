@@ -11,9 +11,9 @@ spring:
       client:
         registration:
           google:
-            clientId: ${GOOGLE_CLIENT_ID}
-            clientSecret: ${GOOGLE_CLIENT_SECRET}
-            redirectUri: '{baseUrl}/login/oauth2/code/{registrationId}'
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: '{baseUrl}/login/oauth2/code/{registrationId}'
             scope:
               - email
               - profile
@@ -41,6 +41,10 @@ management:
 
 # Application configuration
 app:
+  frontendUrl: ${FRONTEND_URL:http://localhost:3000}
+  email:
+    # brevo (Brevo REST API v3, default) or smtp (Gmail SMTP, EmailService)
+    provider: ${EMAIL_PROVIDER:brevo}
   auth:
     tokenSecret: ${TOKEN_SECRET}
     tokenExpirationMs: 259200000 # 3 days
@@ -61,9 +65,17 @@ authorize:
 firebase:
   serviceAccountKey: ${SERVICE_ACCOUNT_KEY}
 
+# Brevo configuration (transaction email, REST API v3)
+brevo:
+  api-key: ${BREVO_API_KEY:}
+  base-url: ${BREVO_BASE_URL:https://api.brevo.com/v3}
+  sender:
+    email: ${BREVO_SENDER_EMAIL:thamphuong.crochet@gmail.com}
+    name: ${BREVO_SENDER_NAME:Little Crochet}
+
 # Resilience4j configuration
 resilience4j:
-  ratelimiter:
+  rate-limiter:
     instances:
       passwordResetRateLimiter:
         limitForPeriod: 1
@@ -80,3 +92,9 @@ resilience4j:
         waitDuration: 1s
         retryExceptions:
           - org.springframework.mail.MailException
+
+# PayPal configuration
+paypal:
+  client-id: ${PAYPAL_CLIENT_ID}
+  client-secret: ${PAYPAL_CLIENT_SECRET}
+  mode: ${PAYPAL_MODE:sandbox}

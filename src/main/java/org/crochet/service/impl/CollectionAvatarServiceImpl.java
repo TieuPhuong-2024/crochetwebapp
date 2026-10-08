@@ -32,13 +32,8 @@ public class CollectionAvatarServiceImpl implements CollectionAvatarService {
 
     @Override
     public void updateAvatarFromNextPattern(Collection collection) {
-        var remainingPatterns = colFrepRepo.findFreePatternsByCollectionId(collection.getId());
-        if (!remainingPatterns.isEmpty()) {
-            updateAvatar(collection, remainingPatterns.getFirst());
-        } else {
-            // Clear the avatar when no patterns remain in collection
-            collection.setAvatar(null);
-            collectionRepo.save(collection);
-        }
+        var avatarUrl = colFrepRepo.findFirstAvatarUrlByCollectionId(collection.getId());
+        collection.setAvatar(avatarUrl.orElse(null));
+        collectionRepo.save(collection);
     }
 }

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
 import org.crochet.event.CommentCreatedEvent;
 import org.crochet.exception.ResourceNotFoundException;
+import org.crochet.exception.UnauthorizedException;
 import org.crochet.mapper.CommentMapper;
 import org.crochet.model.BlogPost;
 import org.crochet.model.Comment;
@@ -67,7 +68,7 @@ public class CommentServiceImpl implements CommentService {
     public CommentResponse createOrUpdate(CommentRequest request) {
         User user = SecurityUtils.getCurrentUser();
         if (user == null) {
-            throw new ResourceNotFoundException(
+            throw new UnauthorizedException(
                     ResultCode.MSG_USER_LOGIN_REQUIRED.message(),
                     ResultCode.MSG_USER_LOGIN_REQUIRED.code()
             );
