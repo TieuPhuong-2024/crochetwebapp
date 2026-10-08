@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -148,6 +150,13 @@ public class ApiExceptionHandler {
     public ResponseData<Object> handleUsernameNotFoundException(UsernameNotFoundException ex, HttpServletRequest request) {
         log.warn("User not found at [{}]: {}", request.getRequestURI(), ex.getMessage());
         return ResponseUtil.error(ResultCode.MSG_USER_NOT_FOUND.code(), ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ResponseData<Object> handleNoHandlerFound(Exception ex, HttpServletRequest request) {
+        log.warn("No handler found at [{}]: {}", request.getRequestURI(), ex.getMessage());
+        return ResponseUtil.error(HttpStatus.NOT_FOUND, "Resource not found");
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
