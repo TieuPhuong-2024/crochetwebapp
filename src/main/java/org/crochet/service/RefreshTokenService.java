@@ -9,6 +9,8 @@ public interface RefreshTokenService {
 
     Optional<RefreshToken> findByToken(String token);
 
+    Optional<RefreshToken> findActiveToken(String userId);
+
     RefreshToken verifyExpiration(RefreshToken token);
 
     void revokeByToken(String token);

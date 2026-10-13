@@ -46,6 +46,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      */
     @Transactional
     @Override
+    public Optional<RefreshToken> findActiveToken(String userId) {
+        return refreshTokenRepo.findActiveByUserId(userId).stream().findFirst();
+    }
+
+    @Override
     public RefreshToken createRefreshToken(String username) {
         var user = userRepository.findById(username)
                 .orElseThrow(() -> new ResourceNotFoundException(ResultCode.MSG_USER_NOT_FOUND_WITH_EMAIL.message(),

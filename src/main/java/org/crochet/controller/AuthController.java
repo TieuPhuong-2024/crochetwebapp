@@ -7,15 +7,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.crochet.enums.ResultCode;
+import org.crochet.exception.UnauthorizedException;
 import org.crochet.payload.request.LoginRequest;
 import org.crochet.payload.request.PasswordResetRequest;
+import org.crochet.payload.request.RefreshTokenRequest;
 import org.crochet.payload.request.SignUpRequest;
 import org.crochet.payload.response.AuthResponse;
 import org.crochet.payload.response.ResponseData;
 import org.crochet.payload.response.TokenResponse;
 import org.crochet.service.AuthService;
 import org.crochet.util.ResponseUtil;
+import org.crochet.util.TokenUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -105,9 +111,9 @@ public class AuthController {
             description = "Access token refreshed successfully",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenResponse.class)))
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/refresh-token")
-    public ResponseData<TokenResponse> refreshToken(@RequestParam("refreshToken") String refreshToken) {
-        var tokenResponse = authService.refreshToken(refreshToken);
+    @PostMapping("/refresh-token")
+    public ResponseData<TokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        var tokenResponse = authService.refreshToken(refreshTokenRequest.getRefreshToken());
         return ResponseUtil.success(tokenResponse);
     }
 
@@ -124,7 +130,15 @@ public class AuthController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/me")
-    public ResponseData<AuthResponse> getUserInfo(@RequestParam("accessToken") String accessToken) {
+    public ResponseData<AuthResponse> getUserInfo(HttpServletRequest request) {
+        var accessToken = TokenUtils.getJwtFromAuthorizationHeader(request);
+        if (!StringUtils.hasText(accessToken)) {
+            throw new UnauthorizedException("Missing Authorization bearer token");
+        }
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            throw new UnauthorizedException("Invalid access token");
+        }
         var res = authService.getUserInfo(accessToken);
         return ResponseUtil.success(res);
     }

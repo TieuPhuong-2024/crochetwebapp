@@ -423,9 +423,14 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse getUserInfo(String token) {
         var username = jwtTokenService.extractUsername(token);
         var user = userService.getDetail(username);
+        // OAuth logins never persisted a refresh token; create one on demand so
+        // server-side token refresh works for those sessions too.
+        var refreshToken = refreshTokenService.findActiveToken(user.getId())
+                .orElseGet(() -> refreshTokenService.createRefreshToken(user.getId()));
         return AuthResponse.builder()
                 .userId(user.getId())
                 .accessToken(token)
+                .refreshToken(refreshToken.getToken())
                 .role(user.getRole().getValue())
                 .email(user.getEmail())
                 .imageUrl(user.getImageUrl())
