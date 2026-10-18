@@ -24,5 +24,5 @@ public interface AuthService {
 
     void logout(HttpServletRequest request);
 
-    AuthResponse getUserInfo(String token);
+    AuthResponse getCurrentUser(HttpServletRequest request);
 }

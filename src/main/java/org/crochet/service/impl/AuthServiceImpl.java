@@ -28,8 +28,10 @@ import org.crochet.service.TokenBlacklistService;
 import org.crochet.service.UserService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.TokenUtils;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -415,20 +417,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse getUserInfo(String token) {
-        var username = jwtTokenService.extractUsername(token);
+    public AuthResponse getCurrentUser(HttpServletRequest request) {
+        var accessToken = TokenUtils.getJwtFromAuthorizationHeader(request);
+        if (!StringUtils.hasText(accessToken)) {
+            throw new UnauthorizedException("Missing Authorization bearer token");
+        }
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            throw new UnauthorizedException("Invalid access token");
+        }
+        var username = jwtTokenService.extractUsername(accessToken);
         var user = userService.getDetail(username);
-        // OAuth logins never persisted a refresh token; create one on demand so
-        // server-side token refresh works for those sessions too.
-        var refreshToken = refreshTokenService.findActiveToken(user.getId())
-                .orElseGet(() -> refreshTokenService.createRefreshToken(user.getId()));
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .accessToken(token)
-                .refreshToken(refreshToken.getToken())
-                .role(user.getRole().getValue())
-                .email(user.getEmail())
-                .imageUrl(user.getImageUrl())
-                .build();
+        var refreshToken = refreshTokenService.ensureActiveRefreshToken(user.getId());
+        return UserMapper.INSTANCE.toAuthResponse(user, accessToken, refreshToken.getToken());
     }
 }

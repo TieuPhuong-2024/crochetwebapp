@@ -5,7 +5,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.crochet.exception.BadRequestException;
 import org.crochet.properties.AppProperties;
+import org.crochet.model.User;
 import org.crochet.service.JwtTokenService;
+import org.crochet.service.RefreshTokenService;
 import org.crochet.util.CookieUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -24,9 +26,8 @@ import static org.crochet.security.oauth2.OAuth2CookieRepository.REDIRECT_URI_PA
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtTokenService jwtTokenService;
-
+    private final RefreshTokenService refreshTokenService;
     private final AppProperties appProperties;
-
     private final OAuth2CookieRepository OAuth2CookieRepository;
 
     /**
@@ -37,9 +38,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
      * @param OAuth2CookieRepository HttpCookieOAuth2AuthorizationRequestRepository
      */
     OAuth2AuthenticationSuccessHandler(JwtTokenService jwtTokenService,
+                                       RefreshTokenService refreshTokenService,
                                        AppProperties appProperties,
                                        OAuth2CookieRepository OAuth2CookieRepository) {
         this.jwtTokenService = jwtTokenService;
+        this.refreshTokenService = refreshTokenService;
         this.appProperties = appProperties;
         this.OAuth2CookieRepository = OAuth2CookieRepository;
     }
@@ -86,6 +89,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         String targetUrl = redirectUri.isEmpty() ? getDefaultTargetUrl() : redirectUri;
         String token = jwtTokenService.createToken(authentication);
+        var user = (User) authentication.getPrincipal();
+        refreshTokenService.ensureActiveRefreshToken(user.getId());
 
         return UriComponentsBuilder.fromUriString(targetUrl)
                 .queryParam("token", token)

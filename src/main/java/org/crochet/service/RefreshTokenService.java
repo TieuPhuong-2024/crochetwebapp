@@ -11,9 +11,9 @@ public interface RefreshTokenService {
 
     Optional<RefreshToken> findActiveToken(String userId);
 
-    RefreshToken verifyExpiration(RefreshToken token);
+    RefreshToken ensureActiveRefreshToken(String userId);
 
-    void revokeByToken(String token);
+    RefreshToken verifyExpiration(RefreshToken token);
 
     void deleteExpiredRefreshTokens();
 }

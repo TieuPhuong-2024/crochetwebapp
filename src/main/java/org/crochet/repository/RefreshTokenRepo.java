@@ -24,13 +24,8 @@ public interface RefreshTokenRepo extends JpaRepository<RefreshToken, String> {
             """)
     List<RefreshToken> findAllValidRefreshTokenByUser(User user);
 
-    @Query("""
-            select r
-            from RefreshToken r
-            where r.user.id = ?1
-            and r.expiresAt > current_timestamp
-            and r.revoked = false
-            order by r.expiresAt desc
-            """)
-    List<RefreshToken> findActiveByUserId(String userId);
+    @EntityGraph(attributePaths = {"user"})
+    Optional<RefreshToken> findFirstByUser_IdAndRevokedFalseAndExpiresAtAfterOrderByExpiresAtDesc(
+            String userId,
+            java.time.LocalDateTime now);
 }

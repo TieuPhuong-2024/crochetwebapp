@@ -38,19 +38,22 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         this.appProps = appProps;
     }
 
-    /**
-     * Create a refresh token for a user
-     *
-     * @param username String
-     * @return RefreshToken
-     */
-    @Transactional
     @Override
+    @Transactional(readOnly = true)
     public Optional<RefreshToken> findActiveToken(String userId) {
-        return refreshTokenRepo.findActiveByUserId(userId).stream().findFirst();
+        return refreshTokenRepo.findFirstByUser_IdAndRevokedFalseAndExpiresAtAfterOrderByExpiresAtDesc(
+                userId,
+                LocalDateTime.now());
     }
 
     @Override
+    @Transactional
+    public RefreshToken ensureActiveRefreshToken(String userId) {
+        return findActiveToken(userId).orElseGet(() -> createRefreshToken(userId));
+    }
+
+    @Override
+    @Transactional
     public RefreshToken createRefreshToken(String username) {
         var user = userRepository.findById(username)
                 .orElseThrow(() -> new ResourceNotFoundException(ResultCode.MSG_USER_NOT_FOUND_WITH_EMAIL.message(),
@@ -89,20 +92,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                     ResultCode.MSG_REFRESH_TOKEN_EXPIRED.code());
         }
         return token;
-    }
-
-    /**
-     * Delete a refresh token
-     *
-     * @param token RefreshToken
-     */
-    @Override
-    public void revokeByToken(String token) {
-        var refreshToken = findByToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException(ResultCode.MSG_REFRESH_TOKEN_NOT_FOUND.message(),
-                        ResultCode.MSG_REFRESH_TOKEN_NOT_FOUND.code()));
-        refreshToken.setRevoked(true);
-        refreshTokenRepo.save(refreshToken);
     }
 
     /**
