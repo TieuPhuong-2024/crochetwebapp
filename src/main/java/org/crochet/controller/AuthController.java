@@ -86,8 +86,8 @@ public class AuthController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/password-reset-request")
     public ResponseData<String> resetPasswordRequest(@RequestParam("email") String email) {
-        var response = authService.resetPasswordLink(email);
-        return ResponseUtil.success(response);
+        authService.resetPasswordLink(email);
+        return ResponseUtil.success(ResultCode.MSG_RESET_PASSWORD_SUCCESS.message());
     }
 
     @Operation(summary = "Reset password")

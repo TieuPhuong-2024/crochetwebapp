@@ -7,6 +7,7 @@ import org.crochet.enums.ResultCode;
 import org.crochet.exception.EmailVerificationException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.exception.TokenException;
+import org.crochet.exception.TooManyRequestsException;
 import org.crochet.exception.UnauthorizedException;
 import org.crochet.mapper.UserMapper;
 import org.crochet.model.ConfirmationToken;
@@ -292,13 +293,12 @@ public class AuthServiceImpl implements AuthService {
      * Reset password link
      *
      * @param email Email
-     * @return ApiResponse
      * @throws ResourceNotFoundException User not found
      */
     @Transactional
     @Override
     @RateLimiter(name = "passwordResetRateLimiter", fallbackMethod = "resetPasswordLinkFallback")
-    public String resetPasswordLink(String email) {
+    public void resetPasswordLink(String email) {
         // Check user
         User user = userService.getByEmail(email);
 
@@ -315,8 +315,6 @@ public class AuthServiceImpl implements AuthService {
                         ResultCode.MSG_RESET_PASSWORD_LINK.message(),
                         ResultCode.RESET_PASSWORD.message());
         emailSender.send(email, ResultCode.RESET_NOTIFICATION.message(), passwordResetLink);
-
-        return ResultCode.RESET_PASSWORD_LINK.message() + link;
     }
 
     /**
@@ -393,15 +391,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Fallback method for resendVerificationEmail
-     *
+     * Fallback method for resetPasswordLinkFallback
      * @param email Email
-     * @param t     Throwable
-     * @return Fallback message
+     * @param t Throwable
      */
     @SuppressWarnings("unused")
-    private String resetPasswordLinkFallback(String email, Throwable t) {
-        return "Request limit exceeded. Please wait for a while before retrying.";
+    private void resetPasswordLinkFallback(String email, Throwable t) {
+        throw new TooManyRequestsException(ResultCode.RATE_LIMIT_MESSAGE.message(),
+                ResultCode.RATE_LIMIT_MESSAGE.code());
     }
 
     /**
@@ -409,11 +406,11 @@ public class AuthServiceImpl implements AuthService {
      *
      * @param email Email
      * @param t     Throwable
-     * @return Fallback message
      */
     @SuppressWarnings("unused")
-    private String resendVerificationEmailFallback(String email, Throwable t) {
-        return "Request limit exceeded. Please wait for a while before retrying.";
+    private void resendVerificationEmailFallback(String email, Throwable t) {
+        throw new TooManyRequestsException(ResultCode.RATE_LIMIT_MESSAGE.message(),
+                ResultCode.RATE_LIMIT_MESSAGE.code());
     }
 
     @Override
