@@ -67,18 +67,8 @@ public class ProductServiceImpl implements ProductService {
         Product product;
         if (!ObjectUtils.hasText(request.getId())) {
             var category = categoryService.findById(request.getCategoryId());
-            var images = ImageUtils.sortFiles(request.getImages());
-            product = Product.builder()
-                    .category(category)
-                    .name(request.getName())
-                    .price(request.getPrice())
-                    .description(request.getDescription())
-                    .currencyCode(request.getCurrencyCode())
-                    .isHome(request.isHome())
-                    .link(request.getLink())
-                    .content(request.getContent())
-                    .images(FileMapper.INSTANCE.toEntities(images))
-                    .build();
+            product = ProductMapper.INSTANCE.toEntity(request);
+            product.setCategory(category);
         } else {
             product = findById(request.getId());
             ProductMapper.INSTANCE.update(request, product);

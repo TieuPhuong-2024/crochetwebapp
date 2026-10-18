@@ -7,6 +7,8 @@ import org.crochet.enums.ResultCode;
 import org.crochet.exception.EmailVerificationException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.exception.TokenException;
+import org.crochet.exception.UnauthorizedException;
+import org.crochet.mapper.UserMapper;
 import org.crochet.model.ConfirmationToken;
 import org.crochet.model.PasswordResetToken;
 import org.crochet.model.RefreshToken;
@@ -99,14 +101,7 @@ public class AuthServiceImpl implements AuthService {
         // Get access token
         var accessToken = jwtTokenService.generateToken(user.getId());
         // Return the authentication token in an AuthResponse
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .role(user.getRole().getValue())
-                .email(user.getEmail())
-                .imageUrl(user.getImageUrl())
-                .userId(user.getId())
-                .build();
+        return UserMapper.INSTANCE.toAuthResponse(user, accessToken, refreshToken.getToken());
     }
 
     /**

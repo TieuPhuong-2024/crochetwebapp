@@ -6,6 +6,7 @@ import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.model.Settings;
 import org.crochet.payload.request.SettingRequest;
 import org.crochet.payload.response.SettingResponse;
+import org.crochet.mapper.SettingMapper;
 import org.crochet.repository.SettingsRepo;
 import org.crochet.service.SettingService;
 import org.crochet.util.SettingsUtil;
@@ -75,12 +76,7 @@ public class SettingServiceImpl implements SettingService {
     @Override
     public List<SettingResponse> getAll() {
         var settings = settingsRepo.findSettings();
-        return settings.stream()
-                .map(s -> SettingResponse.builder()
-                        .key(s.getKey())
-                        .value(s.getValue())
-                        .build())
-                .toList();
+        return SettingMapper.INSTANCE.toResponses(settings);
     }
 
     /**
@@ -97,9 +93,6 @@ public class SettingServiceImpl implements SettingService {
                                 ResultCode.MSG_SETTINGS_NOT_FOUND.message(),
                                 ResultCode.MSG_SETTINGS_NOT_FOUND.code()
                         ));
-        return SettingResponse.builder()
-                .key(setting.getKey())
-                .value(setting.getValue())
-                .build();
+        return SettingMapper.INSTANCE.toResponse(setting);
     }
 }
