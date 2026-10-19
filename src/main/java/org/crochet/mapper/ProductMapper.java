@@ -27,6 +27,15 @@ public interface ProductMapper {
 
     List<ProductResponse> toResponses(Collection<Product> products);
 
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "images", ignore = true)
+    Product toEntity(ProductRequest request);
+
+    @AfterMapping
+    default void afterToEntity(ProductRequest request, @MappingTarget Product product) {
+        afterUpdate(request, product);
+    }
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "images", ignore = true)
     void update(ProductRequest request, @MappingTarget Product product);

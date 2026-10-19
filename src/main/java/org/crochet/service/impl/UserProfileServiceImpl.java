@@ -3,7 +3,6 @@ package org.crochet.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.crochet.enums.ResultCode;
 import org.crochet.exception.ResourceNotFoundException;
-import org.crochet.model.User;
 import org.crochet.model.UserProfile;
 import org.crochet.payload.request.UserProfileRequest;
 import org.crochet.payload.response.CommentResponse;
@@ -12,6 +11,7 @@ import org.crochet.repository.CollectionRepo;
 import org.crochet.repository.CommentRepository;
 import org.crochet.repository.UserProfileRepo;
 import org.crochet.repository.UserRepository;
+import org.crochet.mapper.UserProfileMapper;
 import org.crochet.service.UserProfileService;
 import org.crochet.util.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -55,21 +55,10 @@ public class UserProfileServiceImpl implements UserProfileService {
             userProfile = new UserProfile();
         }
 
-        return UserProfileResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .imageUrl(user.getImageUrl())
-                .provider(user.getProvider())
-                .emailVerified(user.isEmailVerified())
-                .role(user.getRole())
-                .phone(userProfile.getPhone())
-                .birthDate(userProfile.getBirthDate())
-                .gender(userProfile.getGender())
-                .backgroundImageUrl(userProfile.getBackgroundImageUrl())
-                .collections(collections)
-                .recentComments(recentComments)
-                .build();
+        var response = UserProfileMapper.INSTANCE.toResponse(user, userProfile);
+        response.setCollections(collections);
+        response.setRecentComments(recentComments);
+        return response;
     }
 
     /**
@@ -87,90 +76,19 @@ public class UserProfileServiceImpl implements UserProfileService {
                     ResultCode.MSG_USER_NOT_FOUND.code());
         }
 
-        // Update profile info
         var userProfile = user.getUserProfile();
         if (userProfile == null) {
             userProfile = new UserProfile();
         }
-        var isUserProfileUpdated = updateUserProfile(userProfile, request);
 
-        // Update user info
-        var isUserInfoUpdated = updateUserInfo(user, request);
-        if (isUserInfoUpdated) {
-            user = userRepo.save(user);
-        }
+        UserProfileMapper.INSTANCE.updateUserProfile(request, userProfile);
+        UserProfileMapper.INSTANCE.updateUserInfo(request, user);
+        user = userRepo.save(user);
 
-        // Save changes
         userProfile.setUser(user);
-        if (isUserProfileUpdated) {
-            userProfile = userProfileRepo.save(userProfile);
-        }
+        userProfile = userProfileRepo.save(userProfile);
 
-        // Create response
-        return UserProfileResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .imageUrl(user.getImageUrl())
-                .provider(user.getProvider())
-                .emailVerified(user.isEmailVerified())
-                .role(user.getRole())
-                .phone(userProfile.getPhone())
-                .birthDate(userProfile.getBirthDate())
-                .gender(userProfile.getGender())
-                .backgroundImageUrl(userProfile.getBackgroundImageUrl())
-                .build();
-    }
-
-    /**
-     * Update user profile
-     *
-     * @param userProfile UserProfile
-     * @param request     UserProfileRequest
-     * @return boolean
-     */
-    private boolean updateUserProfile(UserProfile userProfile, UserProfileRequest request) {
-        boolean isUpdated = false;
-
-        if (request.getPhone() != null) {
-            userProfile.setPhone(request.getPhone());
-            isUpdated = true;
-        }
-        if (request.getBirthDate() != null) {
-            userProfile.setBirthDate(request.getBirthDate());
-            isUpdated = true;
-        }
-        if (request.getGender() != null) {
-            userProfile.setGender(request.getGender());
-            isUpdated = true;
-        }
-        if (request.getBackgroundImageUrl() != null) {
-            userProfile.setBackgroundImageUrl(request.getBackgroundImageUrl());
-            isUpdated = true;
-        }
-
-        return isUpdated;
-    }
-
-    /**
-     * Update user info
-     *
-     * @param user    User
-     * @param request UserProfileRequest
-     * @return boolean
-     */
-    private boolean updateUserInfo(User user, UserProfileRequest request) {
-        boolean isUpdated = false;
-        if (request.getName() != null) {
-            user.setName(request.getName());
-            isUpdated = true;
-        }
-        if (request.getImageUrl() != null) {
-            user.setImageUrl(request.getImageUrl());
-            isUpdated = true;
-        }
-
-        return isUpdated;
+        return UserProfileMapper.INSTANCE.toResponse(user, userProfile);
     }
 
     /**

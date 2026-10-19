@@ -39,15 +39,14 @@ public class BannerTypeServiceImpl implements BannerTypeService {
         BannerType bannerType;
         if (!ObjectUtils.hasText(request.getId())) {
             bannerType = new BannerType();
-            bannerType.setName(request.getName());
         } else {
             bannerType = bannerTypeRepo.findById(request.getId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             ResultCode.MSG_BANNER_TYPE_NOT_FOUND.message(),
                             ResultCode.MSG_BANNER_TYPE_NOT_FOUND.code()
                     ));
-            bannerType.setName(request.getName());
         }
+        BannerTypeMapper.INSTANCE.partialUpdate(request, bannerType);
         bannerType = bannerTypeRepo.save(bannerType);
         return BannerTypeMapper.INSTANCE.toResponse(bannerType);
     }

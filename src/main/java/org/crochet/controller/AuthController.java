@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.crochet.enums.ResultCode;
 import org.crochet.payload.request.LoginRequest;
 import org.crochet.payload.request.PasswordResetRequest;
+import org.crochet.payload.request.RefreshTokenRequest;
 import org.crochet.payload.request.SignUpRequest;
 import org.crochet.payload.response.AuthResponse;
 import org.crochet.payload.response.ResponseData;
@@ -16,6 +17,7 @@ import org.crochet.payload.response.TokenResponse;
 import org.crochet.service.AuthService;
 import org.crochet.util.ResponseUtil;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -84,8 +86,8 @@ public class AuthController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/password-reset-request")
     public ResponseData<String> resetPasswordRequest(@RequestParam("email") String email) {
-        var response = authService.resetPasswordLink(email);
-        return ResponseUtil.success(response);
+        authService.resetPasswordLink(email);
+        return ResponseUtil.success(ResultCode.MSG_RESET_PASSWORD_SUCCESS.message());
     }
 
     @Operation(summary = "Reset password")
@@ -105,9 +107,9 @@ public class AuthController {
             description = "Access token refreshed successfully",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenResponse.class)))
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/refresh-token")
-    public ResponseData<TokenResponse> refreshToken(@RequestParam("refreshToken") String refreshToken) {
-        var tokenResponse = authService.refreshToken(refreshToken);
+    @PostMapping("/refresh-token")
+    public ResponseData<TokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        var tokenResponse = authService.refreshToken(refreshTokenRequest.refreshToken());
         return ResponseUtil.success(tokenResponse);
     }
 
@@ -122,10 +124,14 @@ public class AuthController {
         return ResponseUtil.success(ResultCode.MSG_LOGOUT_SUCCESS.message());
     }
 
+    @Operation(summary = "Get current authenticated user")
+    @ApiResponse(responseCode = "200",
+            description = "Current user profile",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class)))
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
-    public ResponseData<AuthResponse> getUserInfo(@RequestParam("accessToken") String accessToken) {
-        var res = authService.getUserInfo(accessToken);
-        return ResponseUtil.success(res);
+    public ResponseData<AuthResponse> getCurrentUser(HttpServletRequest request) {
+        return ResponseUtil.success(authService.getCurrentUser(request));
     }
 }

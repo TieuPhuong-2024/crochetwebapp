@@ -55,16 +55,8 @@ public class BannerServiceImpl implements BannerService {
                         .orElseThrow(() -> new ResourceNotFoundException(
                                 ResultCode.MSG_BANNER_TYPE_NOT_FOUND.message(),
                                 ResultCode.MSG_BANNER_TYPE_NOT_FOUND.code()));
-                banner = Banner.builder()
-                        .title(request.getTitle())
-                        .content(request.getContent())
-                        .url(request.getUrl())
-                        .active(request.isActive())
-                        .textColor(request.getTextColor())
-                        .fileName(request.getFileName())
-                        .fileContent(request.getFileContent())
-                        .bannerType(bannerType)
-                        .build();
+                banner = BannerMapper.INSTANCE.toEntity(request);
+                banner.setBannerType(bannerType);
             } else {
                 banner = bannerRepo.findById(request.getId())
                         .orElseThrow(() -> new ResourceNotFoundException(

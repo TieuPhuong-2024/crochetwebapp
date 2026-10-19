@@ -16,7 +16,7 @@ public interface AuthService {
 
     void confirmToken(String token);
 
-    String resetPasswordLink(String email);
+    void resetPasswordLink(String email);
 
     void resetPassword(String token, PasswordResetRequest passwordResetRequest);
 
@@ -24,5 +24,5 @@ public interface AuthService {
 
     void logout(HttpServletRequest request);
 
-    AuthResponse getUserInfo(String token);
+    AuthResponse getCurrentUser(HttpServletRequest request);
 }
