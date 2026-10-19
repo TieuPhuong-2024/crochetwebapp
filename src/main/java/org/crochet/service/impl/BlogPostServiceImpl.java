@@ -80,18 +80,10 @@ public class BlogPostServiceImpl implements BlogPostService {
         BlogPost blogPost;
 
         if (!ObjectUtils.hasText(request.getId())) {
-            BlogCategory blogCategory = null;
+            blogPost = BlogPostMapper.INSTANCE.toEntity(request);
             if (request.getBlogCategoryId() != null) {
-                blogCategory = blogCategoryService.getById(request.getBlogCategoryId());
+                blogPost.setBlogCategory(blogCategoryService.getById(request.getBlogCategoryId()));
             }
-            var images = ImageUtils.sortFiles(request.getFiles());
-            blogPost = BlogPost.builder()
-                    .blogCategory(blogCategory)
-                    .title(request.getTitle())
-                    .content(request.getContent())
-                    .home(request.isHome())
-                    .files(FileMapper.INSTANCE.toEntities(images))
-                    .build();
         } else {
             blogPost = getById(request.getId());
             permissionService.checkUserPermission(blogPost);

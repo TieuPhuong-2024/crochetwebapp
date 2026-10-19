@@ -57,20 +57,8 @@ public class PatternServiceImpl implements PatternService {
         Pattern pattern;
         if (!ObjectUtils.hasText(request.getId())) {
             var category = categoryService.findById(request.getCategoryId());
-            var images = ImageUtils.sortFiles(request.getImages());
-            var files = ImageUtils.sortFiles(request.getFiles());
-            pattern = Pattern.builder()
-                    .category(category)
-                    .name(request.getName())
-                    .price(request.getPrice())
-                    .description(request.getDescription())
-                    .currencyCode(request.getCurrencyCode())
-                    .isHome(request.isHome())
-                    .link(request.getLink())
-                    .content(request.getContent())
-                    .files(FileMapper.INSTANCE.toEntities(files))
-                    .images(FileMapper.INSTANCE.toEntities(images))
-                    .build();
+            pattern = PatternMapper.INSTANCE.toEntity(request);
+            pattern.setCategory(category);
         } else {
             pattern = findById(request.getId());
             permissionService.checkUserPermission(pattern);

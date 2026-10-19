@@ -96,6 +96,17 @@ class ApiExceptionHandlerTest {
     }
 
     @Test
+    void handleTooManyRequestsException_returnsTooManyRequests() {
+        TooManyRequestsException ex = new TooManyRequestsException("Request limit exceeded");
+
+        ResponseData<Object> response = handler.handleTooManyRequestsException(ex, request);
+
+        assertFalse(response.isSuccess());
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS.value(), response.getCode());
+        assertEquals("Request limit exceeded", response.getMessage());
+    }
+
+    @Test
     void handleUnexpectedException_returnsInternalServerErrorWithoutLeakingDetails() {
         RuntimeException ex = new RuntimeException("Sensitive database credentials leaked in internal message");
 

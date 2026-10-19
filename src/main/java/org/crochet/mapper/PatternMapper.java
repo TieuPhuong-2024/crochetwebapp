@@ -25,6 +25,16 @@ public interface PatternMapper extends PartialUpdate<Pattern, PatternRequest> {
     @Mapping(target = "currencyCode", source = "currencyCode")
     PatternResponse toResponse(Pattern pattern);
 
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "images", ignore = true)
+    @Mapping(target = "files", ignore = true)
+    Pattern toEntity(PatternRequest request);
+
+    @AfterMapping
+    default void afterToEntity(PatternRequest req, @MappingTarget Pattern pattern) {
+        afterPartialUpdate(req, pattern);
+    }
+
     @Override
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "images", ignore = true)

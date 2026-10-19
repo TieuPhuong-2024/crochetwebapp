@@ -9,9 +9,11 @@ public interface RefreshTokenService {
 
     Optional<RefreshToken> findByToken(String token);
 
-    RefreshToken verifyExpiration(RefreshToken token);
+    Optional<RefreshToken> findActiveToken(String userId);
 
-    void revokeByToken(String token);
+    RefreshToken ensureActiveRefreshToken(String userId);
+
+    RefreshToken verifyExpiration(RefreshToken token);
 
     void deleteExpiredRefreshTokens();
 }

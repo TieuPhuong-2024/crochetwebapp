@@ -25,6 +25,15 @@ public interface BlogPostMapper extends PartialUpdate<BlogPost, BlogPostRequest>
     @Mapping(target = "isHome", source = "home")
     BlogPostResponse toResponse(BlogPost blogPost);
 
+    @Mapping(target = "blogCategory", ignore = true)
+    @Mapping(target = "files", ignore = true)
+    BlogPost toEntity(BlogPostRequest request);
+
+    @AfterMapping
+    default void afterToEntity(BlogPostRequest request, @MappingTarget BlogPost post) {
+        afterPartialUpdate(request, post);
+    }
+
     default List<BlogPostResponse> toResponses(Collection<BlogPost> blogPosts) {
         return Optional.ofNullable(blogPosts)
                 .map(blogs -> blogs.stream()

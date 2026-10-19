@@ -26,6 +26,16 @@ public interface FreePatternMapper {
 
     List<FreePatternResponse> toResponses(Collection<FreePattern> freePatterns);
 
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "images", ignore = true)
+    @Mapping(target = "files", ignore = true)
+    FreePattern toEntity(FreePatternRequest request);
+
+    @AfterMapping
+    default void afterToEntity(FreePatternRequest req, @MappingTarget FreePattern pattern) {
+        afterUpdate(req, pattern);
+    }
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "files", ignore = true)

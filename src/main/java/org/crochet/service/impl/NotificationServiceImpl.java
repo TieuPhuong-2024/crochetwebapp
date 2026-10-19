@@ -37,15 +37,9 @@ public class NotificationServiceImpl implements NotificationService {
                     .orElse(null);
         }
 
-        Notification notification = Notification.builder()
-                .title(notificationRequest.getTitle())
-                .message(notificationRequest.getMessage())
-                .link(notificationRequest.getLink())
-                .isRead(false)
-                .receiver(receiver)
-                .sender(sender)
-                .notificationType(notificationRequest.getNotificationType())
-                .build();
+        Notification notification = notificationMapper.toEntity(notificationRequest);
+        notification.setReceiver(receiver);
+        notification.setSender(sender);
 
         notification = notificationRepository.save(notification);
         return notificationMapper.toResponse(notification);

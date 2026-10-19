@@ -32,8 +32,7 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
             blogCategory = getById(request.getId());
             permissionService.checkUserPermission(blogCategory);
         }
-        blogCategory.setName(request.getName());
-        blogCategory.setNameEn(request.getNameEn());
+        BlogCategoryMapper.INSTANCE.partialUpdate(request, blogCategory);
         blogCategoryRepo.save(blogCategory);
     }
 
