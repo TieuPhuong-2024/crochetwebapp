@@ -17,3 +17,6 @@ databaseChangeLog:
   - include:
       file: ../migration/20260929-add-missing-indexes.yaml
       relativeToChangelogFile: true
+  - include:
+      file: ../migration/20261104-video-popup-list.yaml
+      relativeToChangelogFile: true
