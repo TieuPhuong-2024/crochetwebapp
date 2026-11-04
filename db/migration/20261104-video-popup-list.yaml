@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261104-video-popup-list
+      author: tieuphuongcrochet
+      changes:
+        - createTable:
+            tableName: video_popup_list
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(50)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: VARCHAR(50)
+              - column:
+                  name: created_date
+                  type: datetime(0)
+              - column:
+                  name: last_modified_by
+                  type: VARCHAR(50)
+              - column:
+                  name: last_modified_date
+                  type: datetime(0)
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cta_url
+                  type: VARCHAR(500)
+              - column:
+                  name: cta_label
+                  type: VARCHAR(255)
+              - column:
+                  name: active
+                  type: BIT(1)
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: clips
+                  type: TEXT
+                  constraints:
+                    nullable: false
