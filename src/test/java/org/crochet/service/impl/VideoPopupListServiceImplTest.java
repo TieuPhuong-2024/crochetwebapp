@@ -44,7 +44,7 @@ class VideoPopupListServiceImplTest {
 
         var saved = service.batchInsertOrUpdate(List.of(request));
 
-        ArgumentCaptor<List<VideoPopupList>> captor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<VideoPopupList>> captor = ArgumentCaptor.captor();
         verify(videoPopupListRepo).saveAll(captor.capture());
         assertThat(captor.getValue()).hasSize(1);
         assertThat(captor.getValue().get(0).getClips())

@@ -8,7 +8,7 @@ import org.crochet.model.Category;
 import org.crochet.model.FreePattern;
 import org.springframework.data.jpa.domain.Specification;
 
-@SuppressWarnings({"DataFlowIssue", "unused"})
+@SuppressWarnings("DataFlowIssue")
 public class FreePatternSpecifications {
 
     public static Specification<FreePattern> fetchJoin() {

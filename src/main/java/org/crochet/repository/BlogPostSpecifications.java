@@ -4,7 +4,7 @@ import jakarta.persistence.criteria.JoinType;
 import org.crochet.model.BlogPost;
 import org.springframework.data.jpa.domain.Specification;
 
-@SuppressWarnings({"DataFlowIssue", "unused"})
+@SuppressWarnings("DataFlowIssue")
 public class BlogPostSpecifications {
 
     public static Specification<BlogPost> fetchJoin() {

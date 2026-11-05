@@ -4,7 +4,6 @@ import jakarta.persistence.LockModeType;
 import org.crochet.enums.ResultCode;
 import org.crochet.exception.TokenException;
 import org.crochet.model.RefreshToken;
-import org.crochet.model.User;
 import org.crochet.properties.AppProperties;
 import org.crochet.repository.RefreshTokenRepo;
 import org.crochet.repository.UserRepository;
