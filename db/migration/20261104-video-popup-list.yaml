@@ -30,12 +30,6 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: cta_url
-                  type: VARCHAR(500)
-              - column:
-                  name: cta_label
-                  type: VARCHAR(255)
-              - column:
                   name: active
                   type: BIT(1)
                   defaultValueBoolean: false
