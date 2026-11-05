@@ -5,6 +5,7 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -31,5 +32,6 @@ public class VideoPopupList extends BaseEntity {
 
     @Convert(converter = VideoPopupClipListConverter.class)
     @Column(name = "clips", columnDefinition = "text", nullable = false)
+    @Builder.Default
     private List<VideoPopupClipPayload> clips = new ArrayList<>();
 }

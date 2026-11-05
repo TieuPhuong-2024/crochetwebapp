@@ -1,7 +1,6 @@
 package org.crochet.service.impl;
 
 import org.crochet.model.RefreshToken;
-import org.crochet.model.User;
 import org.crochet.properties.AppProperties;
 import org.crochet.repository.RefreshTokenRepo;
 import org.crochet.repository.UserRepository;
