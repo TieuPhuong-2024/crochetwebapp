@@ -26,12 +26,6 @@ public class VideoPopupList extends BaseEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "cta_url", length = 500)
-    private String ctaUrl;
-
-    @Column(name = "cta_label")
-    private String ctaLabel;
-
     @Column(name = "active", nullable = false)
     private boolean active;
 

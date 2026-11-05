@@ -16,4 +16,5 @@ public class VideoPopupClipPayload {
     @NotBlank
     private String videoFileName;
     private String label;
+    private String ctaUrl;
 }

@@ -17,8 +17,6 @@ public class VideoPopupListRequest {
     @NotBlank
     private String title;
 
-    private String ctaUrl;
-    private String ctaLabel;
     private boolean active;
 
     @NotEmpty

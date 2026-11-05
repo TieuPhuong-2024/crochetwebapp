@@ -14,8 +14,6 @@ import java.util.List;
 public class VideoPopupListResponse {
     private String id;
     private String title;
-    private String ctaUrl;
-    private String ctaLabel;
     private boolean active;
     private List<VideoPopupClipPayload> clips;
 
