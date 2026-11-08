@@ -118,9 +118,22 @@ public class AuthController {
             description = "Logout successful",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/logout")
-    public ResponseData<String> logout(HttpServletRequest request) {
-        authService.logout(request);
+    @PostMapping("/logout")
+    public ResponseData<String> logout(HttpServletRequest request,
+                                       @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        authService.logout(request, refreshTokenRequest.refreshToken());
+        return ResponseUtil.success(ResultCode.MSG_LOGOUT_SUCCESS.message());
+    }
+
+    @Operation(summary = "Logout all devices")
+    @ApiResponse(responseCode = "200",
+            description = "Logout successful",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/logout-all")
+    public ResponseData<String> logoutAll(HttpServletRequest request) {
+        authService.logoutAll(request);
         return ResponseUtil.success(ResultCode.MSG_LOGOUT_SUCCESS.message());
     }
 
