@@ -56,7 +56,8 @@ public enum ResultCode {
     MSG_NO_PERMISSION_UPDATE_CATEGORY(62, "No permission to update this category"),
     MSG_NO_PERMISSION(63, "No permission"),
     MSG_NO_PERMISSION_DELETE_CATEGORY(61, "No permission to delete this category"),
-    RATE_LIMIT_MESSAGE(62, "Request limit exceeded. Please wait for a while before retrying.");
+    RATE_LIMIT_MESSAGE(62, "Request limit exceeded. Please wait for a while before retrying."),
+    MSG_REFRESH_TOKEN_REUSED(64, "Refresh token reuse detected. Please login again.");
 
     private final int code;
     private final String message;

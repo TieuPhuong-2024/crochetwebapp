@@ -4,7 +4,6 @@ import org.crochet.enums.ResultCode;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.exception.TokenException;
 import org.crochet.model.RefreshToken;
-import org.crochet.model.User;
 import org.crochet.properties.AppProperties;
 import org.crochet.repository.RefreshTokenRepo;
 import org.crochet.repository.UserRepository;
@@ -55,55 +54,72 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     @Transactional
     public RefreshToken createRefreshToken(String username) {
+        return createRefreshToken(username, false);
+    }
+
+    @Override
+    @Transactional
+    public RefreshToken createRefreshToken(String username, boolean rememberMe) {
         var user = userRepository.findById(username)
                 .orElseThrow(() -> new ResourceNotFoundException(ResultCode.MSG_USER_NOT_FOUND_WITH_EMAIL.message(),
                         ResultCode.MSG_USER_NOT_FOUND_WITH_EMAIL.code()));
         LocalDateTime now = LocalDateTime.now();
-        var expiryDate = now.plus(appProps.getAuth().getRefreshTokenExpirationMs(), ChronoUnit.MILLIS);
+        long expirationMs = rememberMe
+                ? appProps.getAuth().getRefreshTokenRememberMeExpirationMs()
+                : appProps.getAuth().getRefreshTokenExpirationMs();
+        var expiryDate = now.plus(expirationMs, ChronoUnit.MILLIS);
         var refreshToken = RefreshToken.builder()
                 .token(UUID.randomUUID().toString())
                 .expiresAt(expiryDate)
                 .user(user)
                 .build();
-        revokeRefreshToken(user);
+        revokeAllRefreshTokens(user.getId());
         return refreshTokenRepo.save(refreshToken);
     }
 
-    /**
-     * Delete a refresh token
-     *
-     * @param token RefreshToken
-     */
     @Override
-    public Optional<RefreshToken> findByToken(String token) {
-        return refreshTokenRepo.findByToken(token);
-    }
+    @Transactional(noRollbackFor = TokenException.class)
+    public RefreshToken rotateRefreshToken(String token) {
+        var currentToken = refreshTokenRepo.findByTokenForUpdate(token)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ResultCode.REFRESH_TOKEN_NOT_IN_DB.message(),
+                        ResultCode.REFRESH_TOKEN_NOT_IN_DB.code()));
+        var user = currentToken.getUser();
 
-    /**
-     * Delete a refresh token
-     *
-     * @param token RefreshToken
-     */
-    @Override
-    public RefreshToken verifyExpiration(RefreshToken token) {
-        if (token.getExpiresAt().isBefore(LocalDateTime.now()) || token.isRevoked()) {
-            refreshTokenRepo.delete(token);
-            throw new TokenException(token.getToken() + ResultCode.MSG_REFRESH_TOKEN_EXPIRED.message(),
+        if (currentToken.isRevoked()) {
+            revokeAllRefreshTokens(user.getId());
+            throw new TokenException(ResultCode.MSG_REFRESH_TOKEN_REUSED.message(),
+                    ResultCode.MSG_REFRESH_TOKEN_REUSED.code());
+        }
+        if (!currentToken.getExpiresAt().isAfter(LocalDateTime.now())) {
+            refreshTokenRepo.delete(currentToken);
+            throw new TokenException(ResultCode.MSG_REFRESH_TOKEN_EXPIRED.message(),
                     ResultCode.MSG_REFRESH_TOKEN_EXPIRED.code());
         }
-        return token;
+
+        currentToken.setRevoked(true);
+        refreshTokenRepo.save(currentToken);
+        var rotatedToken = RefreshToken.builder()
+                .token(UUID.randomUUID().toString())
+                .expiresAt(currentToken.getExpiresAt())
+                .user(user)
+                .build();
+        return refreshTokenRepo.save(rotatedToken);
     }
 
-    /**
-     * Delete a refresh token
-     *
-     * @param user User
-     */
-    private void revokeRefreshToken(User user) {
-        var validRefreshTokens = refreshTokenRepo.findAllValidRefreshTokenByUser(user);
-        if (validRefreshTokens.isEmpty()) {
-            return;
-        }
+    @Override
+    @Transactional
+    public void revokeRefreshToken(String token) {
+        refreshTokenRepo.findByToken(token).ifPresent(refreshToken -> {
+            refreshToken.setRevoked(true);
+            refreshTokenRepo.save(refreshToken);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void revokeAllRefreshTokens(String userId) {
+        var validRefreshTokens = refreshTokenRepo.findAllValidRefreshTokenByUserId(userId);
         validRefreshTokens.forEach(token -> {
             token.setRevoked(true);
             refreshTokenRepo.save(token);
