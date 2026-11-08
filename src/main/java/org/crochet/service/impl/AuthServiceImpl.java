@@ -12,7 +12,6 @@ import org.crochet.exception.UnauthorizedException;
 import org.crochet.mapper.UserMapper;
 import org.crochet.model.ConfirmationToken;
 import org.crochet.model.PasswordResetToken;
-import org.crochet.model.RefreshToken;
 import org.crochet.model.User;
 import org.crochet.payload.request.LoginRequest;
 import org.crochet.payload.request.PasswordResetRequest;
@@ -32,7 +31,6 @@ import org.crochet.util.TokenUtils;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -100,7 +98,7 @@ public class AuthServiceImpl implements AuthService {
             );
         }
         // Create refresh token
-        var refreshToken = refreshTokenService.createRefreshToken(user.getId());
+        var refreshToken = refreshTokenService.createRefreshToken(user.getId(), loginRequest.isRememberMe());
         // Get access token
         var accessToken = jwtTokenService.generateToken(user.getId());
         // Return the authentication token in an AuthResponse
@@ -360,33 +358,37 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public TokenResponse refreshToken(String refreshToken) {
-        return refreshTokenService.findByToken(refreshToken)
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    String accessToken = jwtTokenService.generateToken(user.getId());
-                    return TokenResponse.builder()
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .build();
-                }).orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                ResultCode.REFRESH_TOKEN_NOT_IN_DB.message(),
-                                ResultCode.REFRESH_TOKEN_NOT_IN_DB.code()
-                        ));
+        var rotatedToken = refreshTokenService.rotateRefreshToken(refreshToken);
+        var accessToken = jwtTokenService.generateToken(rotatedToken.getUser().getId());
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(rotatedToken.getToken())
+                .build();
     }
 
-    /**
-     * Logout
-     *
-     * @param request HttpServletRequest
-     */
     @Override
-    public void logout(HttpServletRequest request) {
-        var token = TokenUtils.getJwtFromAuthorizationHeader(request);
-        if (ObjectUtils.hasText(token)) {
-            tokenBlacklistService.addTokenToBlacklist(token);
-            SecurityContextHolder.clearContext();
+    public void logout(HttpServletRequest request, String refreshToken) {
+        blacklistAccessToken(request);
+        refreshTokenService.revokeRefreshToken(refreshToken);
+        SecurityContextHolder.clearContext();
+    }
+
+    @Override
+    public void logoutAll(HttpServletRequest request) {
+        var accessToken = TokenUtils.getJwtFromAuthorizationHeader(request);
+        if (!ObjectUtils.hasText(accessToken)) {
+            throw new UnauthorizedException("Missing Authorization bearer token");
+        }
+        var userId = jwtTokenService.extractUsername(accessToken);
+        refreshTokenService.revokeAllRefreshTokens(userId);
+        tokenBlacklistService.addTokenToBlacklist(accessToken);
+        SecurityContextHolder.clearContext();
+    }
+
+    private void blacklistAccessToken(HttpServletRequest request) {
+        var accessToken = TokenUtils.getJwtFromAuthorizationHeader(request);
+        if (ObjectUtils.hasText(accessToken)) {
+            tokenBlacklistService.addTokenToBlacklist(accessToken);
         }
     }
 
@@ -416,7 +418,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse getCurrentUser(HttpServletRequest request) {
         var accessToken = TokenUtils.getJwtFromAuthorizationHeader(request);
-        if (!StringUtils.hasText(accessToken)) {
+
+        if (!ObjectUtils.hasText(accessToken)) {
             throw new UnauthorizedException("Missing Authorization bearer token");
         }
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -425,7 +428,10 @@ public class AuthServiceImpl implements AuthService {
         }
         var username = jwtTokenService.extractUsername(accessToken);
         var user = userService.getDetail(username);
-        var refreshToken = refreshTokenService.ensureActiveRefreshToken(user.getId());
+        var refreshToken = refreshTokenService.findActiveToken(user.getId())
+                .orElseThrow(() -> new TokenException(
+                        ResultCode.MSG_REFRESH_TOKEN_NOT_FOUND.message(),
+                        ResultCode.MSG_REFRESH_TOKEN_NOT_FOUND.code()));
         return UserMapper.INSTANCE.toAuthResponse(user, accessToken, refreshToken.getToken());
     }
 }

@@ -1,7 +1,6 @@
 package org.crochet.util;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.util.StringUtils;
 
 public class TokenUtils {
     /**
@@ -15,7 +14,7 @@ public class TokenUtils {
         String bearerToken = request.getHeader("Authorization");
 
         // Check if the "Authorization" header value is not empty and starts with "Bearer "
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        if (ObjectUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             // Extract and return the JWT by removing the "Bearer " prefix
             return bearerToken.substring(7);
         }

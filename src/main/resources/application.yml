@@ -47,8 +47,9 @@ app:
     provider: ${EMAIL_PROVIDER:brevo}
   auth:
     tokenSecret: ${TOKEN_SECRET}
-    tokenExpirationMs: 259200000 # 3 days
-    refresh-token-expiration-ms: 604800000 # 1 week
+    tokenExpirationMs: 900000 # 15 minutes
+    refresh-token-expiration-ms: 86400000 # 1 day (default, no remember me)
+    refresh-token-remember-me-expiration-ms: 2592000000 # 30 days (remember me)
   oauth2:
     authorizedRedirectUris:
       - http://localhost:3000/oauth2/redirect
