@@ -7,8 +7,6 @@ import org.crochet.enums.ResultCode;
 import org.crochet.enums.RoleType;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.exception.UnauthorizedException;
-import org.crochet.mapper.CategoryMapper;
-import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.FreePatternMapper;
 import org.crochet.mapper.PaginationMapper;
 import org.crochet.model.FreePattern;
@@ -28,7 +26,6 @@ import org.crochet.service.CategoryService;
 import org.crochet.service.FreePatternService;
 import org.crochet.service.PermissionService;
 import org.crochet.service.UserService;
-import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
 import org.crochet.util.SettingsUtil;
@@ -388,10 +385,6 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.message(),
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()));
-        var user = userService.getById(frep.getCreatedBy());
-        var images = FileMapper.INSTANCE.toResponses(frep.getImages());
-        var files = FileMapper.INSTANCE.toResponses(frep.getFiles());
-        var category = CategoryMapper.INSTANCE.toResponse(frep.getCategory());
         var commentCount = commentRepository.countByFreePatternId(id);
 
         var isLiked = false;
