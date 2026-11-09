@@ -23,6 +23,8 @@ databaseChangeLog:
   - changeSet:
       id: 20260929-drop-duplicate-indexes-collection-free-pattern
       author: tieuphuongcrochet
+      validCheckSum:
+        - 9:6a68455a2c7f71d76609a01bf5a61983
       comment: "collection_free_pattern: drop 6 duplicate indexes"
       changes:
         # All three duplicate fk_collection_free_pattern_collection_id (collection_id)
@@ -111,6 +113,8 @@ databaseChangeLog:
   - changeSet:
       id: 20260929-drop-duplicate-indexes-users
       author: tieuphuongcrochet
+      validCheckSum:
+        - 9:6a68455a2c7f71d76609a01bf5a61983
       comment: "users: drop idx_users_id_optimized (duplicate of PRIMARY) and duplicate UNIQUE(email)"
       changes:
         # idx_users_id_optimized (id) is a byte-for-byte duplicate of PRIMARY(id)
@@ -166,6 +170,8 @@ databaseChangeLog:
   - changeSet:
       id: 20260929-drop-duplicate-indexes-free-pattern
       author: tieuphuongcrochet
+      validCheckSum:
+        - 9:6a68455a2c7f71d76609a01bf5a61983
       comment: "free_pattern: drop idx_fp_created_date_id (PK duplicate) and idx_free_pattern_created_by (covered by created_by,status)"
       changes:
         # idx_fp_created_date_id was intended as (created_date DESC, id) but the

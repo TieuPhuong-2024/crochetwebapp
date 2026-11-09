@@ -1,9 +1,7 @@
 package org.crochet.service.impl;
 
 import com.turkraft.springfilter.converter.FilterSpecification;
-import org.crochet.enums.AuthProvider;
 import org.crochet.enums.ResultCode;
-import org.crochet.enums.RoleType;
 import org.crochet.exception.BadRequestException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.PaginationMapper;
