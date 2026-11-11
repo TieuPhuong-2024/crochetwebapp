@@ -25,7 +25,7 @@ public class FreePatternRequest {
     private String description;
     private String author;
     @JsonProperty("is_home")
-    private boolean isHome;
+    private Boolean isHome;
     private String link;
     private String content;
     @JsonFormat(shape = JsonFormat.Shape.STRING)
