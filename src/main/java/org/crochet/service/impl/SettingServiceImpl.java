@@ -9,6 +9,7 @@ import org.crochet.payload.response.SettingResponse;
 import org.crochet.mapper.SettingMapper;
 import org.crochet.repository.SettingsRepo;
 import org.crochet.service.SettingService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.util.SettingsUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.util.List;
 public class SettingServiceImpl implements SettingService {
     private final SettingsRepo settingsRepo;
     private final SettingsUtil settingsUtil;
+    private final UploadLifecycleService uploads;
 
     /**
      * Create a new setting
@@ -33,6 +35,7 @@ public class SettingServiceImpl implements SettingService {
                 .key(request.getKey())
                 .value(request.getValue())
                 .build();
+        uploads.attach(new UploadLifecycleService.References().content(settings.getValue()));
         settingsRepo.save(settings);
         settingsUtil.clearCache();
     }
@@ -52,6 +55,7 @@ public class SettingServiceImpl implements SettingService {
                                 ResultCode.MSG_SETTINGS_NOT_FOUND.code()
                         ));
         settings.setValue(request.getValue());
+        uploads.attach(new UploadLifecycleService.References().content(settings.getValue()));
         settingsRepo.save(settings);
         settingsUtil.clearCache();
     }

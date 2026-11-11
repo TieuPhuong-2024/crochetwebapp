@@ -5,6 +5,7 @@ import org.crochet.model.VideoPopupList;
 import org.crochet.payload.VideoPopupClipPayload;
 import org.crochet.payload.request.VideoPopupListRequest;
 import org.crochet.repository.VideoPopupListRepo;
+import org.crochet.service.UploadLifecycleService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,6 +27,9 @@ class VideoPopupListServiceImplTest {
 
     @Mock
     private VideoPopupListRepo videoPopupListRepo;
+
+    @Mock
+    private UploadLifecycleService uploads;
 
     @InjectMocks
     private VideoPopupListServiceImpl service;
@@ -52,6 +56,12 @@ class VideoPopupListServiceImplTest {
                 .containsExactly("key-a", "key-b");
         assertThat(saved).hasSize(1);
         assertThat(saved.get(0).getClips()).hasSize(2);
+        var references = ArgumentCaptor.forClass(UploadLifecycleService.References.class);
+        verify(uploads).attach(references.capture());
+        assertThat(references.getValue().files()).extracting(org.crochet.model.File::getFileName)
+                .containsExactly("key-a", "key-b");
+        assertThat(references.getValue().files()).extracting(org.crochet.model.File::getFileContent)
+                .containsExactly("https://cdn/a.mp4", "https://cdn/b.mp4");
     }
 
     @Test

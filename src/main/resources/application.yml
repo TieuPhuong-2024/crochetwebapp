@@ -1,3 +1,11 @@
+r2:
+  endpoint: ${R2_ENDPOINT:}
+  access-key: ${R2_ACCESS_KEY:}
+  secret-key: ${R2_SECRET_KEY:}
+  bucket-name: ${R2_BUCKET_NAME:}
+  cdn-url: ${R2_CDN_URL:}
+  environment: ${R2_ENVIRONMENT:development}
+
 spring:
   profiles:
     active: ${ENV:dev}

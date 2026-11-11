@@ -5,6 +5,8 @@ import org.crochet.exception.BadRequestException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.VideoPopupListMapper;
 import org.crochet.model.VideoPopupList;
+import org.crochet.model.File;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.payload.VideoPopupClipPayload;
 import org.crochet.payload.request.VideoPopupListRequest;
 import org.crochet.payload.response.VideoPopupListResponse;
@@ -20,9 +22,11 @@ import java.util.List;
 @Service
 public class VideoPopupListServiceImpl implements VideoPopupListService {
     private final VideoPopupListRepo videoPopupListRepo;
+    private final UploadLifecycleService uploads;
 
-    public VideoPopupListServiceImpl(VideoPopupListRepo videoPopupListRepo) {
+    public VideoPopupListServiceImpl(VideoPopupListRepo videoPopupListRepo, UploadLifecycleService uploads) {
         this.videoPopupListRepo = videoPopupListRepo;
+        this.uploads = uploads;
     }
 
     @Transactional
@@ -30,6 +34,7 @@ public class VideoPopupListServiceImpl implements VideoPopupListService {
     public List<VideoPopupListResponse> batchInsertOrUpdate(List<VideoPopupListRequest> requests) {
         List<VideoPopupList> lists = new ArrayList<>();
         List<VideoPopupList> existing = videoPopupListRepo.findAll();
+        var references = new UploadLifecycleService.References();
 
         for (VideoPopupListRequest request : requests) {
             validateClips(request.getClips());
@@ -44,8 +49,15 @@ public class VideoPopupListServiceImpl implements VideoPopupListService {
                 VideoPopupListMapper.INSTANCE.partialUpdate(request, entity);
                 entity.setClips(request.getClips());
             }
+            references.files(entity.getClips().stream().map(clip -> {
+                var file = new File();
+                file.setFileName(clip.getVideoFileName());
+                file.setFileContent(clip.getVideoUrl());
+                return file;
+            }).toList());
             lists.add(entity);
         }
+        uploads.attach(references);
 
         existing.removeAll(lists);
         videoPopupListRepo.deleteAll(existing);

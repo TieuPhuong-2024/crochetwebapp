@@ -20,6 +20,7 @@ import org.crochet.repository.FreePatternRepository;
 import org.crochet.repository.ProductRepository;
 import org.crochet.repository.UserRepository;
 import org.crochet.service.CommentService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
 import org.springframework.context.ApplicationEventPublisher;
@@ -42,19 +43,22 @@ public class CommentServiceImpl implements CommentService {
     private final FreePatternRepository freePatternRepo;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UploadLifecycleService uploads;
 
     public CommentServiceImpl(CommentRepository commentRepo,
                               BlogPostRepository blogPostRepo,
                               ProductRepository productRepo,
                               FreePatternRepository freePatternRepo,
                               UserRepository userRepository,
-                              ApplicationEventPublisher eventPublisher) {
+                              ApplicationEventPublisher eventPublisher,
+                              UploadLifecycleService uploads) {
         this.commentRepo = commentRepo;
         this.blogPostRepo = blogPostRepo;
         this.productRepo = productRepo;
         this.freePatternRepo = freePatternRepo;
         this.userRepository = userRepository;
         this.eventPublisher = eventPublisher;
+        this.uploads = uploads;
     }
 
     /**
@@ -168,6 +172,7 @@ public class CommentServiceImpl implements CommentService {
             comment.setMentionedUserId(request.getMentionedUserId());
         }
 
+        uploads.attach(new UploadLifecycleService.References().content(comment.getContent()));
         comment = commentRepo.save(comment);
         // Gửi sự kiện khi comment được tạo
         eventPublisher.publishEvent(new CommentCreatedEvent(comment));

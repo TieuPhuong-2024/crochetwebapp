@@ -16,6 +16,7 @@ import org.crochet.repository.PatternRepository;
 import org.crochet.repository.PatternSpecifications;
 import org.crochet.service.CategoryService;
 import org.crochet.service.PatternService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.service.PermissionService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SettingsUtil;
@@ -43,6 +44,7 @@ public class PatternServiceImpl implements PatternService {
     private final SettingsUtil settingsUtil;
     private final PermissionService permissionService;
     private final CategoryService categoryService;
+    private final UploadLifecycleService uploads;
 
     /**
      * Create or update pattern
@@ -63,6 +65,10 @@ public class PatternServiceImpl implements PatternService {
             PatternMapper.INSTANCE.partialUpdate(request, pattern);
         }
 
+        uploads.attach(new UploadLifecycleService.References()
+                .files(pattern.getImages())
+                .files(pattern.getFiles())
+                .content(pattern.getContent(), pattern.getDescription()));
         patternRepo.save(pattern);
     }
 

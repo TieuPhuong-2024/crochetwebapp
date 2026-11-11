@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261111-upload-asset-lifecycle
+      author: tieuphuongcrochet
+      changes:
+        - createTable:
+            tableName: upload_asset
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: object_key
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_upload_asset_object_key
+              - column:
+                  name: environment
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bucket_name
+                  type: VARCHAR(63)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: owner_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: next_attempt_at
+                  type: TIMESTAMP(6)
+              - column:
+                  name: claim_token
+                  type: VARCHAR(36)
+              - column:
+                  name: content_type
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: size_bytes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: upload_asset
+            indexName: idx_upload_asset_cleanup
+            columns:
+              - column:
+                  name: environment
+              - column:
+                  name: bucket_name
+              - column:
+                  name: state
+              - column:
+                  name: expires_at
+              - column:
+                  name: next_attempt_at
+      rollback:
+        - dropTable:
+            tableName: upload_asset

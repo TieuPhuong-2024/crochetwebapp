@@ -43,6 +43,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
+    implementation platform('software.amazon.awssdk:bom:2.31.54')
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:url-connection-client'
+    implementation 'org.jsoup:jsoup:1.21.2'
+
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
 
     implementation 'jakarta.validation:jakarta.validation-api:3.1.0'

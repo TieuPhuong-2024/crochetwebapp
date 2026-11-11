@@ -5,6 +5,8 @@ import org.crochet.enums.ResultCode;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.BannerMapper;
 import org.crochet.model.Banner;
+import org.crochet.model.File;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.payload.request.BannerRequest;
 import org.crochet.payload.response.BannerResponse;
 import org.crochet.repository.BannerRepo;
@@ -23,6 +25,7 @@ import java.util.List;
 public class BannerServiceImpl implements BannerService {
     private final BannerRepo bannerRepo;
     private final BannerTypeRepo bannerTypeRepo;
+    private final UploadLifecycleService uploads;
 
     /**
      * Constructor
@@ -31,9 +34,10 @@ public class BannerServiceImpl implements BannerService {
      * @param bannerTypeRepo the banner type repository
      */
     public BannerServiceImpl(BannerRepo bannerRepo,
-            BannerTypeRepo bannerTypeRepo) {
+            BannerTypeRepo bannerTypeRepo, UploadLifecycleService uploads) {
         this.bannerRepo = bannerRepo;
         this.bannerTypeRepo = bannerTypeRepo;
+        this.uploads = uploads;
     }
 
     /**
@@ -47,6 +51,7 @@ public class BannerServiceImpl implements BannerService {
     public List<BannerResponse> batchInsertOrUpdate(List<BannerRequest> requests) {
         List<Banner> banners = new ArrayList<>();
         List<Banner> existingBanners = bannerRepo.findAll();
+        var references = new UploadLifecycleService.References();
 
         for (BannerRequest request : requests) {
             Banner banner;
@@ -64,8 +69,13 @@ public class BannerServiceImpl implements BannerService {
                                 ResultCode.MSG_BANNER_NOT_FOUND.code()));
                 BannerMapper.INSTANCE.partialUpdate(request, banner);
             }
+            var file = new File();
+            file.setFileName(banner.getFileName());
+            file.setFileContent(banner.getFileContent());
+            references.files(List.of(file)).content(banner.getContent());
             banners.add(banner);
         }
+        uploads.attach(references);
 
         // Remove existing banners that are not in the new list
         existingBanners.removeAll(banners);
