@@ -34,6 +34,7 @@ env:
   R2_BUCKET_NAME: ${{secrets.R2_BUCKET_NAME}}
   R2_CDN_URL: ${{secrets.R2_CDN_URL}}
   R2_ENVIRONMENT: development
+  FRONTEND_URL: http://localhost:3000
 
 jobs:
   gradle-build:
@@ -96,6 +97,7 @@ jobs:
             R2_BUCKET_NAME=${{ env.R2_BUCKET_NAME }}
             R2_CDN_URL=${{ env.R2_CDN_URL }}
             R2_ENVIRONMENT=development
+            FRONTEND_URL=${{ env.FRONTEND_URL }}
           push: true
           tags: ${{ env.DOCKERHUB_USERNAME }}/crochet:latest
       - name: Verify
