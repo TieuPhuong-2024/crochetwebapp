@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: little-crochet-prod
     needs: build
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Install Render CLI
         run: |
