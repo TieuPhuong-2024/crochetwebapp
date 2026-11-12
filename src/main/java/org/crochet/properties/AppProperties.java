@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 @Getter
@@ -20,6 +19,7 @@ public class AppProperties {
         private String tokenSecret;
         private long tokenExpirationMs;
         private long refreshTokenExpirationMs;
+        private long refreshTokenRememberMeExpirationMs;
     }
 
     @Getter

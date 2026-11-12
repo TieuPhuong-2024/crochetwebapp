@@ -7,11 +7,17 @@ import java.util.Optional;
 public interface RefreshTokenService {
     RefreshToken createRefreshToken(String username);
 
-    Optional<RefreshToken> findByToken(String token);
+    RefreshToken createRefreshToken(String username, boolean rememberMe);
 
-    RefreshToken verifyExpiration(RefreshToken token);
+    Optional<RefreshToken> findActiveToken(String userId);
 
-    void revokeByToken(String token);
+    RefreshToken ensureActiveRefreshToken(String userId);
+
+    RefreshToken rotateRefreshToken(String token);
+
+    void revokeRefreshToken(String token);
+
+    void revokeAllRefreshTokens(String userId);
 
     void deleteExpiredRefreshTokens();
 }

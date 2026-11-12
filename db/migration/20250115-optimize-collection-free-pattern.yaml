@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250115-optimize-collection-free-pattern
+      author: pvanluom
+      comment: "Tối ưu hóa index cho bảng collection_free_pattern"
+      changes:
+        # Index composite cho collection_free_pattern - tối ưu truy vấn EXISTS
+        - createIndex:
+            indexName: idx_collection_free_pattern_frep_user
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: free_pattern_id
+              - column:
+                  name: collection_id
+                  
+        # Index cho collection_free_pattern.collection_id - tối ưu COUNT
+        - createIndex:
+            indexName: idx_collection_free_pattern_collection_id_optimized
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: collection_id
+                  
+        # Index cho collection_free_pattern.free_pattern_id - tối ưu queries
+        - createIndex:
+            indexName: idx_collection_free_pattern_free_pattern_id_optimized
+            tableName: collection_free_pattern
+            columns:
+              - column:
+                  name: free_pattern_id
+                  
+      rollback:
+        - dropIndex:
+            indexName: idx_collection_free_pattern_frep_user
+            tableName: collection_free_pattern
+        - dropIndex:
+            indexName: idx_collection_free_pattern_collection_id_optimized
+            tableName: collection_free_pattern
+        - dropIndex:
+            indexName: idx_collection_free_pattern_free_pattern_id_optimized
+            tableName: collection_free_pattern

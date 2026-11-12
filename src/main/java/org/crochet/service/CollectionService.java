@@ -18,6 +18,4 @@ public interface CollectionService {
     List<CollectionResponse> getAllByUserId(String userId);
 
     void deleteCollection(String collectionId);
-
-    boolean checkFreePatternInCollection(String freePatternId);
 }

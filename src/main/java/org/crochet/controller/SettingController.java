@@ -32,8 +32,8 @@ public class SettingController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
-    public List<SettingResponse> getSetting() {
-        return settingService.getAll();
+    public ResponseData<List<SettingResponse>> getSetting() {
+        return ResponseUtil.success(settingService.getAll());
     }
 
     @ResponseStatus(HttpStatus.OK)

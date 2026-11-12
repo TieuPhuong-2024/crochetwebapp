@@ -1,6 +1,7 @@
 package org.crochet.service;
 
 import org.crochet.model.FreePattern;
+import org.crochet.model.User;
 import org.crochet.payload.request.FreePatternRequest;
 import org.crochet.payload.response.FreePatternResponse;
 import org.crochet.payload.response.PaginationResponse;
@@ -47,4 +48,15 @@ public interface FreePatternService {
             String sortDir);
 
     FreePattern findById(String id);
+
+    boolean existByFreePatternAndUser(String freePatternId, User user);
+
+    boolean existLikeByFreePatternAndUser(String freePatternId, User user);
+
+    PaginationResponse<FreePatternResponse>
+    getLikedFreePatterns(String userId,
+                         int offset,
+                         int limit,
+                         String sortBy,
+                         String sortDir);
 }

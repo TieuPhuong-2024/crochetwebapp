@@ -55,7 +55,11 @@ public enum ResultCode {
     MSG_LOGOUT_SUCCESS(60, "Logged out success"),
     MSG_NO_PERMISSION_UPDATE_CATEGORY(62, "No permission to update this category"),
     MSG_NO_PERMISSION(63, "No permission"),
-    MSG_NO_PERMISSION_DELETE_CATEGORY(61, "No permission to delete this category");
+    MSG_NO_PERMISSION_DELETE_CATEGORY(61, "No permission to delete this category"),
+    RATE_LIMIT_MESSAGE(62, "Request limit exceeded. Please wait for a while before retrying."),
+    MSG_VIDEO_POPUP_LIST_NOT_FOUND(64, "Video popup list not found"),
+    MSG_VIDEO_POPUP_LIST_CLIPS_REQUIRED(65, "Video popup list requires at least one clip"),
+    MSG_REFRESH_TOKEN_REUSED(64, "Refresh token reuse detected. Please login again.");
 
     private final int code;
     private final String message;

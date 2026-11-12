@@ -7,9 +7,11 @@ import org.crochet.enums.ResultCode;
 import org.crochet.exception.EmailVerificationException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.exception.TokenException;
+import org.crochet.exception.TooManyRequestsException;
+import org.crochet.exception.UnauthorizedException;
+import org.crochet.mapper.UserMapper;
 import org.crochet.model.ConfirmationToken;
 import org.crochet.model.PasswordResetToken;
-import org.crochet.model.RefreshToken;
 import org.crochet.model.User;
 import org.crochet.payload.request.LoginRequest;
 import org.crochet.payload.request.PasswordResetRequest;
@@ -26,8 +28,10 @@ import org.crochet.service.TokenBlacklistService;
 import org.crochet.service.UserService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.TokenUtils;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -45,6 +49,9 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenService jwtTokenService;
     private final TokenBlacklistService tokenBlacklistService;
+
+    @Value("${app.frontendUrl}")
+    private String frontendUrl;
 
     /**
      * Constructor
@@ -91,18 +98,11 @@ public class AuthServiceImpl implements AuthService {
             );
         }
         // Create refresh token
-        var refreshToken = refreshTokenService.createRefreshToken(user.getId());
+        var refreshToken = refreshTokenService.createRefreshToken(user.getId(), loginRequest.isRememberMe());
         // Get access token
         var accessToken = jwtTokenService.generateToken(user.getId());
         // Return the authentication token in an AuthResponse
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .role(user.getRole().getValue())
-                .email(user.getEmail())
-                .imageUrl(user.getImageUrl())
-                .userId(user.getId())
-                .build();
+        return UserMapper.INSTANCE.toAuthResponse(user, accessToken, refreshToken.getToken());
     }
 
     /**
@@ -291,22 +291,19 @@ public class AuthServiceImpl implements AuthService {
      * Reset password link
      *
      * @param email Email
-     * @return ApiResponse
      * @throws ResourceNotFoundException User not found
      */
     @Transactional
     @Override
     @RateLimiter(name = "passwordResetRateLimiter", fallbackMethod = "resetPasswordLinkFallback")
-    public String resetPasswordLink(String email) {
+    public void resetPasswordLink(String email) {
         // Check user
         User user = userService.getByEmail(email);
 
         // Build password reset token
         var passwordResetToken = passwordResetTokenService.createOrUpdatePasswordResetToken(user);
 
-        // Build the base URI
-        String baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().toUriString();
-        String link = baseUri + "/api/v1/auth/reset-password?passwordResetToken=" + passwordResetToken.getToken();
+        String link = frontendUrl + "/reset-password?token=" + passwordResetToken.getToken();
 
         // Send password reset link to email
         var passwordResetLink =
@@ -316,8 +313,6 @@ public class AuthServiceImpl implements AuthService {
                         ResultCode.MSG_RESET_PASSWORD_LINK.message(),
                         ResultCode.RESET_PASSWORD.message());
         emailSender.send(email, ResultCode.RESET_NOTIFICATION.message(), passwordResetLink);
-
-        return ResultCode.RESET_PASSWORD_LINK.message() + link;
     }
 
     /**
@@ -363,46 +358,49 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public TokenResponse refreshToken(String refreshToken) {
-        return refreshTokenService.findByToken(refreshToken)
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    String accessToken = jwtTokenService.generateToken(user.getId());
-                    return TokenResponse.builder()
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .build();
-                }).orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                ResultCode.REFRESH_TOKEN_NOT_IN_DB.message(),
-                                ResultCode.REFRESH_TOKEN_NOT_IN_DB.code()
-                        ));
+        var rotatedToken = refreshTokenService.rotateRefreshToken(refreshToken);
+        var accessToken = jwtTokenService.generateToken(rotatedToken.getUser().getId());
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(rotatedToken.getToken())
+                .build();
     }
 
-    /**
-     * Logout
-     *
-     * @param request HttpServletRequest
-     */
     @Override
-    public void logout(HttpServletRequest request) {
-        var token = TokenUtils.getJwtFromAuthorizationHeader(request);
-        if (ObjectUtils.hasText(token)) {
-            tokenBlacklistService.addTokenToBlacklist(token);
-            SecurityContextHolder.clearContext();
+    public void logout(HttpServletRequest request, String refreshToken) {
+        blacklistAccessToken(request);
+        refreshTokenService.revokeRefreshToken(refreshToken);
+        SecurityContextHolder.clearContext();
+    }
+
+    @Override
+    public void logoutAll(HttpServletRequest request) {
+        var accessToken = TokenUtils.getJwtFromAuthorizationHeader(request);
+        if (!ObjectUtils.hasText(accessToken)) {
+            throw new UnauthorizedException("Missing Authorization bearer token");
+        }
+        var userId = jwtTokenService.extractUsername(accessToken);
+        refreshTokenService.revokeAllRefreshTokens(userId);
+        tokenBlacklistService.addTokenToBlacklist(accessToken);
+        SecurityContextHolder.clearContext();
+    }
+
+    private void blacklistAccessToken(HttpServletRequest request) {
+        var accessToken = TokenUtils.getJwtFromAuthorizationHeader(request);
+        if (ObjectUtils.hasText(accessToken)) {
+            tokenBlacklistService.addTokenToBlacklist(accessToken);
         }
     }
 
     /**
-     * Fallback method for resendVerificationEmail
-     *
+     * Fallback method for resetPasswordLinkFallback
      * @param email Email
-     * @param t     Throwable
-     * @return Fallback message
+     * @param t Throwable
      */
     @SuppressWarnings("unused")
-    private String resetPasswordLinkFallback(String email, Throwable t) {
-        return "Request limit exceeded. Please wait for a while before retrying.";
+    private void resetPasswordLinkFallback(String email, Throwable t) {
+        throw new TooManyRequestsException(ResultCode.RATE_LIMIT_MESSAGE.message(),
+                ResultCode.RATE_LIMIT_MESSAGE.code());
     }
 
     /**
@@ -410,23 +408,30 @@ public class AuthServiceImpl implements AuthService {
      *
      * @param email Email
      * @param t     Throwable
-     * @return Fallback message
      */
     @SuppressWarnings("unused")
-    private String resendVerificationEmailFallback(String email, Throwable t) {
-        return "Request limit exceeded. Please wait for a while before retrying.";
+    private void resendVerificationEmailFallback(String email, Throwable t) {
+        throw new TooManyRequestsException(ResultCode.RATE_LIMIT_MESSAGE.message(),
+                ResultCode.RATE_LIMIT_MESSAGE.code());
     }
 
     @Override
-    public AuthResponse getUserInfo(String token) {
-        var username = jwtTokenService.extractUsername(token);
+    public AuthResponse getCurrentUser(HttpServletRequest request) {
+        var accessToken = TokenUtils.getJwtFromAuthorizationHeader(request);
+
+        if (!ObjectUtils.hasText(accessToken)) {
+            throw new UnauthorizedException("Missing Authorization bearer token");
+        }
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            throw new UnauthorizedException("Invalid access token");
+        }
+        var username = jwtTokenService.extractUsername(accessToken);
         var user = userService.getDetail(username);
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .accessToken(token)
-                .role(user.getRole().getValue())
-                .email(user.getEmail())
-                .imageUrl(user.getImageUrl())
-                .build();
+        var refreshToken = refreshTokenService.findActiveToken(user.getId())
+                .orElseThrow(() -> new TokenException(
+                        ResultCode.MSG_REFRESH_TOKEN_NOT_FOUND.message(),
+                        ResultCode.MSG_REFRESH_TOKEN_NOT_FOUND.code()));
+        return UserMapper.INSTANCE.toAuthResponse(user, accessToken, refreshToken.getToken());
     }
 }

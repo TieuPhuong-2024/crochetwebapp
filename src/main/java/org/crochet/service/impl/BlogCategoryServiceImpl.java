@@ -30,9 +30,9 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
             blogCategory = new BlogCategory();
         } else {
             blogCategory = getById(request.getId());
-            permissionService.checkUserPermission(blogCategory, "update");
+            permissionService.checkUserPermission(blogCategory);
         }
-        blogCategory.setName(request.getName());
+        BlogCategoryMapper.INSTANCE.partialUpdate(request, blogCategory);
         blogCategoryRepo.save(blogCategory);
     }
 
@@ -68,7 +68,7 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
     @Override
     public void delete(String id) {
         BlogCategory blogCategory = getById(id);
-        permissionService.checkUserPermission(blogCategory, "delete");
+        permissionService.checkUserPermission(blogCategory);
         blogCategoryRepo.delete(blogCategory);
     }
 

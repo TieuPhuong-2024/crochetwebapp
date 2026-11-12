@@ -1,0 +1,140 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-subscriptions-table
+      author: ai
+      changes:
+        - createTable:
+            tableName: subscriptions
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(50)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: plan_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: VARCHAR(50)
+              - column:
+                  name: created_date
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: last_modified_by
+                  type: VARCHAR(50)
+              - column:
+                  name: last_modified_date
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: subscriptions
+            baseColumnNames: user_id
+            constraintName: fk_subscription_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: add-payment-transactions-table
+      author: ai
+      changes:
+        - createTable:
+            tableName: payment_transactions
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(50)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subscription_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: payment_method
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_order_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_capture_id
+                  type: VARCHAR(255)
+              - column:
+                  name: amount
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: VARCHAR(50)
+              - column:
+                  name: created_date
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: last_modified_by
+                  type: VARCHAR(50)
+              - column:
+                  name: last_modified_date
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: payment_transactions
+            baseColumnNames: user_id
+            constraintName: fk_payment_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: payment_transactions
+            baseColumnNames: subscription_id
+            constraintName: fk_payment_subscription
+            referencedTableName: subscriptions
+            referencedColumnNames: id
+            onDelete: SET NULL

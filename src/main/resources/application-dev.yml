@@ -4,20 +4,59 @@ spring:
       on-profile: dev
   jpa:
     open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
     properties:
       hibernate:
+        # Cấu hình dev hiện tại
         format_sql: true
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+        use_sql_comments: true
+        jdbc:
+          batch_size: 50 # Tăng từ 25 lên 50
+          batch_versioned_data: true
+          batch_builder: legacy
+        order_inserts: true
+        order_updates: true
+
+        # Thêm cấu hình optimization
+        connection:
+          provider_disables_autocommit: false
+        query:
+          fail_on_pagination_over_collection_fetch: false
+          in_clause_parameter_padding: true
+          plan_cache_max_size: 2048
+          plan_parameter_metadata_max_size: 128
+          timeout: 30
+        batch_fetch_style: DYNAMIC
+        default_batch_fetch_size: 16
+        enable_lazy_load_no_trans: false
+
+  # Datasource optimization
   datasource:
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: CrochetHikariPool
+      maximum-pool-size: 15
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      keepalive-time: 300000
+      auto-commit: false
+      leak-detection-threshold: 60000
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+
   liquibase:
     enabled: false
-
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: debug

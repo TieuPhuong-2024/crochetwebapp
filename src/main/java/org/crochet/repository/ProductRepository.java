@@ -25,7 +25,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
                 p.description,
                 p.price,
                 p.currencyCode,
-                i.fileContent
+                i.fileContent,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               Product p
@@ -60,7 +62,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
                 p.description,
                 p.price,
                 p.currencyCode,
-                i.fileContent
+                i.fileContent,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               Product p
@@ -80,7 +84,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
                 p.description,
                 p.price,
                 p.currencyCode,
-                i.fileContent
+                i.fileContent,
+                p.viewCount,
+                p.likeCount
               )
             FROM
               Product p
@@ -103,4 +109,16 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
     @Modifying
     @Query("delete from Product p where p.id in :ids")
     void deleteMultiple(@Param("ids") List<String> ids);
+
+    @Modifying
+    @Query("UPDATE Product p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
+    int incrementViewCount(@Param("id") String id);
+
+    @Modifying
+    @Query("UPDATE Product p SET p.likeCount = p.likeCount + 1 WHERE p.id = :id")
+    int incrementLikeCount(@Param("id") String id);
+
+    @Modifying
+    @Query("UPDATE Product p SET p.likeCount = CASE WHEN p.likeCount > 0 THEN p.likeCount - 1 ELSE 0 END WHERE p.id = :id")
+    int decrementLikeCount(@Param("id") String id);
 }

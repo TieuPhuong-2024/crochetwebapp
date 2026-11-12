@@ -4,8 +4,9 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
-import org.crochet.exception.IllegalStateException;
+import org.crochet.exception.EmailException;
 import org.crochet.service.EmailSender;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -14,10 +15,13 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 
 /**
- * EmailService class
+ * EmailService class.
+ * Sends email through Gmail SMTP. Active only when {@code app.email.provider=smtp};
+ * otherwise {@link BrevoEmailService} is used.
  */
 @Service
 @Slf4j
+@ConditionalOnProperty(prefix = "app.email", name = "provider", havingValue = "smtp")
 public class EmailService implements EmailSender {
     private final JavaMailSender javaMailSender;
 
@@ -52,10 +56,12 @@ public class EmailService implements EmailSender {
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
             log.error(ResultCode.MSG_FAILED_SEND_EMAIL.message(), e);
-            throw new IllegalStateException(ResultCode.MSG_FAILED_SEND_EMAIL.message(),
+            throw new EmailException(ResultCode.MSG_FAILED_SEND_EMAIL.message(), e,
                     ResultCode.MSG_FAILED_SEND_EMAIL.code());
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            log.error("Email encoding error", e);
+            throw new EmailException("Email encoding error", e,
+                    ResultCode.MSG_FAILED_SEND_EMAIL.code());
         }
     }
 }

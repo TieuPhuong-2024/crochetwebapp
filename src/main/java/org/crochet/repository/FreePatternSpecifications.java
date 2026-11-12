@@ -8,7 +8,7 @@ import org.crochet.model.Category;
 import org.crochet.model.FreePattern;
 import org.springframework.data.jpa.domain.Specification;
 
-@SuppressWarnings({"DataFlowIssue", "unused"})
+@SuppressWarnings("DataFlowIssue")
 public class FreePatternSpecifications {
 
     public static Specification<FreePattern> fetchJoin() {
@@ -36,5 +36,13 @@ public class FreePatternSpecifications {
 
             return cb.in(root.get("category").get("id")).value(subquery);
         };
+    }
+
+    public static Specification<FreePattern> getByStatus(String status) {
+        return (root, query, cb) -> cb.equal(root.get("status"), status);
+    }
+
+    public static Specification<FreePattern> getByIsHome(boolean isHome) {
+        return (root, query, cb) -> cb.equal(root.get("isHome"), isHome);
     }
 }

@@ -3,22 +3,24 @@ package org.crochet.service.impl;
 import com.turkraft.springfilter.converter.FilterSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
+import org.crochet.enums.TargetType;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.BlogPostMapper;
-import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.PaginationMapper;
-import org.crochet.model.BlogCategory;
 import org.crochet.model.BlogPost;
 import org.crochet.model.Settings;
 import org.crochet.payload.request.BlogPostRequest;
 import org.crochet.payload.response.BlogPostResponse;
 import org.crochet.payload.response.PaginationResponse;
 import org.crochet.repository.BlogPostRepository;
+import org.crochet.repository.LikeRepository;
+import org.crochet.repository.CommentRepository;
 import org.crochet.service.BlogCategoryService;
 import org.crochet.service.BlogPostService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.service.PermissionService;
-import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
+import org.crochet.util.SecurityUtils;
 import org.crochet.util.SettingsUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * BlogPostServiceImpl class
@@ -42,15 +45,24 @@ public class BlogPostServiceImpl implements BlogPostService {
     private final BlogCategoryService blogCategoryService;
     private final SettingsUtil settingsUtil;
     private final PermissionService permissionService;
+    private final CommentRepository commentRepository;
+    private final LikeRepository likeRepository;
+    private final UploadLifecycleService uploads;
 
     public BlogPostServiceImpl(BlogPostRepository blogPostRepo,
-                               BlogCategoryService blogCategoryService,
-                               SettingsUtil settingsUtil,
-                               PermissionService permissionService) {
+            BlogCategoryService blogCategoryService,
+            SettingsUtil settingsUtil,
+            PermissionService permissionService,
+            CommentRepository commentRepository,
+            LikeRepository likeRepository,
+            UploadLifecycleService uploads) {
         this.blogPostRepo = blogPostRepo;
         this.blogCategoryService = blogCategoryService;
         this.settingsUtil = settingsUtil;
         this.permissionService = permissionService;
+        this.commentRepository = commentRepository;
+        this.likeRepository = likeRepository;
+        this.uploads = uploads;
     }
 
     /**
@@ -69,23 +81,18 @@ public class BlogPostServiceImpl implements BlogPostService {
         BlogPost blogPost;
 
         if (!ObjectUtils.hasText(request.getId())) {
-            BlogCategory blogCategory = null;
+            blogPost = BlogPostMapper.INSTANCE.toEntity(request);
             if (request.getBlogCategoryId() != null) {
-                blogCategory = blogCategoryService.getById(request.getBlogCategoryId());
+                blogPost.setBlogCategory(blogCategoryService.getById(request.getBlogCategoryId()));
             }
-            var images = ImageUtils.sortFiles(request.getFiles());
-            blogPost = BlogPost.builder()
-                    .blogCategory(blogCategory)
-                    .title(request.getTitle())
-                    .content(request.getContent())
-                    .home(request.isHome())
-                    .files(FileMapper.INSTANCE.toEntities(images))
-                    .build();
         } else {
             blogPost = getById(request.getId());
-            permissionService.checkUserPermission(blogPost, "update");
-            blogPost = BlogPostMapper.INSTANCE.partialUpdate(request, blogPost);
+            permissionService.checkUserPermission(blogPost);
+            BlogPostMapper.INSTANCE.partialUpdate(request, blogPost);
         }
+        uploads.attach(new UploadLifecycleService.References()
+                .files(blogPost.getFiles())
+                .content(blogPost.getContent()));
         blogPostRepo.save(blogPost);
     }
 
@@ -98,13 +105,14 @@ public class BlogPostServiceImpl implements BlogPostService {
      * @param sortDir The sorting direction, either "ASC" (ascending) or "DESC"
      *                (descending).
      * @param spec    The specification used to filter the blog posts.
-     * @return A {@link org.crochet.payload.response.PaginationResponse} containing the paginated list of
-     * blog posts.
+     * @return A {@link org.crochet.payload.response.PaginationResponse} containing
+     *         the paginated list of
+     *         blog posts.
      */
     @SuppressWarnings("ConstantValue")
     @Override
     public PaginationResponse<BlogPostResponse> getBlogs(int offset, int limit, String sortBy, String sortDir,
-                                                         Specification<BlogPost> spec) {
+            Specification<BlogPost> spec) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(offset, limit, sort);
         var filter = ((FilterSpecification<BlogPost>) spec).getFilter();
@@ -118,7 +126,35 @@ public class BlogPostServiceImpl implements BlogPostService {
         } else {
             page = blogPostRepo.findPostWithPageable(pageable);
         }
-        return PaginationMapper.toPagination(page);
+
+        // Thêm số lượng comments cho mỗi bài viết
+        var paginationResponse = PaginationMapper.toPagination(page);
+        for (BlogPostResponse post : paginationResponse.getContents()) {
+            long commentCount = commentRepository.countByBlogPostId(post.getId());
+            post.setCommentCount(commentCount);
+        }
+
+        var content = paginationResponse.getContents();
+        if (!content.isEmpty()) {
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    var blogIdsSet = content.stream()
+                            .map(BlogPostResponse::getId)
+                            .collect(Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.BLOG, blogIdsSet);
+                    content.forEach(blog -> blog.setIsLiked(likedIds.contains(blog.getId())));
+                } catch (Exception e) {
+                    log.warn("Failed to retrieve liked status for user {}: {}", currentUser.getId(), e.getMessage());
+                    content.forEach(blog -> blog.setIsLiked(false));
+                }
+            } else {
+                content.forEach(blog -> blog.setIsLiked(false));
+            }
+        }
+
+        return paginationResponse;
     }
 
     /**
@@ -140,7 +176,7 @@ public class BlogPostServiceImpl implements BlogPostService {
      *
      * @param id The unique identifier of the blog post.
      * @return A {@link BlogPostResponse} containing detailed information about the
-     * blog post.
+     *         blog post.
      * @throws ResourceNotFoundException If the specified blog post ID does not
      *                                   correspond to an existing blog post.
      */
@@ -149,9 +185,25 @@ public class BlogPostServiceImpl implements BlogPostService {
         var blogPost = blogPostRepo.getDetail(id).orElseThrow(
                 () -> new ResourceNotFoundException(
                         ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                        ResultCode.MSG_BLOG_NOT_FOUND.code()
-                ));
-        return BlogPostMapper.INSTANCE.toResponse(blogPost);
+                        ResultCode.MSG_BLOG_NOT_FOUND.code()));
+        BlogPostResponse response = BlogPostMapper.INSTANCE.toResponse(blogPost);
+
+        // Thêm số lượng comments
+        long commentCount = commentRepository.countByBlogPostId(id);
+        response.setCommentCount(commentCount);
+
+        response.setViewCount(blogPost.getViewCount() != null ? blogPost.getViewCount() : 0L);
+        response.setLikeCount(blogPost.getLikeCount() != null ? blogPost.getLikeCount() : 0L);
+
+        var isLiked = false;
+        var currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser != null) {
+            isLiked = likeRepository.existsByUserIdAndTargetIdAndTargetType(currentUser.getId(), id,
+                    TargetType.BLOG);
+        }
+        response.setIsLiked(isLiked);
+
+        return response;
     }
 
     /**
@@ -166,12 +218,45 @@ public class BlogPostServiceImpl implements BlogPostService {
         if (settingsMap.isEmpty()) {
             return List.of();
         }
-        String direction = settingsMap.get("homepage.blog.direction").getValue();
-        String orderBy = settingsMap.get("homepage.blog.orderBy").getValue();
-        String limit = settingsMap.get("homepage.blog.limit").getValue();
+        String direction = settingsMap.getOrDefault(
+                "homepage.blog.direction",
+                new Settings("homepage.blog.direction", "desc")).getValue();
+        String orderBy = settingsMap.getOrDefault(
+                "homepage.blog.orderBy",
+                new Settings("homepage.blog.orderBy", "createdDate")).getValue();
+        String limit = settingsMap.getOrDefault(
+                "homepage.blog.limit",
+                new Settings("homepage.blog.limit", "12")).getValue();
         Sort sort = Sort.by(Sort.Direction.fromString(direction), orderBy);
         Pageable pageable = PageRequest.of(0, Integer.parseInt(limit), sort);
-        return blogPostRepo.findLimitedNumPosts(pageable);
+        List<BlogPostResponse> posts = blogPostRepo.findLimitedNumPosts(pageable);
+
+        // Thêm số lượng comments cho mỗi bài viết
+        for (BlogPostResponse post : posts) {
+            long commentCount = commentRepository.countByBlogPostId(post.getId());
+            post.setCommentCount(commentCount);
+        }
+
+        if (!posts.isEmpty()) {
+            var currentUser = SecurityUtils.getCurrentUser();
+            if (currentUser != null) {
+                try {
+                    var blogIdsSet = posts.stream()
+                            .map(BlogPostResponse::getId)
+                            .collect(Collectors.toSet());
+                    List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(),
+                            TargetType.BLOG, blogIdsSet);
+                    posts.forEach(blog -> blog.setIsLiked(likedIds.contains(blog.getId())));
+                } catch (Exception e) {
+                    log.warn("Failed to retrieve liked status for user {}: {}", currentUser.getId(), e.getMessage());
+                    posts.forEach(blog -> blog.setIsLiked(false));
+                }
+            } else {
+                posts.forEach(blog -> blog.setIsLiked(false));
+            }
+        }
+
+        return posts;
     }
 
     /**
@@ -185,7 +270,7 @@ public class BlogPostServiceImpl implements BlogPostService {
     @Override
     public void deletePost(String id) {
         var blogPost = getById(id);
-        permissionService.checkUserPermission(blogPost, "delete");
+        permissionService.checkUserPermission(blogPost);
         blogPostRepo.delete(blogPost);
     }
 
@@ -202,7 +287,6 @@ public class BlogPostServiceImpl implements BlogPostService {
         return blogPostRepo.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(
                         ResultCode.MSG_BLOG_NOT_FOUND.message(),
-                        ResultCode.MSG_BLOG_NOT_FOUND.code()
-                ));
+                        ResultCode.MSG_BLOG_NOT_FOUND.code()));
     }
 }

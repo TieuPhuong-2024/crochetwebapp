@@ -68,7 +68,7 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
     private String verificationCode;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "roles", columnDefinition = "VARCHAR(10) DEFAULT 'USER'")
+    @Column(name = "roles", columnDefinition = "VARCHAR(50) DEFAULT 'USER'")
     @Builder.Default
     private RoleType role = RoleType.USER;
 
@@ -86,6 +86,9 @@ public class User extends BaseEntity implements UserDetails, OAuth2User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Collection> collections;
+
+    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
+    private Set<Notification> notifications;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserProfile userProfile;
