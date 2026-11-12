@@ -17,6 +17,7 @@ import org.crochet.repository.LikeRepository;
 import org.crochet.repository.CommentRepository;
 import org.crochet.service.BlogCategoryService;
 import org.crochet.service.BlogPostService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.service.PermissionService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
@@ -46,19 +47,22 @@ public class BlogPostServiceImpl implements BlogPostService {
     private final PermissionService permissionService;
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
+    private final UploadLifecycleService uploads;
 
     public BlogPostServiceImpl(BlogPostRepository blogPostRepo,
             BlogCategoryService blogCategoryService,
             SettingsUtil settingsUtil,
             PermissionService permissionService,
             CommentRepository commentRepository,
-            LikeRepository likeRepository) {
+            LikeRepository likeRepository,
+            UploadLifecycleService uploads) {
         this.blogPostRepo = blogPostRepo;
         this.blogCategoryService = blogCategoryService;
         this.settingsUtil = settingsUtil;
         this.permissionService = permissionService;
         this.commentRepository = commentRepository;
         this.likeRepository = likeRepository;
+        this.uploads = uploads;
     }
 
     /**
@@ -86,6 +90,9 @@ public class BlogPostServiceImpl implements BlogPostService {
             permissionService.checkUserPermission(blogPost);
             BlogPostMapper.INSTANCE.partialUpdate(request, blogPost);
         }
+        uploads.attach(new UploadLifecycleService.References()
+                .files(blogPost.getFiles())
+                .content(blogPost.getContent()));
         blogPostRepo.save(blogPost);
     }
 

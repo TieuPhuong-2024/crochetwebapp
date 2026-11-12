@@ -26,6 +26,7 @@ import org.crochet.service.CategoryService;
 import org.crochet.service.FreePatternService;
 import org.crochet.service.PermissionService;
 import org.crochet.service.UserService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
 import org.crochet.util.SettingsUtil;
@@ -58,6 +59,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final CommentRepository commentRepository;
     private final ColFrepRepo colFrepRepo;
     private final LikeRepository likeRepository;
+    private final UploadLifecycleService uploads;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -82,6 +84,10 @@ public class FreePatternServiceImpl implements FreePatternService {
             permissionService.checkUserPermission(freePattern);
             FreePatternMapper.INSTANCE.update(request, freePattern);
         }
+        uploads.attach(new UploadLifecycleService.References()
+                .files(freePattern.getImages())
+                .files(freePattern.getFiles())
+                .content(freePattern.getContent(), freePattern.getDescription()));
         freePatternRepo.save(freePattern);
     }
 

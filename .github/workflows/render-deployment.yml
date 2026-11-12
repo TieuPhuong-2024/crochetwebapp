@@ -8,9 +8,6 @@ on:
     branches:
       - 'master'
 
-vars:
-  BREVO_SENDER_NAME: Little Crochet
-
 env:
   ENV: prod
   EMAIL: ${{ secrets.EMAIL }}
@@ -25,7 +22,9 @@ env:
   APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
   EMAIL_PROVIDER: brevo
   BREVO_SENDER_EMAIL: ${{ secrets.EMAIL }}
-  BREVO_SENDER_NAME: ${{ vars.BREVO_SENDER_NAME }}
+  BREVO_SENDER_NAME: Little Crochet
+  PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+  PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
 
 jobs:
   build:

@@ -17,6 +17,7 @@ import org.crochet.repository.ProductRepository;
 import org.crochet.repository.ProductSpecifications;
 import org.crochet.service.CategoryService;
 import org.crochet.service.ProductService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SettingsUtil;
 import org.springframework.data.domain.Page;
@@ -48,6 +49,7 @@ public class ProductServiceImpl implements ProductService {
     private final SettingsUtil settingsUtil;
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
+    private final UploadLifecycleService uploads;
 
     /**
      * Creates a new product or updates an existing one based on the provided
@@ -71,6 +73,9 @@ public class ProductServiceImpl implements ProductService {
             product = findById(request.getId());
             ProductMapper.INSTANCE.update(request, product);
         }
+        uploads.attach(new UploadLifecycleService.References()
+                .files(product.getImages())
+                .content(product.getContent(), product.getDescription()));
         productRepo.save(product);
     }
 

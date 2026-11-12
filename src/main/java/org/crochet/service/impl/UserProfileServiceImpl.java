@@ -13,6 +13,7 @@ import org.crochet.repository.UserProfileRepo;
 import org.crochet.repository.UserRepository;
 import org.crochet.mapper.UserProfileMapper;
 import org.crochet.service.UserProfileService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     private final UserProfileRepo userProfileRepo;
     private final UserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
+    private final UploadLifecycleService uploads;
 
     /**
      * Load user profile
@@ -83,6 +85,8 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         UserProfileMapper.INSTANCE.updateUserProfile(request, userProfile);
         UserProfileMapper.INSTANCE.updateUserInfo(request, user);
+        uploads.attach(new UploadLifecycleService.References()
+                .urls(user.getImageUrl(), userProfile.getBackgroundImageUrl()));
         user = userRepo.save(user);
 
         userProfile.setUser(user);
