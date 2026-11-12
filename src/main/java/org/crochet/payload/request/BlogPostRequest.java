@@ -17,6 +17,6 @@ public class BlogPostRequest {
     private String title;
     private String content;
     @JsonProperty("is_home")
-    private boolean isHome;
+    private Boolean isHome;
     private List<FileResponse> files;
 }

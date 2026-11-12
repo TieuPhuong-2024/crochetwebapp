@@ -1,9 +1,7 @@
 package org.crochet.service.impl;
 
 import com.turkraft.springfilter.converter.FilterSpecification;
-import org.crochet.enums.AuthProvider;
 import org.crochet.enums.ResultCode;
-import org.crochet.enums.RoleType;
 import org.crochet.exception.BadRequestException;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.PaginationMapper;
@@ -58,15 +56,8 @@ public class UserServiceImpl implements UserService {
                     ResultCode.MSG_EMAIL_ALREADY_IN_USE.code());
         }
 
-        // Creating user's account
-        User user = User.builder()
-                .name(signUpRequest.getName())
-                .email(signUpRequest.getEmail())
-                .emailVerified(false)
-                .password(passwordEncoder.encode(signUpRequest.getPassword()))
-                .provider(AuthProvider.LOCAL)
-                .role(RoleType.USER)
-                .build();
+        User user = UserMapper.INSTANCE.toEntity(signUpRequest);
+        user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
         // Save the user to the repository
         return userRepository.save(user);
     }

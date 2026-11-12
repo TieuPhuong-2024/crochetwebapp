@@ -7,8 +7,6 @@ import org.crochet.enums.ResultCode;
 import org.crochet.enums.RoleType;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.exception.UnauthorizedException;
-import org.crochet.mapper.CategoryMapper;
-import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.FreePatternMapper;
 import org.crochet.mapper.PaginationMapper;
 import org.crochet.model.FreePattern;
@@ -28,7 +26,7 @@ import org.crochet.service.CategoryService;
 import org.crochet.service.FreePatternService;
 import org.crochet.service.PermissionService;
 import org.crochet.service.UserService;
-import org.crochet.util.ImageUtils;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
 import org.crochet.util.SettingsUtil;
@@ -61,6 +59,7 @@ public class FreePatternServiceImpl implements FreePatternService {
     private final CommentRepository commentRepository;
     private final ColFrepRepo colFrepRepo;
     private final LikeRepository likeRepository;
+    private final UploadLifecycleService uploads;
 
     /**
      * Creates a new FreePattern or updates an existing one based on the provided
@@ -78,25 +77,17 @@ public class FreePatternServiceImpl implements FreePatternService {
         FreePattern freePattern;
         if (!ObjectUtils.hasText(request.getId())) {
             var category = categoryService.findById(request.getCategoryId());
-            var sortedImages = ImageUtils.sortFiles(request.getImages());
-            var sortedFiles = ImageUtils.sortFiles(request.getFiles());
-            freePattern = FreePattern.builder()
-                    .category(category)
-                    .name(request.getName())
-                    .description(request.getDescription())
-                    .author(request.getAuthor())
-                    .isHome(request.isHome())
-                    .link(request.getLink())
-                    .content(request.getContent())
-                    .status(request.getStatus())
-                    .files(FileMapper.INSTANCE.toEntities(sortedFiles))
-                    .images(FileMapper.INSTANCE.toEntities(sortedImages))
-                    .build();
+            freePattern = FreePatternMapper.INSTANCE.toEntity(request);
+            freePattern.setCategory(category);
         } else {
             freePattern = findById(request.getId());
             permissionService.checkUserPermission(freePattern);
             FreePatternMapper.INSTANCE.update(request, freePattern);
         }
+        uploads.attach(new UploadLifecycleService.References()
+                .files(freePattern.getImages())
+                .files(freePattern.getFiles())
+                .content(freePattern.getContent(), freePattern.getDescription()));
         freePatternRepo.save(freePattern);
     }
 
@@ -400,10 +391,6 @@ public class FreePatternServiceImpl implements FreePatternService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.message(),
                         ResultCode.MSG_FREE_PATTERN_NOT_FOUND.code()));
-        var user = userService.getById(frep.getCreatedBy());
-        var images = FileMapper.INSTANCE.toResponses(frep.getImages());
-        var files = FileMapper.INSTANCE.toResponses(frep.getFiles());
-        var category = CategoryMapper.INSTANCE.toResponse(frep.getCategory());
         var commentCount = commentRepository.countByFreePatternId(id);
 
         var isLiked = false;
@@ -415,27 +402,11 @@ public class FreePatternServiceImpl implements FreePatternService {
             inCollection = colFrepRepo.existsByFreePatternAndUserOptimized(id, currentUser.getId());
         }
 
-        return FreePatternResponse.builder()
-                .id(frep.getId())
-                .name(frep.getName())
-                .description(frep.getDescription())
-                .author(frep.getAuthor())
-                .isHome(frep.isHome())
-                .link(frep.getLink())
-                .content(frep.getContent())
-                .status(frep.getStatus())
-                .userId(user.getId())
-                .username(user.getName())
-                .userAvatar(user.getImageUrl())
-                .images(images)
-                .files(files)
-                .category(category)
-                .commentCount(commentCount)
-                .viewCount(frep.getViewCount() != null ? frep.getViewCount() : 0L)
-                .likeCount(frep.getLikeCount() != null ? frep.getLikeCount() : 0L)
-                .isLiked(isLiked)
-                .inCollection(inCollection)
-                .build();
+        var response = convertToResponse(frep);
+        response.setCommentCount(commentCount);
+        response.setIsLiked(isLiked);
+        response.setInCollection(inCollection);
+        return response;
     }
 
     /**
@@ -537,28 +508,13 @@ public class FreePatternServiceImpl implements FreePatternService {
      */
     private FreePatternResponse convertToResponse(FreePattern freePattern) {
         var user = userService.getById(freePattern.getCreatedBy());
-        var images = FileMapper.INSTANCE.toResponses(freePattern.getImages());
-        var files = FileMapper.INSTANCE.toResponses(freePattern.getFiles());
-        var category = CategoryMapper.INSTANCE.toResponse(freePattern.getCategory());
-
-        return FreePatternResponse.builder()
-                .id(freePattern.getId())
-                .name(freePattern.getName())
-                .description(freePattern.getDescription())
-                .author(freePattern.getAuthor())
-                .isHome(freePattern.isHome())
-                .link(freePattern.getLink())
-                .content(freePattern.getContent())
-                .status(freePattern.getStatus())
-                .userId(user.getId())
-                .username(user.getName())
-                .userAvatar(user.getImageUrl())
-                .images(images)
-                .files(files)
-                .category(category)
-                .viewCount(freePattern.getViewCount() != null ? freePattern.getViewCount() : 0L)
-                .likeCount(freePattern.getLikeCount() != null ? freePattern.getLikeCount() : 0L)
-                .build();
+        var response = FreePatternMapper.INSTANCE.toResponse(freePattern);
+        if (user != null) {
+            response.setUserId(user.getId());
+            response.setUsername(user.getName());
+            response.setUserAvatar(user.getImageUrl());
+        }
+        return response;
     }
 
     @Override

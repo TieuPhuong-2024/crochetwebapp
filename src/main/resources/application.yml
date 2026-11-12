@@ -1,3 +1,11 @@
+r2:
+  endpoint: ${R2_ENDPOINT:}
+  access-key: ${R2_ACCESS_KEY:}
+  secret-key: ${R2_SECRET_KEY:}
+  bucket-name: ${R2_BUCKET_NAME:}
+  cdn-url: ${R2_CDN_URL:}
+  environment: ${R2_ENVIRONMENT:development}
+
 spring:
   profiles:
     active: ${ENV:dev}
@@ -47,8 +55,9 @@ app:
     provider: ${EMAIL_PROVIDER:brevo}
   auth:
     tokenSecret: ${TOKEN_SECRET}
-    tokenExpirationMs: 259200000 # 3 days
-    refresh-token-expiration-ms: 604800000 # 1 week
+    tokenExpirationMs: 900000 # 15 minutes
+    refresh-token-expiration-ms: 86400000 # 1 day (default, no remember me)
+    refresh-token-remember-me-expiration-ms: 2592000000 # 30 days (remember me)
   oauth2:
     authorizedRedirectUris:
       - http://localhost:3000/oauth2/redirect
@@ -60,10 +69,6 @@ app:
 authorize:
   http-request:
     allowedOrigins: ${ALLOWED_ORIGINS}
-
-# Firebase configuration
-firebase:
-  serviceAccountKey: ${SERVICE_ACCOUNT_KEY}
 
 # Brevo configuration (transaction email, REST API v3)
 brevo:

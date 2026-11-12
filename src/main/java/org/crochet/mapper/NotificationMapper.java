@@ -1,6 +1,7 @@
 package org.crochet.mapper;
 
 import org.crochet.model.Notification;
+import org.crochet.payload.request.NotificationRequest;
 import org.crochet.payload.response.NotificationResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,4 +20,11 @@ public interface NotificationMapper {
     NotificationResponse toResponse(Notification notification);
     
     List<NotificationResponse> toResponses(Collection<Notification> notifications);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "receiver", ignore = true)
+    @Mapping(target = "sender", ignore = true)
+    @Mapping(target = "isRead", constant = "false")
+    @Mapping(target = "createdAt", ignore = true)
+    Notification toEntity(NotificationRequest request);
 } 

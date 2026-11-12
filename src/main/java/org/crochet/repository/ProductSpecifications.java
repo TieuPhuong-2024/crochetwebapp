@@ -8,7 +8,7 @@ import org.crochet.model.Category;
 import org.crochet.model.Product;
 import org.springframework.data.jpa.domain.Specification;
 
-@SuppressWarnings({"DataFlowIssue", "unused"})
+@SuppressWarnings("DataFlowIssue")
 public class ProductSpecifications {
 
     public static Specification<Product> fetchJoin() {

@@ -19,6 +19,7 @@ public class AppProperties {
         private String tokenSecret;
         private long tokenExpirationMs;
         private long refreshTokenExpirationMs;
+        private long refreshTokenRememberMeExpirationMs;
     }
 
     @Getter

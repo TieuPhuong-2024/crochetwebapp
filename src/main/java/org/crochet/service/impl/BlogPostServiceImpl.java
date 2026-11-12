@@ -6,9 +6,7 @@ import org.crochet.enums.ResultCode;
 import org.crochet.enums.TargetType;
 import org.crochet.exception.ResourceNotFoundException;
 import org.crochet.mapper.BlogPostMapper;
-import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.PaginationMapper;
-import org.crochet.model.BlogCategory;
 import org.crochet.model.BlogPost;
 import org.crochet.model.Settings;
 import org.crochet.payload.request.BlogPostRequest;
@@ -19,8 +17,8 @@ import org.crochet.repository.LikeRepository;
 import org.crochet.repository.CommentRepository;
 import org.crochet.service.BlogCategoryService;
 import org.crochet.service.BlogPostService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.service.PermissionService;
-import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SecurityUtils;
 import org.crochet.util.SettingsUtil;
@@ -49,19 +47,22 @@ public class BlogPostServiceImpl implements BlogPostService {
     private final PermissionService permissionService;
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
+    private final UploadLifecycleService uploads;
 
     public BlogPostServiceImpl(BlogPostRepository blogPostRepo,
             BlogCategoryService blogCategoryService,
             SettingsUtil settingsUtil,
             PermissionService permissionService,
             CommentRepository commentRepository,
-            LikeRepository likeRepository) {
+            LikeRepository likeRepository,
+            UploadLifecycleService uploads) {
         this.blogPostRepo = blogPostRepo;
         this.blogCategoryService = blogCategoryService;
         this.settingsUtil = settingsUtil;
         this.permissionService = permissionService;
         this.commentRepository = commentRepository;
         this.likeRepository = likeRepository;
+        this.uploads = uploads;
     }
 
     /**
@@ -80,23 +81,18 @@ public class BlogPostServiceImpl implements BlogPostService {
         BlogPost blogPost;
 
         if (!ObjectUtils.hasText(request.getId())) {
-            BlogCategory blogCategory = null;
+            blogPost = BlogPostMapper.INSTANCE.toEntity(request);
             if (request.getBlogCategoryId() != null) {
-                blogCategory = blogCategoryService.getById(request.getBlogCategoryId());
+                blogPost.setBlogCategory(blogCategoryService.getById(request.getBlogCategoryId()));
             }
-            var images = ImageUtils.sortFiles(request.getFiles());
-            blogPost = BlogPost.builder()
-                    .blogCategory(blogCategory)
-                    .title(request.getTitle())
-                    .content(request.getContent())
-                    .home(request.isHome())
-                    .files(FileMapper.INSTANCE.toEntities(images))
-                    .build();
         } else {
             blogPost = getById(request.getId());
             permissionService.checkUserPermission(blogPost);
             BlogPostMapper.INSTANCE.partialUpdate(request, blogPost);
         }
+        uploads.attach(new UploadLifecycleService.References()
+                .files(blogPost.getFiles())
+                .content(blogPost.getContent()));
         blogPostRepo.save(blogPost);
     }
 

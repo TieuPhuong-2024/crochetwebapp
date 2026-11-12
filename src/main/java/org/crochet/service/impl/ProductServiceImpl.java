@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
 import org.crochet.exception.ResourceNotFoundException;
-import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.PaginationMapper;
 import org.crochet.mapper.ProductMapper;
 import org.crochet.model.Product;
@@ -18,7 +17,7 @@ import org.crochet.repository.ProductRepository;
 import org.crochet.repository.ProductSpecifications;
 import org.crochet.service.CategoryService;
 import org.crochet.service.ProductService;
-import org.crochet.util.ImageUtils;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SettingsUtil;
 import org.springframework.data.domain.Page;
@@ -50,6 +49,7 @@ public class ProductServiceImpl implements ProductService {
     private final SettingsUtil settingsUtil;
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
+    private final UploadLifecycleService uploads;
 
     /**
      * Creates a new product or updates an existing one based on the provided
@@ -67,22 +67,15 @@ public class ProductServiceImpl implements ProductService {
         Product product;
         if (!ObjectUtils.hasText(request.getId())) {
             var category = categoryService.findById(request.getCategoryId());
-            var images = ImageUtils.sortFiles(request.getImages());
-            product = Product.builder()
-                    .category(category)
-                    .name(request.getName())
-                    .price(request.getPrice())
-                    .description(request.getDescription())
-                    .currencyCode(request.getCurrencyCode())
-                    .isHome(request.isHome())
-                    .link(request.getLink())
-                    .content(request.getContent())
-                    .images(FileMapper.INSTANCE.toEntities(images))
-                    .build();
+            product = ProductMapper.INSTANCE.toEntity(request);
+            product.setCategory(category);
         } else {
             product = findById(request.getId());
             ProductMapper.INSTANCE.update(request, product);
         }
+        uploads.attach(new UploadLifecycleService.References()
+                .files(product.getImages())
+                .content(product.getContent(), product.getDescription()));
         productRepo.save(product);
     }
 

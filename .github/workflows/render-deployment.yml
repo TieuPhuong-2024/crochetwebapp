@@ -1,4 +1,4 @@
-name: Heroku deployment
+name: Render deployment
 
 on:
   push:
@@ -21,13 +21,10 @@ env:
   TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
   APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
   EMAIL_PROVIDER: brevo
-  BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
   BREVO_SENDER_EMAIL: ${{ secrets.EMAIL }}
   BREVO_SENDER_NAME: Little Crochet
-  SERVICE_ACCOUNT_KEY: ${{ secrets.SERVICE_ACCOUNT_KEY }}
-  HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-  HEROKU_APP: ${{ secrets.HEROKU_APP }}
-  HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+  PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+  PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
 
 jobs:
   build:
@@ -50,19 +47,20 @@ jobs:
           ./gradlew clean build
 
   deploy:
-    name: Deploy to Heroku
+    name: Deploy to Render
     runs-on: ubuntu-latest
     environment: little-crochet-prod
     needs: build
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install Heroku CLI
-        run: curl https://cli-assets.heroku.com/install.sh | sh
-      - name: Deploy to heroku
-        uses: akhileshns/heroku-deploy@v3.13.15
-        with:
-          heroku_api_key: ${{ env.HEROKU_API_KEY }}
-          heroku_app_name: ${{ env.HEROKU_APP }}
-          heroku_email: ${{ env.HEROKU_EMAIL }}
+      - name: Install Render CLI
+        run: |
+          curl --fail --location --silent --show-error https://github.com/render-oss/cli/releases/download/v1.1.0/cli_1.1.0_linux_amd64.zip --output render.zip
+          unzip render.zip
+          sudo mv cli_v1.1.0 /usr/local/bin/render
+      - name: Trigger deploy with Render CLI
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          CI: true
+        run: render deploys create "$RENDER_SERVICE_ID" --output json --confirm
