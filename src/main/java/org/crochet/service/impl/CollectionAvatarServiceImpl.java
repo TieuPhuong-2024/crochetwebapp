@@ -7,6 +7,7 @@ import org.crochet.model.FreePattern;
 import org.crochet.repository.ColFrepRepo;
 import org.crochet.repository.CollectionRepo;
 import org.crochet.service.CollectionAvatarService;
+import org.crochet.service.UploadLifecycleService;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,6 +17,7 @@ public class CollectionAvatarServiceImpl implements CollectionAvatarService {
 
     private final CollectionRepo collectionRepo;
     private final ColFrepRepo colFrepRepo;
+    private final UploadLifecycleService uploads;
 
     @Override
     public void updateAvatar(Collection collection, FreePattern freePattern) {
@@ -25,6 +27,7 @@ public class CollectionAvatarServiceImpl implements CollectionAvatarService {
                     .findFirst()
                     .get()
                     .getFileContent();
+            uploads.attach(new UploadLifecycleService.References().urls(firstImage));
             collection.setAvatar(firstImage);
             collectionRepo.save(collection);
         }
@@ -33,6 +36,7 @@ public class CollectionAvatarServiceImpl implements CollectionAvatarService {
     @Override
     public void updateAvatarFromNextPattern(Collection collection) {
         var avatarUrl = colFrepRepo.findFirstAvatarUrlByCollectionId(collection.getId());
+        uploads.attach(new UploadLifecycleService.References().urls(avatarUrl.orElse(null)));
         collection.setAvatar(avatarUrl.orElse(null));
         collectionRepo.save(collection);
     }

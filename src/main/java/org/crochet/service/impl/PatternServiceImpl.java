@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.crochet.enums.ResultCode;
 import org.crochet.exception.ResourceNotFoundException;
-import org.crochet.mapper.FileMapper;
 import org.crochet.mapper.PaginationMapper;
 import org.crochet.mapper.PatternMapper;
 import org.crochet.model.Pattern;
@@ -17,8 +16,8 @@ import org.crochet.repository.PatternRepository;
 import org.crochet.repository.PatternSpecifications;
 import org.crochet.service.CategoryService;
 import org.crochet.service.PatternService;
+import org.crochet.service.UploadLifecycleService;
 import org.crochet.service.PermissionService;
-import org.crochet.util.ImageUtils;
 import org.crochet.util.ObjectUtils;
 import org.crochet.util.SettingsUtil;
 import org.springframework.data.domain.Page;
@@ -45,6 +44,7 @@ public class PatternServiceImpl implements PatternService {
     private final SettingsUtil settingsUtil;
     private final PermissionService permissionService;
     private final CategoryService categoryService;
+    private final UploadLifecycleService uploads;
 
     /**
      * Create or update pattern
@@ -57,26 +57,18 @@ public class PatternServiceImpl implements PatternService {
         Pattern pattern;
         if (!ObjectUtils.hasText(request.getId())) {
             var category = categoryService.findById(request.getCategoryId());
-            var images = ImageUtils.sortFiles(request.getImages());
-            var files = ImageUtils.sortFiles(request.getFiles());
-            pattern = Pattern.builder()
-                    .category(category)
-                    .name(request.getName())
-                    .price(request.getPrice())
-                    .description(request.getDescription())
-                    .currencyCode(request.getCurrencyCode())
-                    .isHome(request.isHome())
-                    .link(request.getLink())
-                    .content(request.getContent())
-                    .files(FileMapper.INSTANCE.toEntities(files))
-                    .images(FileMapper.INSTANCE.toEntities(images))
-                    .build();
+            pattern = PatternMapper.INSTANCE.toEntity(request);
+            pattern.setCategory(category);
         } else {
             pattern = findById(request.getId());
             permissionService.checkUserPermission(pattern);
             PatternMapper.INSTANCE.partialUpdate(request, pattern);
         }
 
+        uploads.attach(new UploadLifecycleService.References()
+                .files(pattern.getImages())
+                .files(pattern.getFiles())
+                .content(pattern.getContent(), pattern.getDescription()));
         patternRepo.save(pattern);
     }
 

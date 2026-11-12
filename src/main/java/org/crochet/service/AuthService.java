@@ -16,13 +16,15 @@ public interface AuthService {
 
     void confirmToken(String token);
 
-    String resetPasswordLink(String email);
+    void resetPasswordLink(String email);
 
     void resetPassword(String token, PasswordResetRequest passwordResetRequest);
 
     TokenResponse refreshToken(String refreshToken);
 
-    void logout(HttpServletRequest request);
+    void logout(HttpServletRequest request, String refreshToken);
 
-    AuthResponse getUserInfo(String token);
+    void logoutAll(HttpServletRequest request);
+
+    AuthResponse getCurrentUser(HttpServletRequest request);
 }

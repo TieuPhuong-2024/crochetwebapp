@@ -4,6 +4,7 @@ import org.crochet.model.Banner;
 import org.crochet.payload.request.BannerRequest;
 import org.crochet.payload.response.BannerResponse;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
@@ -13,4 +14,7 @@ import org.mapstruct.factory.Mappers;
 )
 public interface BannerMapper extends AbstractMapper<Banner, BannerResponse>, PartialUpdate<Banner, BannerRequest> {
     BannerMapper INSTANCE = Mappers.getMapper(BannerMapper.class);
+
+    @Mapping(target = "bannerType", ignore = true)
+    Banner toEntity(BannerRequest request);
 }

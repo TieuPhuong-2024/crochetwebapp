@@ -122,6 +122,14 @@ public class ApiExceptionHandler {
         return ResponseUtil.error(code, ex.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseData<Object> handleTooManyRequestsException(TooManyRequestsException ex, HttpServletRequest request) {
+        int code = ex.getMessageCode() != 0 ? ex.getMessageCode() : HttpStatus.TOO_MANY_REQUESTS.value();
+        log.warn("Rate limit at [{}] - code {}: {}", request.getRequestURI(), code, ex.getMessage());
+        return ResponseUtil.error(code, ex.getMessage());
+    }
+
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(ForbiddenException.class)
     public ResponseData<Object> handleForbiddenException(ForbiddenException ex, HttpServletRequest request) {
@@ -178,7 +186,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(EmailVerificationException.class)
     public ResponseData<Object> handleEmailVerificationException(EmailVerificationException ex, HttpServletRequest request) {
         int code = ex.getMessageCode() != 0 ? ex.getMessageCode() : HttpStatus.INTERNAL_SERVER_ERROR.value();
-        log.error("Email verification error at [{}] - code {}: {}", request.getRequestURI(), code, ex.getMessage(), ex);
+        log.warn("Email verification error at [{}] - code {}: {}", request.getRequestURI(), code, ex.getMessage());
         return ResponseUtil.error(code, ex.getMessage());
     }
 
@@ -186,7 +194,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(EmailException.class)
     public ResponseData<Object> handleEmailException(EmailException ex, HttpServletRequest request) {
         int code = ex.getMessageCode() != 0 ? ex.getMessageCode() : HttpStatus.INTERNAL_SERVER_ERROR.value();
-        log.error("Email service error at [{}] - code {}: {}", request.getRequestURI(), code, ex.getMessage(), ex);
+        log.warn("Email service error at [{}] - code {}: {}", request.getRequestURI(), code, ex.getMessage(), ex);
         return ResponseUtil.error(code, ex.getMessage());
     }
 

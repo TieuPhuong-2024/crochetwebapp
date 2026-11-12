@@ -1,3 +1,6 @@
+r2:
+  environment: ${R2_ENVIRONMENT:development}
+
 spring:
   config:
     activate:
