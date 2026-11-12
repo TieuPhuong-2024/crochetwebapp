@@ -62,10 +62,6 @@ authorize:
   http-request:
     allowedOrigins: ${ALLOWED_ORIGINS}
 
-# Firebase configuration
-firebase:
-  serviceAccountKey: ${SERVICE_ACCOUNT_KEY}
-
 # Brevo configuration (transaction email, REST API v3)
 brevo:
   api-key: ${BREVO_API_KEY:}
