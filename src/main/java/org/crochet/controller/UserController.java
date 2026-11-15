@@ -85,7 +85,6 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{userId}/free-pattern")
     @SecurityRequirement(name = "BearerAuth")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseData<PaginationResponse<FreePatternResponse>> getFreePatternByUser(
             @Parameter(description = "Page number (default: 0)")
             @RequestParam(value = "pageNo", defaultValue = AppConstant.DEFAULT_PAGE_NUMBER,
@@ -160,7 +159,6 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{userId}/collections")
     @SecurityRequirement(name = "BearerAuth")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseData<List<CollectionResponse>> getCollections(@PathVariable("userId") String userId) {
         var res = collectionService.getAllByUserId(userId);
         return ResponseUtil.success(res);
@@ -202,7 +200,6 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{userId}/collections/{collection_id}/free-patterns")
     @SecurityRequirement(name = "BearerAuth")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseData<PaginationResponse<FreePatternResponse>> getFreePatternsByCollection(
             @Parameter(description = "Page number (default: 0)")
             @RequestParam(value = "pageNo", defaultValue = AppConstant.DEFAULT_PAGE_NUMBER,
