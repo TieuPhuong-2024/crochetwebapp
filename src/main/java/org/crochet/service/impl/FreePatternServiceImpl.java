@@ -467,8 +467,6 @@ public class FreePatternServiceImpl implements FreePatternService {
         Pageable pageable = PageRequest.of(offset, limit, Sort.Direction.fromString(sortDir), sortBy);
         var frepResponse = freePatternRepo.getFrepsByCollection(userId, collectionId, pageable);
 
-        // Thêm collection status cho từng pattern (patterns trong collection nên luôn
-        // có inCollection = true)
         if (!frepResponse.getContent().isEmpty()) {
             var currentUser = SecurityUtils.getCurrentUser();
             if (currentUser != null) {
@@ -477,13 +475,19 @@ public class FreePatternServiceImpl implements FreePatternService {
                         .collect(Collectors.toSet());
                 List<String> likedIds = likeRepository.findLikedTargetIds(currentUser.getId(), TargetType.FREE_PATTERN,
                         patternIds);
+                Map<String, Boolean> collectionStatus = colFrepRepo
+                        .existFreePatternsInCollection(patternIds, currentUser.getId())
+                        .stream()
+                        .collect(Collectors.toMap(
+                                result -> (String) result[0],
+                                result -> (Boolean) result[1]));
                 frepResponse.getContent().forEach(pattern -> {
-                    pattern.setInCollection(true);
+                    pattern.setInCollection(collectionStatus.getOrDefault(pattern.getId(), false));
                     pattern.setIsLiked(likedIds.contains(pattern.getId()));
                 });
             } else {
                 frepResponse.getContent().forEach(pattern -> {
-                    pattern.setInCollection(true);
+                    pattern.setInCollection(false);
                     pattern.setIsLiked(false);
                 });
             }
