@@ -13,8 +13,10 @@ import lombok.Setter;
 public class VideoPopupClipPayload {
     @NotBlank
     private String videoUrl;
+
     @NotBlank
     private String videoFileName;
+
     private String label;
     private String ctaUrl;
 }

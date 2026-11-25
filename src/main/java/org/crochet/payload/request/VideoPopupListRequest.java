@@ -12,8 +12,6 @@ import java.util.List;
 @Getter
 @Setter
 public class VideoPopupListRequest {
-    private String id;
-
     @NotBlank
     private String title;
 

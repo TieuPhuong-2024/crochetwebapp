@@ -56,10 +56,10 @@ public enum ResultCode {
     MSG_NO_PERMISSION_UPDATE_CATEGORY(62, "No permission to update this category"),
     MSG_NO_PERMISSION(63, "No permission"),
     MSG_NO_PERMISSION_DELETE_CATEGORY(61, "No permission to delete this category"),
-    RATE_LIMIT_MESSAGE(62, "Request limit exceeded. Please wait for a while before retrying."),
-    MSG_VIDEO_POPUP_LIST_NOT_FOUND(64, "Video popup list not found"),
-    MSG_VIDEO_POPUP_LIST_CLIPS_REQUIRED(65, "Video popup list requires at least one clip"),
-    MSG_REFRESH_TOKEN_REUSED(64, "Refresh token reuse detected. Please login again.");
+    RATE_LIMIT_MESSAGE(67, "Request limit exceeded. Please wait for a while before retrying."),
+    MSG_REFRESH_TOKEN_REUSED(64, "Refresh token reuse detected. Please login again."),
+    MSG_VIDEO_POPUP_LIST_NOT_FOUND(65, "Video popup list not found"),
+    MSG_VIDEO_POPUP_LIST_INVALID_CTA(66, "CTA URL must be an http(s) link or an internal path");
 
     private final int code;
     private final String message;
