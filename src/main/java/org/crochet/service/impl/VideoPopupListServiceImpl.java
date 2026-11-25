@@ -92,8 +92,14 @@ public class VideoPopupListServiceImpl implements VideoPopupListService {
         List<VideoPopupClip> normalized = new ArrayList<>(payloads.size());
         for (VideoPopupClipPayload payload : payloads) {
             VideoPopupClip clip = VideoPopupListMapper.INSTANCE.toClip(payload);
-            clip.setVideoUrl(clip.getVideoUrl().trim());
-            clip.setVideoFileName(clip.getVideoFileName().trim());
+            String videoUrl = trimToNull(clip.getVideoUrl());
+            if (videoUrl == null || !isHttpUrl(videoUrl)) {
+                throw new BadRequestException(
+                        ResultCode.MSG_VIDEO_POPUP_LIST_INVALID_VIDEO_URL.message(),
+                        ResultCode.MSG_VIDEO_POPUP_LIST_INVALID_VIDEO_URL.code());
+            }
+            clip.setVideoUrl(videoUrl);
+            clip.setVideoFileName(trimToNull(clip.getVideoFileName()));
             clip.setLabel(trimToNull(clip.getLabel()));
 
             String ctaUrl = trimToNull(clip.getCtaUrl());
@@ -110,12 +116,18 @@ public class VideoPopupListServiceImpl implements VideoPopupListService {
 
     private void attachUploads(List<VideoPopupClip> clips) {
         var references = new UploadLifecycleService.References();
-        references.files(clips.stream().map(clip -> {
-            var file = new File();
-            file.setFileName(clip.getVideoFileName());
-            file.setFileContent(clip.getVideoUrl());
-            return file;
-        }).toList());
+        List<File> files = new ArrayList<>();
+        for (VideoPopupClip clip : clips) {
+            if (clip.getVideoFileName() != null) {
+                var file = new File();
+                file.setFileName(clip.getVideoFileName());
+                file.setFileContent(clip.getVideoUrl());
+                files.add(file);
+            } else {
+                references.urls(clip.getVideoUrl());
+            }
+        }
+        references.files(files);
         uploads.attach(references);
     }
 
@@ -128,9 +140,10 @@ public class VideoPopupListServiceImpl implements VideoPopupListService {
     }
 
     private static boolean isSafeCtaUrl(String url) {
-        if (SAFE_INTERNAL_PATH.matcher(url).matches()) {
-            return true;
-        }
+        return SAFE_INTERNAL_PATH.matcher(url).matches() || isHttpUrl(url);
+    }
+
+    private static boolean isHttpUrl(String url) {
         try {
             URI uri = URI.create(url);
             String scheme = uri.getScheme();

@@ -75,6 +75,51 @@ class VideoPopupListServiceImplTest {
         assertThat(saved.getClips()).hasSize(2);
     }
 
+    @Test
+    void create_acceptsUrlOnlyClipAndAttachesViaUrls() {
+        var nullFileNameClip = clip("  https://cdn.example.com/promo.mp4  ", null, "Watch", "https://example.com");
+        var blankFileNameClip = clip("http://cdn.example.com/intro.webm", "   ", null, null);
+        var request = request("URL Ads", true, List.of(nullFileNameClip, blankFileNameClip));
+
+        when(videoPopupListRepo.save(any(VideoPopupList.class))).thenAnswer(invocation -> {
+            VideoPopupList entity = invocation.getArgument(0);
+            entity.setId("list-url");
+            return entity;
+        });
+
+        var saved = service.create(request);
+
+        var entityCaptor = ArgumentCaptor.forClass(VideoPopupList.class);
+        verify(videoPopupListRepo).save(entityCaptor.capture());
+        assertThat(entityCaptor.getValue().getClips())
+                .extracting(VideoPopupClip::getVideoFileName)
+                .containsExactly(null, null);
+        assertThat(entityCaptor.getValue().getClips())
+                .extracting(VideoPopupClip::getVideoUrl)
+                .containsExactly("https://cdn.example.com/promo.mp4", "http://cdn.example.com/intro.webm");
+
+        var references = ArgumentCaptor.forClass(UploadLifecycleService.References.class);
+        verify(uploads).attach(references.capture());
+        assertThat(references.getValue().files()).isEmpty();
+        assertThat(references.getValue().urls())
+                .containsExactly("https://cdn.example.com/promo.mp4", "http://cdn.example.com/intro.webm");
+
+        assertThat(saved.getId()).isEqualTo("list-url");
+        assertThat(saved.getClips())
+                .extracting(VideoPopupClipPayload::getVideoFileName)
+                .containsExactly(null, null);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"javascript:alert(1)", "/relative/video.mp4", "ftp://example.com/a.mp4"})
+    void create_rejectsInvalidVideoUrl(String invalidVideoUrl) {
+        var request = request("Ads", true, List.of(clip(invalidVideoUrl, null, "CTA", "/patterns")));
+
+        assertThatThrownBy(() -> service.create(request))
+                .isInstanceOf(BadRequestException.class);
+        verifyNoInteractions(uploads, videoPopupListRepo);
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"javascript:alert(1)", "//evil.com", "/\\evil.com", "ftp://example.com/a"})
     void create_rejectsUnsafeCtaUrl(String unsafeUrl) {

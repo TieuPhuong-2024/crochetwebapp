@@ -59,7 +59,8 @@ public enum ResultCode {
     RATE_LIMIT_MESSAGE(67, "Request limit exceeded. Please wait for a while before retrying."),
     MSG_REFRESH_TOKEN_REUSED(64, "Refresh token reuse detected. Please login again."),
     MSG_VIDEO_POPUP_LIST_NOT_FOUND(65, "Video popup list not found"),
-    MSG_VIDEO_POPUP_LIST_INVALID_CTA(66, "CTA URL must be an http(s) link or an internal path");
+    MSG_VIDEO_POPUP_LIST_INVALID_CTA(66, "CTA URL must be an http(s) link or an internal path"),
+    MSG_VIDEO_POPUP_LIST_INVALID_VIDEO_URL(67, "Video URL must be a valid http(s) link");
 
     private final int code;
     private final String message;
