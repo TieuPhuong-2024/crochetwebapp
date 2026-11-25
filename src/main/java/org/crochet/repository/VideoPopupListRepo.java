@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface VideoPopupListRepo extends JpaRepository<VideoPopupList, String> {
     List<VideoPopupList> findByActiveTrueOrderByCreatedDateDesc();
+
+    List<VideoPopupList> findAllByOrderByCreatedDateDesc();
 }

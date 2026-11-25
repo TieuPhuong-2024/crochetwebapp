@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.crochet.converter.VideoPopupClipListConverter;
-import org.crochet.payload.VideoPopupClipPayload;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,5 +32,5 @@ public class VideoPopupList extends BaseEntity {
     @Convert(converter = VideoPopupClipListConverter.class)
     @Column(name = "clips", columnDefinition = "text", nullable = false)
     @Builder.Default
-    private List<VideoPopupClipPayload> clips = new ArrayList<>();
+    private List<VideoPopupClip> clips = new ArrayList<>();
 }
